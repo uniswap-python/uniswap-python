@@ -42,6 +42,23 @@ class UniswapWrapper():
         """Get the maker fee."""
         return 0.003
 
+    # ------ Market -----------------------------------------------------------
+    def get_eth_token_input_price(self, token, qty):
+        """Public price for ETH to Token trades with an exact input."""
+        return self.contract[token].call().getEthToTokenInputPrice(qty)
+
+    def get_token_eth_input_price(self, token, qty):
+        """Public price for token to ETH trades with an exact input."""
+        return self.contract[token].call().getTokenToEthInputPrice(qty)
+
+    def get_eth_token_output_price(self, token, qty):
+        """Public price for ETH to Token trades with an exact output."""
+        return self.contract[token].call().getEthToTokenOutputPrice(qty)
+
+    def get_token_eth_output_price(self, token, qty):
+        """Public price for token to ETH trades with an exact output."""
+        return self.contract[token].call().getTokenToEthOutputPrice(qty)
+
 
 if __name__ == '__main__':
     us = UniswapWrapper()
