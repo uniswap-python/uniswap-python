@@ -1,0 +1,2 @@
+lint:
+	flake8
