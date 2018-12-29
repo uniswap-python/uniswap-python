@@ -2,6 +2,14 @@
 
 from setuptools import setup, find_packages
 
+install_requires = [
+    'web3',
+]
+
+tests_require = [
+    'pytest',
+    ]
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
