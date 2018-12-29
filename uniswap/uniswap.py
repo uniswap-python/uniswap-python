@@ -6,7 +6,7 @@ from web3 import Web3
 
 
 class UniswapWrapper():
-    def __init__(self) -> None:
+    def __init__(self):
         # Initialize web3
         self.eth_address = os.environ['ETH_ADDRESS']
         self.password = os.environ['ETH_ADDRESS_PW']
@@ -34,11 +34,11 @@ class UniswapWrapper():
                                                         abi=exchange_abi)
 
     # ------ Exchange ---------------------------------------------------------
-    def get_fee_maker(self) -> float:
+    def get_fee_maker(self):
         """Get the maker fee."""
         return 0
 
-    def get_fee_taker(self) -> float:
+    def get_fee_taker(self):
         """Get the maker fee."""
         return 0.003
 
