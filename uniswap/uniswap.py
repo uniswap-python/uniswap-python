@@ -6,12 +6,9 @@ from web3 import Web3
 
 
 class UniswapWrapper():
-    def __init__(self):
+    def __init__(self, address, private_key):
         # Initialize web3
         self.provider = os.environ['PROVIDER']
-        self.eth_address = os.environ['ETH_ADDRESS']
-        self.password = os.environ['ETH_ADDRESS_PW']
-
         self.w3 = Web3(Web3.HTTPProvider(self.provider,
                                          request_kwargs={'timeout':60}))
 
@@ -61,7 +58,10 @@ class UniswapWrapper():
 
 
 if __name__ == '__main__':
-    us = UniswapWrapper()
+    address = os.environ['ETH_ADDRESS']
+    priv_key = os.environ['ETH_PRIV_KEY']
+    us = UniswapWrapper(address, priv_key)
+
     token = 'bat'
     out_token = 'eth'
     one_eth = 1*10**18
