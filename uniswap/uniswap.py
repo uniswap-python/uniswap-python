@@ -8,10 +8,11 @@ from web3 import Web3
 class UniswapWrapper():
     def __init__(self):
         # Initialize web3
+        self.provider = os.environ['PROVIDER']
         self.eth_address = os.environ['ETH_ADDRESS']
         self.password = os.environ['ETH_ADDRESS_PW']
 
-        self.w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545",
+        self.w3 = Web3(Web3.HTTPProvider(self.provider,
                                          request_kwargs={'timeout':60}))
         self.w3.personal.unlockAccount(self.eth_address, self.password)
 
