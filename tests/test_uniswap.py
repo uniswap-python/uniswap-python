@@ -1,12 +1,16 @@
 import pytest
 import time
+import os
+
 
 from uniswap.uniswap import UniswapWrapper
 
 
 @pytest.fixture(scope='module')
 def client():
-    return UniswapWrapper()
+    address = os.environ['ETH_ADDRESS']
+    priv_key = os.environ['ETH_PRIV_KEY']
+    return UniswapWrapper(address, priv_key)
 
 
 @pytest.mark.usefixtures('client')
@@ -65,4 +69,3 @@ class TestUniswap(object):
     def test_get_token_eth_output_price(self, client, token, qty):
         r = client.get_token_eth_output_price(token, qty)
         assert bool(r)
-        
