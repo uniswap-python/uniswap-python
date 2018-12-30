@@ -24,6 +24,11 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/shanefontaine/uniswap-python",
     packages=find_packages(),
+    install_requires=install_requires,
+    tests_require=tests_require,
+    extras_require={
+        'test': tests_require,
+    },
     keywords=['uniswap', 'uniswap-exchange', 'uniswap-api', 'orderbook', 'dex',
               'trade', 'ethereum', 'ETH', 'client', 'api', 'wrapper',
               'exchange', 'crypto', 'currency', 'trading', 'trading-api',
