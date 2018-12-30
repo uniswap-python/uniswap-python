@@ -14,7 +14,6 @@ class UniswapWrapper():
 
         self.w3 = Web3(Web3.HTTPProvider(self.provider,
                                          request_kwargs={'timeout':60}))
-        self.w3.personal.unlockAccount(self.eth_address, self.password)
 
         # Initialize address and contract
         path = './uniswap/'
