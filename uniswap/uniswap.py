@@ -17,16 +17,21 @@ class UniswapWrapper():
         with open(os.path.abspath(path + 'contract_addresses.JSON')) as f:
             contract_addresses = json.load(f)
         with open(os.path.abspath(path + 'token_addresses.JSON')) as f:
-            token_addressess = json.load(f)
+            self.token_address = json.load(f)
         with open(os.path.abspath(path + 'uniswap_exchange.abi')) as f:
             exchange_abi = json.load(f)
+        with open(os.path.abspath(path + 'erc20.abi')) as f:
+            erc20_abi = json.load(f)
 
         # Defined addresses and contract instance for each token
-        self.address = {}
+        self.token_exchange_address = {}
+        self.erc20_contract = {}
         self.contract = {}
         for token in contract_addresses:
             address = contract_addresses[token]
-            self.address[token] = address
+            self.token_exchange_address[token] = address
+            self.erc20_contract[token] = self.w3.eth.contract(address=self.token_address[token],
+                                                              abi=erc20_abi)
             self.contract[token] = self.w3.eth.contract(address=address,
                                                         abi=exchange_abi)
 
@@ -56,21 +61,43 @@ class UniswapWrapper():
         """Public price for token to ETH trades with an exact output."""
         return self.contract[token].call().getTokenToEthOutputPrice(qty)
 
+    # ------ ERC20 Pool -------------------------------------------------------
+    def get_total_supply(self, token):
+        return self.contract[token].call().totalSupply()
+
+    def get_eth_balance(self, token):
+        """Get the balance of ETH in an exchange contract."""
+        return self.w3.eth.getBalance(self.token_exchange_address[token])
+
+    def _get_token_balance(self, token):
+        """Get the balance of a token in an exchange contract."""
+        return self.erc20_contract[token].call().balanceOf(self.token_exchange_address[token])
+
+    def get_exchange_rate(self, token):
+        """Get the current ETH/token exchange rate of the token."""
+        eth_reserve = self.get_eth_balance(token)
+        token_reserve = self._get_token_balance(token)
+        return token_reserve / eth_reserve
 
 if __name__ == '__main__':
     address = os.environ['ETH_ADDRESS']
     priv_key = os.environ['ETH_PRIV_KEY']
     us = UniswapWrapper(address, priv_key)
-
-    token = 'bat'
-    out_token = 'eth'
     one_eth = 1*10**18
     qty = 1 * one_eth
-    res = us.get_eth_token_input_price(token, qty)
-    print(res)
-    res = us.get_token_eth_input_price(token, qty)
-    print(res)
-    res = us.get_eth_token_output_price(token, qty)
-    print(res)
-    res = us.get_token_eth_output_price(token, qty)
-    print(res)
+    token = 'bat'
+    out_token = 'eth'
+
+    print(us.get_total_supply(token))
+
+    # print(us.get_eth_balance(token))
+    # print(us.get_token_balance(token))
+
+    # res = us.get_token_eth_output_price(token, int(qty))
+    # print(res)
+    # res = us.get_token_eth_input_price(token, qty)
+    # print(res)
+    # res = us.get_eth_token_output_price(token, qty)
+    # print(res)
+    # res = us.get_token_eth_output_price(token, qty)
+    # print(res)
