@@ -59,28 +59,28 @@ uniswap_wrapper.get_fee_maker()
 uniswap_wrapper.get_fee_taker()
 ```
 
-- [get_eth_token_input_price]()
+- [get_eth_token_input_price](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L416)
 ```python
 # Get the public price for ETH to Token trades with an exact input.
 uniswap_wrapper.get_eth_token_input_price('bat', 1*10**18)
 uniswap_wrapper.get_eth_token_input_price('dai', 5*10**18)
 ```
 
-- [get_token_eth_input_price]()
+- [get_token_eth_input_price](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L437)
 ```python
 # Get the public price for token to ETH trades with an exact input.
 uniswap_wrapper.get_token_eth_input_price('bat', 1*10**18)
 uniswap_wrapper.get_token_eth_input_price('dai', 5*10**18)
 ```
 
-- [get_eth_token_output_price]()
+- [get_eth_token_output_price](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L426)
 ```python
 # Get the public price for ETH to Token trades with an exact output
 uniswap_wrapper.get_eth_token_output_price('bat', 1*10**18)
 uniswap_wrapper.get_eth_token_output_price('dai', 5*10**18)
 ```
 
-- [get_token_eth_output_price]()
+- [get_token_eth_output_price](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L448)
 ```python
 # Get the public price for token to ETH trades with an exact output.
 uniswap_wrapper.get_token_eth_output_price('bat', 1*10**18)
