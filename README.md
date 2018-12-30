@@ -41,12 +41,10 @@ pip install git+git://github.com/shanefontaine/uniswap-python.git
 ```
 
 ### Environment Variables
-The program expects three different environment variables to be set in order to run the program. They are:
+The program expects an environment variables to be set in order to run the program. It is:
 
 ```
-PROVIDER       # HTTP Provider for web3
-ETH_ADDRESS    # Ethereum address
-ETH_ADDRESS_PW # Password for your Ethereum address
+PROVIDER  # HTTP Provider for web3
 ```
 
 ### Public Client
