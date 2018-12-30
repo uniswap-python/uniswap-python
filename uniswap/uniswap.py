@@ -62,6 +62,15 @@ class UniswapWrapper():
 
 if __name__ == '__main__':
     us = UniswapWrapper()
-    res = us.get_fee_maker()
+    token = 'bat'
+    out_token = 'eth'
+    one_eth = 1*10**18
+    qty = 1 * one_eth
+    res = us.get_eth_token_input_price(token, qty)
     print(res)
-
+    res = us.get_token_eth_input_price(token, qty)
+    print(res)
+    res = us.get_eth_token_output_price(token, qty)
+    print(res)
+    res = us.get_token_eth_output_price(token, qty)
+    print(res)
