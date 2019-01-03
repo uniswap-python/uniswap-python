@@ -3,6 +3,7 @@ test.py
 *.swp
 contracts/
 .github/
+.github/ISSUE_TEMPLATE
 
 build/
 dist/
