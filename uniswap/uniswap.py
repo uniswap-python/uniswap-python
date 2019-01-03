@@ -16,8 +16,16 @@ class UniswapWrapper:
         self.w3 = Web3(Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60}))
         self.address = address
         self.private_key = private_key
+
+        # This code automatically approves you for trading on the exchange.
+        # max_approval is to allow the contract to exchange on your behalf.
+        # max_approval_check checks that current approval is above a reasonable number
+        # The program cannot check for max_approval each time because it decreases
+        # with each trade.
         self.max_approval_hex = "0x" + "f" * 64
         self.max_approval_int = int(self.max_approval_hex, 16)
+        self.max_approval_check = "0x" + "f" * 55 + "0" * 9
+        self.max_approval_check_int = int(self.max_approval_check, 16)
 
         # Initialize address and contract
         path = "./uniswap/"
@@ -145,7 +153,8 @@ class UniswapWrapper:
         amount = (
             self.erc20_contract[token].call().allowance(self.address, exchange_addr)
         )
-        if amount == self.max_approval_int:
+
+        if amount >= self.max_approval_check:
             return True
         else:
             return False
