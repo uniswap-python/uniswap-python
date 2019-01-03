@@ -24,8 +24,8 @@ class UniswapWrapper:
         # with each trade.
         self.max_approval_hex = "0x" + "f" * 64
         self.max_approval_int = int(self.max_approval_hex, 16)
-        self.max_approval_check = "0x" + "f" * 55 + "0" * 9
-        self.max_approval_check_int = int(self.max_approval_check, 16)
+        self.max_approval_check_hex = "0x" + "0" * 15 + "f" * 49
+        self.max_approval_check_int = int(self.max_approval_check_hex, 16)
 
         # Initialize address and contract
         path = "./uniswap/assets/"
