@@ -99,3 +99,25 @@ class TestUniswap(object):
         assert bool(r)
 
     # ------ Liquidity -----------------------------------------------------------------
+    @pytest.mark.parametrize("token, max_eth", [
+        ("bat", 0.005 * ONE_ETH),
+        ("dai", 0.005 * ONE_ETH),
+        ("bat", 0.001 * ONE_ETH),
+        pytest.param("btc", ONE_ETH,
+                     marks=pytest.mark.xfail)
+        ])
+    def test_add_liquidity(self, client, token, max_eth):
+        r = client.add_liquidity(token, max_eth)
+        assert bool(r)
+
+
+    @pytest.mark.parametrize("token, max_token", [
+        ("bat", 0.005 * ONE_ETH),
+        ("dai", 0.005 * ONE_ETH),
+        ("bat", 0.001 * ONE_ETH),
+        pytest.param("btc", ONE_ETH,
+                     marks=pytest.mark.xfail)
+        ])
+    def test_remove_liquidity(self, client, token, max_token):
+        r = client.remove_liquidity(token, max_token)
+        assert bool(r)
