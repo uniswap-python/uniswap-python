@@ -62,14 +62,11 @@ class UniswapWrapper():
         return self.contract[token].call().getTokenToEthOutputPrice(qty)
 
     # ------ ERC20 Pool -------------------------------------------------------
-    def get_total_supply(self, token):
-        return self.contract[token].call().totalSupply()
-
     def get_eth_balance(self, token):
         """Get the balance of ETH in an exchange contract."""
         return self.w3.eth.getBalance(self.token_exchange_address[token])
 
-    def _get_token_balance(self, token):
+    def get_token_balance(self, token):
         """Get the balance of a token in an exchange contract."""
         return self.erc20_contract[token].call().balanceOf(self.token_exchange_address[token])
 
@@ -78,6 +75,26 @@ class UniswapWrapper():
         eth_reserve = self.get_eth_balance(token)
         token_reserve = self._get_token_balance(token)
         return token_reserve / eth_reserve
+
+    # ------ Liquidity --------------------------------------------------------
+        # def add_liquidity(self, token, max_tokens, deadline=None):
+        #     min_liquidity = 1
+        #     deadline = int(time.time()) + 1000 if not deadline else deadline
+        #     func = self.contract[token].functions
+        #     func_params = [min_liquidity, max_tokens, deadline]
+        #     func.add_liquidity(func_params)
+        #             self.contract.functions.trade(self.w3.toChecksumAddress(token_get),
+        #                                           amount_get,
+        #                                           self.w3.toChecksumAddress(token_give),
+        #                                           amount_give,
+        #                                           expires,
+        #                                           nonce,
+        #                                           self.w3.toChecksumAddress(counterparty),
+        #                                           v,
+        #                                           r,
+        #                                           s,
+        #                                           amount).transact({'from': self.trader})
+
 
 if __name__ == '__main__':
     address = os.environ['ETH_ADDRESS']
@@ -88,7 +105,7 @@ if __name__ == '__main__':
     token = 'bat'
     out_token = 'eth'
 
-    print(us.get_total_supply(token))
+    print(us._get_token_balance(token))
 
     # print(us.get_eth_balance(token))
     # print(us.get_token_balance(token))
