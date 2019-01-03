@@ -51,6 +51,19 @@ class UniswapWrapper:
             self.contract[token] = self.w3.eth.contract(
                 address=address, abi=exchange_abi
             )
+    # ------ Decorators ----------------------------------------------------------------
+    def check_approval(method):
+        """Decorator to check if user is approved for a token. It approves them if they
+            need to be approved."""
+        def approved(self, *args):
+            token = args[0]
+            is_approved = self._is_approved(token)
+            print(is_approved)
+            # if not is_approved:
+            #     self.approve_exchange(token)
+            result = method(self, *args)
+            return result
+        return approved
 
     # ------ Exchange ------------------------------------------------------------------
     def get_fee_maker(self):
@@ -79,6 +92,7 @@ class UniswapWrapper:
         return self.contract[token].call().getTokenToEthOutputPrice(qty)
 
     # ------ ERC20 Pool ----------------------------------------------------------------
+    @check_approval
     def get_eth_balance(self, token):
         """Get the balance of ETH in an exchange contract."""
         return self.w3.eth.getBalance(self.token_exchange_address[token])
@@ -154,7 +168,7 @@ class UniswapWrapper:
             self.erc20_contract[token].call().allowance(self.address, exchange_addr)
         )
 
-        if amount >= self.max_approval_check:
+        if amount <= self.max_approval_check:
             return True
         else:
             return False
@@ -169,4 +183,4 @@ if __name__ == "__main__":
     token = "bat"
     out_token = "eth"
 
-    print(us._is_approved(token))
+    print(us.get_eth_balance(token))
