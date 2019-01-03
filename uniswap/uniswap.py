@@ -150,6 +150,47 @@ class UniswapWrapper:
         function = self.contract[token].functions.removeLiquidity(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
+    # ------ Trading -------------------------------------------------------------------
+    @check_approval
+    def make_trade(self, input_token, output_token, qty):
+        """Make a trade by defining the qty of the input token."""
+        deadline = int(time.time()) + 1000
+        qty = int(qty)
+        if input_token == 'eth':
+            return self._eth_to_token_swap_input(output_token, qty, deadline)
+        else:
+            if output_token == 'eth':
+                return self._token_to_eth_swap_input(input_token, qty, deadline)
+            else:
+                return self._token_to_token_swap_input(input_token, qty, deadline, output_token)
+
+    @check_approval
+    def make_trade_output(self, input_token, output_token, qty):
+        """Make a trade by defining the qty of the output token."""
+        deadline = int(time.time()) + 1000
+        pass
+
+    def _eth_to_token_swap_input(self, output_token, qty, deadline):
+        token_funcs = self.contract[output_token].functions
+        tx_params = self._get_tx_params(qty)
+        func_params = [qty, deadline]
+        function = token_funcs.ethToTokenSwapInput(*func_params)
+        return self._build_and_send_tx(function, tx_params)
+
+    def _token_to_eth_swap_input(self, input_token, qty, deadline):
+        token_funcs = self.contract[input_token].functions
+        tx_params = self._get_tx_params()
+        func_params = [qty, 1, deadline]
+        function = token_funcs.tokenToEthSwapInput(*func_params)
+        return self._build_and_send_tx(function, tx_params)
+
+    def _token_to_token_swap_input(self, input_token, qty, deadline, output_token):
+        token_funcs = self.contract[input_token].functions
+        tx_params = self._get_tx_params()
+        func_params = [qty, 1, 1, deadline, self.token_address[output_token]]
+        function = token_funcs.tokenToTokenSwapInput(*func_params)
+        return self._build_and_send_tx(function, tx_params)
+
     # ------ Approval Utils ------------------------------------------------------------
     def approve_exchange(self, token, max_approval=None):
         """Give an exchange max approval of a token."""
@@ -194,12 +235,12 @@ class UniswapWrapper:
 if __name__ == "__main__":
     address = os.environ["ETH_ADDRESS"]
     priv_key = os.environ["ETH_PRIV_KEY"]
-    provider = os.environ["TESTNET_PROVIDER"]
-    # us = UniswapWrapper(address, priv_key)
-    us = UniswapWrapper(address, priv_key, provider)
+    # provider = os.environ["TESTNET_PROVIDER"]
+    us = UniswapWrapper(address, priv_key)
+    # us = UniswapWrapper(address, priv_key, provider)
     one_eth = 1 * 10 ** 18
-    qty = 0.0001 * one_eth
-    token = "bat"
-    out_token = "eth"
+    qty = 0.000001 * one_eth
+    input_token = "bat"
+    output_token = "dai"
 
-    print(us.remove_liquidity(token, qty))
+    print(us.make_trade_output(input_token, output_token, qty))
