@@ -66,7 +66,10 @@ class UniswapWrapper:
         def approved(self, *args):
             token = args[0]
             is_approved = self._is_approved(token)
+            print('in')
+            print(is_approved)
             if not is_approved:
+                print('in')
                 self.approve_exchange(token)
             return method(self, *args)
         return approved
@@ -155,7 +158,7 @@ class UniswapWrapper:
             self.erc20_contract[token].call().allowance(self.address, exchange_addr)
         )
 
-        if amount <= self.max_approval_check_int:
+        if amount >= self.max_approval_check_int:
             return True
         else:
             return False
