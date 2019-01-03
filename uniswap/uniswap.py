@@ -171,7 +171,8 @@ class UniswapWrapper:
             if output_token == 'eth':
                 return self._token_to_eth_swap_input(input_token, qty, self._deadline())
             else:
-        return self._token_to_token_swap_input(input_token, qty, output_token)
+                return self._token_to_token_swap_input(input_token, qty, output_token, self._deadline())
+
     def _eth_to_token_swap_input(self, output_token, qty):
         token_funcs = self.contract[output_token].functions
         tx_params = self._get_tx_params(qty)
@@ -217,6 +218,10 @@ class UniswapWrapper:
             return False
 
     # ------ Tx Utils-------------------------------------------------------------------
+    def _deadline(self):
+        """Get a predefined deadline."""
+        return int(time.time()) + 1000
+
     def _build_and_send_tx(self, function, tx_params):
         """Build and send a transaction."""
         transaction = function.buildTransaction(tx_params)
