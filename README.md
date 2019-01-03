@@ -14,8 +14,8 @@ _I am in no way affiliated with or funded by Uniswap, uniswap.io, or any subsidi
 - Simple parsing of data returned from the Uniswap contract
 
 ## Under Development
+- Run tests on a private chain rather than Rinkeby
 - Better error handling
-- Tests
 
 ## Getting Started
 This README is documentation on the syntax of the python client presented in this repository. See function docstrings for full syntax details.
@@ -132,6 +132,9 @@ python -m pytest -W ignore::DeprecationWarning
 ```
 
 ## Changelog
+_0.2.1_
+- Add liquidity tests
+
 _0.2.0_
 - Add liquidity and ERC20 pool methods
 
