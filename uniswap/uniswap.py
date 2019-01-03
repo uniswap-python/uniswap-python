@@ -10,6 +10,8 @@ class UniswapWrapper:
         # Initialize web3
         self.provider = os.environ["PROVIDER"]
         self.w3 = Web3(Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60}))
+        self.address = address
+        self.private_key = private_key
 
         # Initialize address and contract
         path = "./uniswap/"
@@ -82,34 +84,46 @@ class UniswapWrapper:
         return token_reserve / eth_reserve
 
     # ------ Liquidity --------------------------------------------------------
-    # def add_liquidity(self, token, max_tokens, min_liquidity = 1, deadline=None):
-    #     deadline = int(time.time()) + 1000 if not deadline else deadline
-    #     func = self.contract[token].functions
-    #     func_params = [min_liquidity, max_tokens, deadline]
-    #     func.add_liquidity(func_params)
-    #             self.contract.functions.trade(self.w3.toChecksumAddress(token_get),
-    #                                           amount_get,
-    #                                           self.w3.toChecksumAddress(token_give),
-    #                                           amount_give,
-    #                                           expires,
-    #                                           nonce,
-    #                                           self.w3.toChecksumAddress(counterparty),
-    #                                           v,
-    #                                           r,
-    #                                           s,
-    #                                           amount).transact({'from': self.trader})
+    def add_liquidity(self, token, max_tokens, min_liquidity=1, deadline=None):
+        deadline = int(time.time()) + 1000 if not deadline else deadline
+        tx_params = self._get_tx_params(max_tokens)
+        func_params = [min_liquidity, max_tokens, deadline]
+        function = self.contract[token].functions.addLiquidity(*func_params)
+        transaction = function.buildTransaction(tx_params)
+        signed_txn = self.w3.eth.account.signTransaction(transaction,
+                                                         private_key=self.private_key)
+        print(signed_txn.hash)
+        # self.contract.functions.trade(self.w3.toChecksumAddress(token_get),
+        #                               amount_get,
+        #                               self.w3.toChecksumAddress(token_give),
+        #                               amount_give,
+        #                               expires,
+        #                               nonce,
+        #                               self.w3.toChecksumAddress(counterparty),
+        #                               v,
+        #                               r,
+        #                               s,
+        #                               amount).transact({'from': self.trader})
 
+    # ------ Tx Utils-------------------------------------------------------------------
+    def _get_tx_params(self, value=0, gas=1000000):
+        return {
+            'from': self.address,
+            'value': value,
+            'gas': gas,
+            'nonce': self.w3.eth.getTransactionCount(self.address)
+        }
 
 if __name__ == "__main__":
     address = os.environ["ETH_ADDRESS"]
     priv_key = os.environ["ETH_PRIV_KEY"]
     us = UniswapWrapper(address, priv_key)
     one_eth = 1 * 10 ** 18
-    qty = 1 * one_eth
+    qty = 0.0001 * one_eth
     token = "bat"
     out_token = "eth"
 
-    print(us._get_token_balance(token))
+    print(us.add_liquidity(token, int(qty)))
 
     # print(us.get_eth_balance(token))
     # print(us.get_token_balance(token))
