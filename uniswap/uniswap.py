@@ -117,7 +117,7 @@ class UniswapWrapper:
         max_token = int(max_eth * self.get_exchange_rate(token))
         func_params = [min_liquidity, max_token, deadline]
         function = self.contract[token].functions.addLiquidity(*func_params)
-        self._build_and_send_tx(function, tx_params)
+        return self._build_and_send_tx(function, tx_params)
 
     @check_approval
     def remove_liquidity(self, token, max_token, deadline=None):
@@ -126,7 +126,7 @@ class UniswapWrapper:
         tx_params = self._get_tx_params()
         func_params = [max_token, 1, 1, deadline]
         function = self.contract[token].functions.removeLiquidity(*func_params)
-        self._build_and_send_tx(function, tx_params)
+        return self._build_and_send_tx(function, tx_params)
 
     # ------ Tx Utils-------------------------------------------------------------------
     def _build_and_send_tx(self, function, tx_params):
@@ -135,7 +135,7 @@ class UniswapWrapper:
         signed_txn = self.w3.eth.account.signTransaction(
             transaction, private_key=self.private_key
         )
-        self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+        return self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
     def _get_tx_params(self, value=0, gas=100000):
         """Get generic transaction parameters."""
