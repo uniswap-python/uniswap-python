@@ -38,7 +38,7 @@ class UniswapWrapper:
                 address=address, abi=exchange_abi
             )
 
-    # ------ Exchange ---------------------------------------------------------
+    # ------ Exchange ------------------------------------------------------------------
     def get_fee_maker(self):
         """Get the maker fee."""
         return 0
@@ -47,7 +47,7 @@ class UniswapWrapper:
         """Get the maker fee."""
         return 0.003
 
-    # ------ Market -----------------------------------------------------------
+    # ------ Market --------------------------------------------------------------------
     def get_eth_token_input_price(self, token, qty):
         """Public price for ETH to Token trades with an exact input."""
         return self.contract[token].call().getEthToTokenInputPrice(qty)
@@ -64,7 +64,7 @@ class UniswapWrapper:
         """Public price for token to ETH trades with an exact output."""
         return self.contract[token].call().getTokenToEthOutputPrice(qty)
 
-    # ------ ERC20 Pool -------------------------------------------------------
+    # ------ ERC20 Pool ----------------------------------------------------------------
     def get_eth_balance(self, token):
         """Get the balance of ETH in an exchange contract."""
         return self.w3.eth.getBalance(self.token_exchange_address[token])
@@ -83,7 +83,7 @@ class UniswapWrapper:
         token_reserve = self.get_token_balance(token)
         return token_reserve / eth_reserve
 
-    # ------ Liquidity --------------------------------------------------------
+    # ------ Liquidity -----------------------------------------------------------------
     def add_liquidity(self, token, max_eth, min_liquidity=1, deadline=None):
         """Add liquidity to the pool."""
         deadline = int(time.time()) + 1000 if not deadline else deadline
@@ -103,7 +103,6 @@ class UniswapWrapper:
 
     # ------ Tx Utils-------------------------------------------------------------------
     def _build_and_send_tx(self, function, tx_params):
-
         """Build and send a transaction."""
         transaction = function.buildTransaction(tx_params)
         signed_txn = self.w3.eth.account.signTransaction(
