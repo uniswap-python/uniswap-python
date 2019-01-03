@@ -2,6 +2,8 @@ import pytest
 import time
 import os
 
+from web3 import Web3
+
 from uniswap.uniswap import UniswapWrapper
 
 
@@ -12,12 +14,20 @@ def client():
     # For testing, use Rinkeby
     provider = os.environ["TESTNET_PROVIDER"]
     return UniswapWrapper(address, priv_key, provider)
+    # return UniswapWrapper(address, priv_key)
+
+@pytest.fixture(scope="module")
+def web3_provider():
+    provider = os.environ["TESTNET_PROVIDER"]
+    w3 = Web3(Web3.HTTPProvider(provider, request_kwargs={"timeout": 60}))
+    return w3
 
 
-@pytest.mark.usefixtures("client")
+@pytest.mark.usefixtures("client", "web3_provider")
 class TestUniswap(object):
 
     ONE_ETH = 1*10**18
+
 
     # ------ Exchange ------------------------------------------------------------------
     def test_get_fee_maker(self, client):
@@ -99,25 +109,33 @@ class TestUniswap(object):
         assert bool(r)
 
     # ------ Liquidity -----------------------------------------------------------------
+    @pytest.mark.skip
     @pytest.mark.parametrize("token, max_eth", [
-        ("bat", 0.005 * ONE_ETH),
-        ("dai", 0.005 * ONE_ETH),
-        ("bat", 0.001 * ONE_ETH),
+        ("bat", 0.00000005 * ONE_ETH),
+        ("dai", 0.00000005 * ONE_ETH),
+        ("bat", 0.00000001 * ONE_ETH),
         pytest.param("btc", ONE_ETH,
                      marks=pytest.mark.xfail)
         ])
-    def test_add_liquidity(self, client, token, max_eth):
+    def test_add_liquidity(self, client, web3_provider, token, max_eth):
         r = client.add_liquidity(token, max_eth)
-        assert bool(r)
+        tx = web3_provider.eth.waitForTransactionReceipt(r, timeout=6000)
+        status = web3_provider.eth.getTransactionReceipt(tx.transactionHash).status
+        assert status
 
 
+    @pytest.mark.skip
     @pytest.mark.parametrize("token, max_token", [
-        ("bat", 0.005 * ONE_ETH),
-        ("dai", 0.005 * ONE_ETH),
-        ("bat", 0.001 * ONE_ETH),
+        ("bat", 0.00000005 * ONE_ETH),
+        ("dai", 0.00000005 * ONE_ETH),
+        ("bat", 0.00000001 * ONE_ETH),
         pytest.param("btc", ONE_ETH,
                      marks=pytest.mark.xfail)
         ])
-    def test_remove_liquidity(self, client, token, max_token):
+    def test_remove_liquidity(self, client, web3_provider, token, max_token):
         r = client.remove_liquidity(token, max_token)
+        tx = web3_provider.eth.waitForTransactionReceipt(r)
+        print(tx)
+        status = web3_provider.eth.getTransactionReceipt(tx.transactionHash).status
+        print(r)
         assert bool(r)
