@@ -85,20 +85,28 @@ class UniswapWrapper:
 
     # ------ Liquidity --------------------------------------------------------
     def add_liquidity(self, token, max_eth, min_liquidity=1, deadline=None):
-        self._change_liquidity('add', token, max_eth)
-
-    def _change_liquidity(self, type, token, max_eth, min_liquidity=1, deadline=None):
         deadline = int(time.time()) + 1000 if not deadline else deadline
         tx_params = self._get_tx_params(max_eth)
         max_token = int(max_eth * self.get_exchange_rate(token))
         func_params = [min_liquidity, max_token, deadline]
         function = self.contract[token].functions.addLiquidity(*func_params)
+        self._build_and_send_tx(function, tx_params)
+
+    def remove_liquidity(self, token, max_token, min_liquidity=1, deadline=None):
+        deadline = int(time.time()) + 1000 if not deadline else deadline
+        tx_params = self._get_tx_params()
+        func_params = [max_token, 1, 1, deadline]
+        function = self.contract[token].functions.removeLiquidity(*func_params)
+        self._build_and_send_tx(function, tx_params)
+
+    # ------ Tx Utils-------------------------------------------------------------------
+    def _build_and_send_tx(self, function, tx_params):
+        """Build and send a transaction."""
         transaction = function.buildTransaction(tx_params)
         signed_txn = self.w3.eth.account.signTransaction(transaction,
                                                          private_key=self.private_key)
         self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
-    # ------ Tx Utils-------------------------------------------------------------------
     def _get_tx_params(self, value=0, gas=1000000):
         return {
             'from': self.address,
@@ -112,20 +120,8 @@ if __name__ == "__main__":
     priv_key = os.environ["ETH_PRIV_KEY"]
     us = UniswapWrapper(address, priv_key)
     one_eth = 1 * 10 ** 18
-    qty = 0.00001 * one_eth
+    qty = 0.000001 * one_eth
     token = "bat"
     out_token = "eth"
 
-    print(us.add_liquidity(token, int(qty)))
-
-    # print(us.get_eth_balance(token))
-    # print(us.get_token_balance(token))
-
-    # res = us.get_token_eth_output_price(token, int(qty))
-    # print(res)
-    # res = us.get_token_eth_input_price(token, qty)
-    # print(res)
-    # res = us.get_eth_token_output_price(token, qty)
-    # print(res)
-    # res = us.get_token_eth_output_price(token, qty)
-    # print(res)
+    print(us.remove_liquidity(token, int(qty)))
