@@ -132,21 +132,19 @@ class UniswapWrapper:
 
     # ------ Liquidity -----------------------------------------------------------------
     @check_approval
-    def add_liquidity(self, token, max_eth, min_liquidity=1, deadline=None):
+    def add_liquidity(self, token, max_eth, min_liquidity=1):
         """Add liquidity to the pool."""
-        deadline = int(time.time()) + 1000 if not deadline else deadline
         tx_params = self._get_tx_params(int(max_eth))
         max_token = int(max_eth * self.get_exchange_rate(token))
-        func_params = [min_liquidity, max_token, deadline]
+        func_params = [min_liquidity, max_token, self._deadline()]
         function = self.contract[token].functions.addLiquidity(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
     @check_approval
-    def remove_liquidity(self, token, max_token, deadline=None):
+    def remove_liquidity(self, token, max_token):
         """Remove liquidity from the pool."""
-        deadline = int(time.time()) + 1000 if not deadline else deadline
         tx_params = self._get_tx_params()
-        func_params = [int(max_token), 1, 1, deadline]
+        func_params = [int(max_token), 1, 1, self._deadline()]
         function = self.contract[token].functions.removeLiquidity(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
@@ -154,40 +152,44 @@ class UniswapWrapper:
     @check_approval
     def make_trade(self, input_token, output_token, qty):
         """Make a trade by defining the qty of the input token."""
-        deadline = int(time.time()) + 1000
         qty = int(qty)
         if input_token == 'eth':
-            return self._eth_to_token_swap_input(output_token, qty, deadline)
+            return self._eth_to_token_swap_input(output_token, qty, self._deadline())
         else:
             if output_token == 'eth':
-                return self._token_to_eth_swap_input(input_token, qty, deadline)
+                return self._token_to_eth_swap_input(input_token, qty, self._deadline())
             else:
-                return self._token_to_token_swap_input(input_token, qty, deadline, output_token)
+                return self._token_to_token_swap_input(input_token, qty, self._deadline(), output_token)
 
     @check_approval
     def make_trade_output(self, input_token, output_token, qty):
         """Make a trade by defining the qty of the output token."""
-        deadline = int(time.time()) + 1000
-        pass
-
-    def _eth_to_token_swap_input(self, output_token, qty, deadline):
+        qty = int(qty)
+        if input_token == 'eth':
+            return self._eth_to_token_swap_input(output_token, qty, self._deadline())
+        else:
+            if output_token == 'eth':
+                return self._token_to_eth_swap_input(input_token, qty, self._deadline())
+            else:
+        return self._token_to_token_swap_input(input_token, qty, output_token)
+    def _eth_to_token_swap_input(self, output_token, qty):
         token_funcs = self.contract[output_token].functions
         tx_params = self._get_tx_params(qty)
-        func_params = [qty, deadline]
+        func_params = [qty, self._deadline()]
         function = token_funcs.ethToTokenSwapInput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
-    def _token_to_eth_swap_input(self, input_token, qty, deadline):
+    def _token_to_eth_swap_input(self, input_token, qty):
         token_funcs = self.contract[input_token].functions
         tx_params = self._get_tx_params()
-        func_params = [qty, 1, deadline]
+        func_params = [qty, 1, self._deadline()]
         function = token_funcs.tokenToEthSwapInput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
-    def _token_to_token_swap_input(self, input_token, qty, deadline, output_token):
+    def _token_to_token_swap_input(self, input_token, qty, output_token):
         token_funcs = self.contract[input_token].functions
         tx_params = self._get_tx_params()
-        func_params = [qty, 1, 1, deadline, self.token_address[output_token]]
+        func_params = [qty, 1, 1, self._deadline(), self.token_address[output_token]]
         function = token_funcs.tokenToTokenSwapInput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
