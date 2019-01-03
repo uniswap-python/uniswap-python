@@ -106,18 +106,20 @@ class UniswapWrapper:
 
         """Build and send a transaction."""
         transaction = function.buildTransaction(tx_params)
-        signed_txn = self.w3.eth.account.signTransaction(transaction,
-                                                         private_key=self.private_key)
+        signed_txn = self.w3.eth.account.signTransaction(
+            transaction, private_key=self.private_key
+        )
         self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
     def _get_tx_params(self, value=0, gas=100000):
         """Get generic transaction parameters."""
         return {
-            'from': self.address,
-            'value': value,
-            'gas': gas,
-            'nonce': self.w3.eth.getTransactionCount(self.address)
+            "from": self.address,
+            "value": value,
+            "gas": gas,
+            "nonce": self.w3.eth.getTransactionCount(self.address),
         }
+
 
 if __name__ == "__main__":
     address = os.environ["ETH_ADDRESS"]
