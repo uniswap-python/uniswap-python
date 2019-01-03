@@ -59,15 +59,28 @@ class UniswapWrapper:
             self.contract[token] = self.w3.eth.contract(
                 address=address, abi=exchange_abi
             )
+
     # ------ Decorators ----------------------------------------------------------------
     def check_approval(method):
         """Decorator to check if user is approved for a token. It approves them if they
             need to be approved."""
         def approved(self, *args):
-            token = args[0]
-            is_approved = self._is_approved(token)
-            if not is_approved:
-                self.approve_exchange(token)
+            # Check to see if the first token is actually ETH
+            token = args[0] if token != 'eth' else None
+
+            # Check second token, if needed
+            if method.__name__ == 'make_trade':
+                token_two = args[1] if args[1] != 'eth' else None
+
+            # Approve both tokens, if needed
+            if token:
+                is_approved = self._is_approved(token)
+                    if not is_approved:
+                        self.approve_exchange(token)
+            if token_two:
+                is_approved = self._is_approved(token_two)
+                if not is_approved:
+                    self.approve_exchange(token_two)
             return method(self, *args)
         return approved
 
