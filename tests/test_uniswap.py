@@ -2,7 +2,6 @@ import pytest
 import time
 import os
 
-
 from uniswap.uniswap import UniswapWrapper
 
 
@@ -10,7 +9,9 @@ from uniswap.uniswap import UniswapWrapper
 def client():
     address = os.environ["ETH_ADDRESS"]
     priv_key = os.environ["ETH_PRIV_KEY"]
-    return UniswapWrapper(address, priv_key)
+    # For testing, use Rinkeby
+    provider = os.environ["TESTNET_PROVIDER"]
+    return UniswapWrapper(address, priv_key, provider)
 
 
 @pytest.mark.usefixtures("client")
@@ -96,3 +97,5 @@ class TestUniswap(object):
     def get_exchange_rate(self, client, token,):
         r = client.get_exchange_rate(token)
         assert bool(r)
+
+    # ------ Liquidity -----------------------------------------------------------------
