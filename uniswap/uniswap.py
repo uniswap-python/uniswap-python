@@ -58,9 +58,8 @@ class UniswapWrapper:
         def approved(self, *args):
             token = args[0]
             is_approved = self._is_approved(token)
-            print(is_approved)
-            # if not is_approved:
-            #     self.approve_exchange(token)
+            if not is_approved:
+                self.approve_exchange(token)
             result = method(self, *args)
             return result
         return approved
