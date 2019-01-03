@@ -60,8 +60,7 @@ class UniswapWrapper:
             is_approved = self._is_approved(token)
             if not is_approved:
                 self.approve_exchange(token)
-            result = method(self, *args)
-            return result
+            return method(self, *args)
         return approved
 
     # ------ Exchange ------------------------------------------------------------------
@@ -91,7 +90,6 @@ class UniswapWrapper:
         return self.contract[token].call().getTokenToEthOutputPrice(qty)
 
     # ------ ERC20 Pool ----------------------------------------------------------------
-    @check_approval
     def get_eth_balance(self, token):
         """Get the balance of ETH in an exchange contract."""
         return self.w3.eth.getBalance(self.token_exchange_address[token])
@@ -111,6 +109,7 @@ class UniswapWrapper:
         return token_reserve / eth_reserve
 
     # ------ Liquidity -----------------------------------------------------------------
+    @check_approval
     def add_liquidity(self, token, max_eth, min_liquidity=1, deadline=None):
         """Add liquidity to the pool."""
         deadline = int(time.time()) + 1000 if not deadline else deadline
@@ -120,6 +119,7 @@ class UniswapWrapper:
         function = self.contract[token].functions.addLiquidity(*func_params)
         self._build_and_send_tx(function, tx_params)
 
+    @check_approval
     def remove_liquidity(self, token, max_token, deadline=None):
         """Remove liquidity from the pool."""
         deadline = int(time.time()) + 1000 if not deadline else deadline
