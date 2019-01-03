@@ -93,7 +93,7 @@ class UniswapWrapper:
         function = self.contract[token].functions.addLiquidity(*func_params)
         self._build_and_send_tx(function, tx_params)
 
-    def remove_liquidity(self, token, max_token, min_liquidity=1, deadline=None):
+    def remove_liquidity(self, token, max_token, deadline=None):
         """Remove liquidity from the pool."""
         deadline = int(time.time()) + 1000 if not deadline else deadline
         tx_params = self._get_tx_params()
