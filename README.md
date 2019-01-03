@@ -123,6 +123,8 @@ uniswap_wrapper.removeliquidity("bat", 1*10**18)
 ## Testing
 Unit tests are under development using the pytest framework. Contributions are welcome!
 
+Test are run on the Rinkeby network.
+
 To run the full test suite and ignore warnings, in the project directory run:
 
 ```
