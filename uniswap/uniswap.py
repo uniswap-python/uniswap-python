@@ -66,10 +66,7 @@ class UniswapWrapper:
         def approved(self, *args):
             token = args[0]
             is_approved = self._is_approved(token)
-            print('in')
-            print(is_approved)
             if not is_approved:
-                print('in')
                 self.approve_exchange(token)
             return method(self, *args)
         return approved
@@ -124,7 +121,7 @@ class UniswapWrapper:
     def add_liquidity(self, token, max_eth, min_liquidity=1, deadline=None):
         """Add liquidity to the pool."""
         deadline = int(time.time()) + 1000 if not deadline else deadline
-        tx_params = self._get_tx_params(max_eth)
+        tx_params = self._get_tx_params(int(max_eth))
         max_token = int(max_eth * self.get_exchange_rate(token))
         func_params = [min_liquidity, max_token, deadline]
         function = self.contract[token].functions.addLiquidity(*func_params)
@@ -135,7 +132,7 @@ class UniswapWrapper:
         """Remove liquidity from the pool."""
         deadline = int(time.time()) + 1000 if not deadline else deadline
         tx_params = self._get_tx_params()
-        func_params = [max_token, 1, 1, deadline]
+        func_params = [int(max_token), 1, 1, deadline]
         function = self.contract[token].functions.removeLiquidity(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
@@ -157,7 +154,6 @@ class UniswapWrapper:
         amount = (
             self.erc20_contract[token].call().allowance(self.address, exchange_addr)
         )
-
         if amount >= self.max_approval_check_int:
             return True
         else:
@@ -185,10 +181,11 @@ if __name__ == "__main__":
     address = os.environ["ETH_ADDRESS"]
     priv_key = os.environ["ETH_PRIV_KEY"]
     provider = os.environ["TESTNET_PROVIDER"]
+    # us = UniswapWrapper(address, priv_key)
     us = UniswapWrapper(address, priv_key, provider)
     one_eth = 1 * 10 ** 18
-    qty = 0.000001 * one_eth
+    qty = 0.0001 * one_eth
     token = "bat"
     out_token = "eth"
 
-    print(us.add_liquidity(token, qty))
+    print(us.remove_liquidity(token, qty))
