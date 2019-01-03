@@ -28,11 +28,19 @@ class UniswapWrapper:
         self.max_approval_check_int = int(self.max_approval_check, 16)
 
         # Initialize address and contract
-        path = "./uniswap/"
-        with open(os.path.abspath(path + "contract_addresses.JSON")) as f:
-            contract_addresses = json.load(f)
-        with open(os.path.abspath(path + "token_addresses.JSON")) as f:
-            self.token_address = json.load(f)
+        path = "./uniswap/assets/"
+        # Mainnet vs. testnet addressess
+        if not provider:
+            with open(os.path.abspath(path + "contract_addresses.JSON")) as f:
+                contract_addresses = json.load(f)
+            with open(os.path.abspath(path + "token_addresses.JSON")) as f:
+                self.token_address = json.load(f)
+        else:
+            with open(os.path.abspath(path + "contract_addresses_testnet.JSON")) as f:
+                contract_addresses = json.load(f)
+            with open(os.path.abspath(path + "token_addresses_testnet.JSON")) as f:
+                self.token_address = json.load(f)
+
         with open(os.path.abspath(path + "uniswap_exchange.abi")) as f:
             exchange_abi = json.load(f)
         with open(os.path.abspath(path + "erc20.abi")) as f:
@@ -128,6 +136,30 @@ class UniswapWrapper:
         function = self.contract[token].functions.removeLiquidity(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
+    # ------ Approval Utils ------------------------------------------------------------
+    def approve_exchange(self, token, max_approval=None):
+        """Give an exchange max approval of a token."""
+        max_approval = self.max_approval_int if not max_approval else max_approval
+        tx_params = self._get_tx_params()
+        exchange_addr = self.token_exchange_address[token]
+        function = self.erc20_contract[token].functions.approve(exchange_addr, max_approval)
+        tx = self._build_and_send_tx(function, tx_params)
+        self.w3.eth.waitForTransactionReceipt(tx, timeout=6000)
+        # Add extra sleep to let tx propogate correctly
+        time.sleep(1)
+
+    def _is_approved(self, token):
+        """Check to see if the exchange and token is approved."""
+        exchange_addr = self.token_exchange_address[token]
+        amount = (
+            self.erc20_contract[token].call().allowance(self.address, exchange_addr)
+        )
+
+        if amount <= self.max_approval_check_int:
+            return True
+        else:
+            return False
+
     # ------ Tx Utils-------------------------------------------------------------------
     def _build_and_send_tx(self, function, tx_params):
         """Build and send a transaction."""
@@ -146,40 +178,14 @@ class UniswapWrapper:
             "nonce": self.w3.eth.getTransactionCount(self.address),
         }
 
-    # ------ Approval Utils ------------------------------------------------------------
-    def approve_exchange(self, token, max_approval=None):
-        """Give an exchange max approval of a token."""
-        max_approval = self.max_approval_int if not max_approval else max_approval
-        exchange_addr = self.token_exchange_address[token]
-        tx = (
-            self.erc20_contract[token]
-            .functions.approve(exchange_addr, max_approval)
-            .transact({"from": self.address})
-        )
-        self.w3.eth.waitForTransactionReceipt(tx, timeout=6000)
-        # Add extra sleep to let tx propogate correctly
-        time.sleep(1)
-
-    def _is_approved(self, token):
-        """Check to see if the exchange and token is approved."""
-        exchange_addr = self.token_exchange_address[token]
-        amount = (
-            self.erc20_contract[token].call().allowance(self.address, exchange_addr)
-        )
-
-        if amount <= self.max_approval_check_int:
-            return True
-        else:
-            return False
-
-
 if __name__ == "__main__":
     address = os.environ["ETH_ADDRESS"]
     priv_key = os.environ["ETH_PRIV_KEY"]
-    us = UniswapWrapper(address, priv_key)
+    provider = os.environ["TESTNET_PROVIDER"]
+    us = UniswapWrapper(address, priv_key, provider)
     one_eth = 1 * 10 ** 18
     qty = 0.000001 * one_eth
     token = "bat"
     out_token = "eth"
 
-    print(us.get_eth_balance(token))
+    print(us.add_liquidity(token, qty))
