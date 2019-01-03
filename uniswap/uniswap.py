@@ -6,9 +6,13 @@ from web3 import Web3
 
 
 class UniswapWrapper:
-    def __init__(self, address, private_key):
-        # Initialize web3
-        self.provider = os.environ["PROVIDER"]
+    def __init__(self, address, private_key, provider=None):
+        # Initialize web3. Extra provider for testing.
+        if not provider:
+            self.provider = os.environ["PROVIDER"]
+        else:
+            self.provider = provider
+
         self.w3 = Web3(Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60}))
         self.address = address
         self.private_key = private_key
