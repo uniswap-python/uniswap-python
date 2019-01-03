@@ -85,6 +85,7 @@ class UniswapWrapper:
 
     # ------ Liquidity --------------------------------------------------------
     def add_liquidity(self, token, max_eth, min_liquidity=1, deadline=None):
+        """Add liquidity to the pool."""
         deadline = int(time.time()) + 1000 if not deadline else deadline
         tx_params = self._get_tx_params(max_eth)
         max_token = int(max_eth * self.get_exchange_rate(token))
@@ -93,6 +94,7 @@ class UniswapWrapper:
         self._build_and_send_tx(function, tx_params)
 
     def remove_liquidity(self, token, max_token, min_liquidity=1, deadline=None):
+        """Remove liquidity from the pool."""
         deadline = int(time.time()) + 1000 if not deadline else deadline
         tx_params = self._get_tx_params()
         func_params = [max_token, 1, 1, deadline]
@@ -101,13 +103,15 @@ class UniswapWrapper:
 
     # ------ Tx Utils-------------------------------------------------------------------
     def _build_and_send_tx(self, function, tx_params):
+
         """Build and send a transaction."""
         transaction = function.buildTransaction(tx_params)
         signed_txn = self.w3.eth.account.signTransaction(transaction,
                                                          private_key=self.private_key)
         self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
-    def _get_tx_params(self, value=0, gas=1000000):
+    def _get_tx_params(self, value=0, gas=100000):
+        """Get generic transaction parameters."""
         return {
             'from': self.address,
             'value': value,
