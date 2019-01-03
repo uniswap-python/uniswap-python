@@ -34,7 +34,7 @@ pip install git+git://github.com/shanefontaine/uniswap-python.git
 ```
 
 ### Environment Variables
-The program expects an environment variables to be set in order to run the program. It is:
+The program expects an environment variables to be set in order to run the program. You can use an Infura node, since the transactions are being signed locally and broadcast as a raw transaction. The environment variable is:
 
 ```
 PROVIDER  # HTTP Provider for web3
