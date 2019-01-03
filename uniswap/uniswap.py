@@ -154,12 +154,12 @@ class UniswapWrapper:
         """Make a trade by defining the qty of the input token."""
         qty = int(qty)
         if input_token == 'eth':
-            return self._eth_to_token_swap_input(output_token, qty, self._deadline())
+            return self._eth_to_token_swap_input(output_token, qty)
         else:
             if output_token == 'eth':
-                return self._token_to_eth_swap_input(input_token, qty, self._deadline())
+                return self._token_to_eth_swap_input(input_token, qty)
             else:
-                return self._token_to_token_swap_input(input_token, qty, self._deadline(), output_token)
+                return self._token_to_token_swap_input(input_token, qty, output_token)
 
     @check_approval
     def make_trade_output(self, input_token, output_token, qty):
