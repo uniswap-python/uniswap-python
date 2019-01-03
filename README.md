@@ -132,6 +132,10 @@ python -m pytest -W ignore::DeprecationWarning
 ```
 
 ## Changelog
+_0.3.0_
+- Add ability to make all types of trades
+- Add example to README
+
 _0.2.1_
 - Add liquidity tests
 
