@@ -168,7 +168,7 @@ class UniswapWrapper:
             self.erc20_contract[token].call().allowance(self.address, exchange_addr)
         )
 
-        if amount <= self.max_approval_check:
+        if amount <= self.max_approval_check_int:
             return True
         else:
             return False
