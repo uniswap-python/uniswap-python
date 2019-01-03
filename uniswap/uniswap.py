@@ -66,7 +66,8 @@ class UniswapWrapper:
             need to be approved."""
         def approved(self, *args):
             # Check to see if the first token is actually ETH
-            token = args[0] if token != 'eth' else None
+            token = args[0] if args[0] != 'eth' else None
+            token_two = None
 
             # Check second token, if needed
             if method.__name__ == 'make_trade':
@@ -75,8 +76,8 @@ class UniswapWrapper:
             # Approve both tokens, if needed
             if token:
                 is_approved = self._is_approved(token)
-                    if not is_approved:
-                        self.approve_exchange(token)
+                if not is_approved:
+                    self.approve_exchange(token)
             if token_two:
                 is_approved = self._is_approved(token_two)
                 if not is_approved:
