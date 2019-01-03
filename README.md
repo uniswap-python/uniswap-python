@@ -1,6 +1,7 @@
 # uniswap-python
 
 [![Build Status](https://travis-ci.org/shanefontaine/uniswap-python.svg?branch=master)](https://travis-ci.org/shanefontaine/uniswap-python)
+[![Downloads](https://pepy.tech/badge/uniswap-python)](https://pepy.tech/project/uniswap-python)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/shanefontaine/uniswap-python/master/LICENSE)
 
 The unofficial Python client for the [Uniswap](https://uniswap.io/).
@@ -48,12 +49,12 @@ uniswap_wrapper = uniswap.UniswapWrapper()
 ```
 
 #### Market Methods
-- get_fee_maker
+- [get_fee_maker](https://docs.uniswap.io/)
 ```python
 uniswap_wrapper.get_fee_maker()
 ```
 
-- get_fee_taker
+- [get_fee_taker](https://docs.uniswap.io/)
 ```python
 uniswap_wrapper.get_fee_taker()
 ```
