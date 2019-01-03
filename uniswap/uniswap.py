@@ -16,6 +16,8 @@ class UniswapWrapper:
         self.w3 = Web3(Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60}))
         self.address = address
         self.private_key = private_key
+        self.max_approval_hex = "0x" + "f" * 64
+        self.max_approval_int = int(self.max_approval_hex, 16)
 
         # Initialize address and contract
         path = "./uniswap/"
@@ -123,6 +125,31 @@ class UniswapWrapper:
             "nonce": self.w3.eth.getTransactionCount(self.address),
         }
 
+    # ------ Approval Utils ------------------------------------------------------------
+    def approve_exchange(self, token, max_approval=None):
+        """Give an exchange max approval of a token."""
+        max_approval = self.max_approval_int if not max_approval else max_approval
+        exchange_addr = self.token_exchange_address[token]
+        tx = (
+            self.erc20_contract[token]
+            .functions.approve(exchange_addr, max_approval)
+            .transact({"from": self.address})
+        )
+        self.w3.eth.waitForTransactionReceipt(tx, timeout=6000)
+        # Add extra sleep to let tx propogate correctly
+        time.sleep(1)
+
+    def _is_approved(self, token):
+        """Check to see if the exchange and token is approved."""
+        exchange_addr = self.token_exchange_address[token]
+        amount = (
+            self.erc20_contract[token].call().allowance(self.address, exchange_addr)
+        )
+        if amount == self.max_approval_int:
+            return True
+        else:
+            return False
+
 
 if __name__ == "__main__":
     address = os.environ["ETH_ADDRESS"]
@@ -133,4 +160,4 @@ if __name__ == "__main__":
     token = "bat"
     out_token = "eth"
 
-    print(us.remove_liquidity(token, int(qty)))
+    print(us._is_approved(token))
