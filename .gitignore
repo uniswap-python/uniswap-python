@@ -2,6 +2,7 @@ api.txt
 test.py
 *.swp
 contracts/
+.github/
 
 build/
 dist/
