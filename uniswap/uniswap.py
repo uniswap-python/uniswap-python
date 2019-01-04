@@ -168,12 +168,12 @@ class UniswapWrapper:
         """Make a trade by defining the qty of the output token."""
         qty = int(qty)
         if input_token == "eth":
-            return self._eth_to_token_swap_output(output_token, qty)
+            return self._eth_to_token_swap_output(output_token, qty, recipient)
         else:
             if output_token == "eth":
-                return self._token_to_eth_swap_output(input_token, qty)
+                return self._token_to_eth_swap_output(input_token, qty, recipient)
             else:
-                return self._token_to_token_swap_output(input_token, qty, output_token)
+                return self._token_to_token_swap_output(input_token, qty, output_token, recipient)
 
     def _eth_to_token_swap_input(self, output_token, qty, recipient):
         """Convert ETH to tokens given an input amount."""
@@ -207,7 +207,7 @@ class UniswapWrapper:
         if not recipient:
             function = token_funcs.tokenToTokenSwapInput(*func_params)
         else:
-            func_params.append(recipient)
+            func_params.insert(len(func_params) - 1, recipient)
             function = token_funcs.tokenToTokenTransferInput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
@@ -254,7 +254,7 @@ class UniswapWrapper:
         if not recipient:
             function = token_funcs.tokenToTokenSwapOutput(*func_params)
         else:
-            func_params.append(recipient)
+            func_params.insert(len(func_params) - 1, recipient)
             function = token_funcs.tokenToTokenTransferOutput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
@@ -296,7 +296,7 @@ class UniswapWrapper:
         )
         return self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
-    def _get_tx_params(self, value=0, gas=100000):
+    def _get_tx_params(self, value=0, gas=150000):
         """Get generic transaction parameters."""
         return {
             "from": self.address,
