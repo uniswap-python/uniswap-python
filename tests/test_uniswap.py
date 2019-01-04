@@ -120,8 +120,7 @@ class TestUniswap(object):
     def test_add_liquidity(self, client, web3_provider, token, max_eth):
         r = client.add_liquidity(token, max_eth)
         tx = web3_provider.eth.waitForTransactionReceipt(r, timeout=6000)
-        status = web3_provider.eth.getTransactionReceipt(tx.transactionHash).status
-        assert status
+        assert tx.status
 
 
     @pytest.mark.skip
@@ -135,7 +134,29 @@ class TestUniswap(object):
     def test_remove_liquidity(self, client, web3_provider, token, max_token):
         r = client.remove_liquidity(token, max_token)
         tx = web3_provider.eth.waitForTransactionReceipt(r)
-        print(tx)
-        status = web3_provider.eth.getTransactionReceipt(tx.transactionHash).status
-        print(r)
-        assert bool(r)
+        assert tx.status
+
+    # ------ Trading -------------------------------------------------------------------
+    @pytest.mark.parametrize("input_token, output_token, qty", [
+        ("eth", "bat", 0.00000005 * ONE_ETH),
+        ("bat", "eth", 0.00000005 * ONE_ETH),
+        ("dai", "bat", 0.00000001 * ONE_ETH),
+        pytest.param("dai", "btc", ONE_ETH,
+                     marks=pytest.mark.xfail)
+        ])
+    def test_make_trade(self, client, web3_provider, input_token, output_token, qty):
+        r = client.make_trade(input_token, output_token, qty)
+        tx = web3_provider.eth.waitForTransactionReceipt(r)
+        assert tx.status
+
+    @pytest.mark.parametrize("input_token, output_token, qty", [
+        ("eth", "bat", 0.00000005 * ONE_ETH),
+        ("bat", "eth", 0.00000005 * ONE_ETH),
+        ("dai", "bat", 0.00000001 * ONE_ETH),
+        pytest.param("dai", "btc", ONE_ETH,
+                     marks=pytest.mark.xfail)
+        ])
+    def test_make_trade_output(self, client, web3_provider, input_token, output_token, qty):
+        r = client.make_trade_output(input_token, output_token, qty)
+        tx = web3_provider.eth.waitForTransactionReceipt(r)
+        assert tx.status
