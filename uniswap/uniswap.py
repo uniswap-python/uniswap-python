@@ -71,7 +71,7 @@ class UniswapWrapper:
             token_two = None
 
             # Check second token, if needed
-            if method.__name__ == "make_trade":
+            if method.__name__ == "make_trade" or method.__name__ == "make_trade_output":
                 token_two = args[1] if args[1] != "eth" else None
 
             # Approve both tokens, if needed
@@ -150,21 +150,21 @@ class UniswapWrapper:
         function = self.contract[token].functions.removeLiquidity(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
-    # ------ Trading -------------------------------------------------------------------
+    # ------ Make Trade ----------------------------------------------------------------
     @check_approval
-    def make_trade(self, input_token, output_token, qty):
+    def make_trade(self, input_token, output_token, qty, recipient=None):
         """Make a trade by defining the qty of the input token."""
         qty = int(qty)
         if input_token == "eth":
-            return self._eth_to_token_swap_input(output_token, qty)
+            return self._eth_to_token_swap_input(output_token, qty, recipient)
         else:
             if output_token == "eth":
-                return self._token_to_eth_swap_input(input_token, qty)
+                return self._token_to_eth_swap_input(input_token, qty, recipient)
             else:
-                return self._token_to_token_swap_input(input_token, qty, output_token)
+                return self._token_to_token_swap_input(input_token, qty, output_token, recipient)
 
     @check_approval
-    def make_trade_output(self, input_token, output_token, qty):
+    def make_trade_output(self, input_token, output_token, qty, recipient=None):
         """Make a trade by defining the qty of the output token."""
         qty = int(qty)
         if input_token == "eth":
@@ -175,49 +175,69 @@ class UniswapWrapper:
             else:
                 return self._token_to_token_swap_output(input_token, qty, output_token)
 
-    def _eth_to_token_swap_input(self, output_token, qty):
+    def _eth_to_token_swap_input(self, output_token, qty, recipient):
         """Convert ETH to tokens given an input amount."""
         token_funcs = self.contract[output_token].functions
         tx_params = self._get_tx_params(qty)
         func_params = [qty, self._deadline()]
-        function = token_funcs.ethToTokenSwapInput(*func_params)
+        if not recipient:
+            function = token_funcs.ethToTokenSwapInput(*func_params)
+        else:
+            func_params.append(recipient)
+            function = token_funcs.ethToTokenTransferInput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
-    def _token_to_eth_swap_input(self, input_token, qty):
+    def _token_to_eth_swap_input(self, input_token, qty, recipient):
         """Convert tokens to ETH given an input amount."""
         token_funcs = self.contract[input_token].functions
         tx_params = self._get_tx_params()
         func_params = [qty, 1, self._deadline()]
-        function = token_funcs.tokenToEthSwapInput(*func_params)
+        if not recipient:
+            function = token_funcs.tokenToEthSwapInput(*func_params)
+        else:
+            func_params.append(recipient)
+            function = token_funcs.tokenToEthTransferInput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
-    def _token_to_token_swap_input(self, input_token, qty, output_token):
+    def _token_to_token_swap_input(self, input_token, qty, output_token, recipient):
         """Convert tokens to tokens given an input amount."""
         token_funcs = self.contract[input_token].functions
         tx_params = self._get_tx_params()
         func_params = [qty, 1, 1, self._deadline(), self.token_address[output_token]]
-        function = token_funcs.tokenToTokenSwapInput(*func_params)
+        if not recipient:
+            function = token_funcs.tokenToTokenSwapInput(*func_params)
+        else:
+            func_params.append(recipient)
+            function = token_funcs.tokenToTokenTransferInput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
-    def _eth_to_token_swap_output(self, output_token, qty):
+    def _eth_to_token_swap_output(self, output_token, qty, recipient):
         """Convert ETH to tokens given an output amount."""
         token_funcs = self.contract[output_token].functions
         eth_qty = self.get_eth_token_output_price(output_token, qty)
         tx_params = self._get_tx_params(eth_qty)
         func_params = [qty, self._deadline()]
-        function = token_funcs.ethToTokenSwapOutput(*func_params)
+        if not recipient:
+            function = token_funcs.ethToTokenSwapOutput(*func_params)
+        else:
+            func_params.append(recipient)
+            function = token_funcs.ethToTokenTransferOutput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
-    def _token_to_eth_swap_output(self, input_token, qty):
+    def _token_to_eth_swap_output(self, input_token, qty, recipient):
         """Convert tokens to ETH given an output amount."""
         token_funcs = self.contract[input_token].functions
         max_token = self.get_token_eth_output_price(input_token, qty)
         tx_params = self._get_tx_params()
         func_params = [qty, max_token, self._deadline()]
-        function = token_funcs.tokenToEthSwapOutput(*func_params)
+        if not recipient:
+            function = token_funcs.tokenToEthSwapOutput(*func_params)
+        else:
+            func_params.append(recipient)
+            function = token_funcs.tokenToEthTransferOutput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
-    def _token_to_token_swap_output(self, input_token, qty, output_token):
+    def _token_to_token_swap_output(self, input_token, qty, output_token, recipient):
         """Convert tokens to tokens given an output amount."""
         token_funcs = self.contract[input_token].functions
         max_input_token, max_eth_sold = self._calculate_max_input_token(
@@ -231,7 +251,11 @@ class UniswapWrapper:
             self._deadline(),
             self.token_address[output_token],
         ]
-        function = token_funcs.tokenToTokenSwapOutput(*func_params)
+        if not recipient:
+            function = token_funcs.tokenToTokenSwapOutput(*func_params)
+        else:
+            func_params.append(recipient)
+            function = token_funcs.tokenToTokenTransferOutput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
     # ------ Approval Utils ------------------------------------------------------------
@@ -306,12 +330,14 @@ class UniswapWrapper:
 if __name__ == "__main__":
     address = os.environ["ETH_ADDRESS"]
     priv_key = os.environ["ETH_PRIV_KEY"]
-    # provider = os.environ["TESTNET_PROVIDER"]
-    us = UniswapWrapper(address, priv_key)
-    # us = UniswapWrapper(address, priv_key, provider)
+    provider = os.environ["TESTNET_PROVIDER"]
+    w3 = Web3(Web3.HTTPProvider(provider, request_kwargs={"timeout": 60}))
+
+    # us = UniswapWrapper(address, priv_key)
+    us = UniswapWrapper(address, priv_key, provider)
     one_eth = 1 * 10 ** 18
-    qty = 0.0001 * one_eth
-    input_token = "dai"
+    ZERO_ADDRESS = '0x0000000000000000000000000000000000000001'
+    qty = 0.00000005 * one_eth
+    input_token = "eth"
     output_token = "bat"
-    # print(us.get_eth_token_output_price(input_token, int(qty)))
-    print(us.make_trade_output(input_token, output_token, qty))
+    print(us.make_trade(input_token, output_token, qty, ZERO_ADDRESS))
