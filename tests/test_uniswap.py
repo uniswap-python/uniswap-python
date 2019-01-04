@@ -109,11 +109,9 @@ class TestUniswap(object):
         assert bool(r)
 
     # ------ Liquidity -----------------------------------------------------------------
-    @pytest.mark.skip
     @pytest.mark.parametrize("token, max_eth", [
-        ("bat", 0.00000005 * ONE_ETH),
-        ("dai", 0.00000005 * ONE_ETH),
-        ("bat", 0.00000001 * ONE_ETH),
+        ("bat", 0.0005 * ONE_ETH),
+        ("dai", 0.0005 * ONE_ETH),
         pytest.param("btc", ONE_ETH,
                      marks=pytest.mark.xfail)
         ])
@@ -123,11 +121,9 @@ class TestUniswap(object):
         assert tx.status
 
 
-    @pytest.mark.skip
     @pytest.mark.parametrize("token, max_token", [
-        ("bat", 0.00000005 * ONE_ETH),
-        ("dai", 0.00000005 * ONE_ETH),
-        ("bat", 0.00000001 * ONE_ETH),
+        ("bat", 0.0005 * ONE_ETH),
+        ("dai", 0.0005 * ONE_ETH),
         pytest.param("btc", ONE_ETH,
                      marks=pytest.mark.xfail)
         ])
