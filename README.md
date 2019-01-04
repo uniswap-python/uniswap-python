@@ -137,8 +137,6 @@ uniswap_wrapper.make_trade_output("bat", "eth", 1*10**18) # calls _token_to_eth_
 uniswap_wrapper.make_trade_output("bat", "dai", 1*10**18) # calls _token_to_token_swap_output
 ```
 
-
-
 ## Testing
 Unit tests are under development using the pytest framework. Contributions are welcome!
 
