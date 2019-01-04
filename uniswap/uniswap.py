@@ -64,14 +64,15 @@ class UniswapWrapper:
     def check_approval(method):
         """Decorator to check if user is approved for a token. It approves them if they
             need to be approved."""
+
         def approved(self, *args):
             # Check to see if the first token is actually ETH
-            token = args[0] if args[0] != 'eth' else None
+            token = args[0] if args[0] != "eth" else None
             token_two = None
 
             # Check second token, if needed
-            if method.__name__ == 'make_trade':
-                token_two = args[1] if args[1] != 'eth' else None
+            if method.__name__ == "make_trade":
+                token_two = args[1] if args[1] != "eth" else None
 
             # Approve both tokens, if needed
             if token:
@@ -83,6 +84,7 @@ class UniswapWrapper:
                 if not is_approved:
                     self.approve_exchange(token_two)
             return method(self, *args)
+
         return approved
 
     # ------ Exchange ------------------------------------------------------------------
@@ -153,10 +155,10 @@ class UniswapWrapper:
     def make_trade(self, input_token, output_token, qty):
         """Make a trade by defining the qty of the input token."""
         qty = int(qty)
-        if input_token == 'eth':
+        if input_token == "eth":
             return self._eth_to_token_swap_input(output_token, qty)
         else:
-            if output_token == 'eth':
+            if output_token == "eth":
                 return self._token_to_eth_swap_input(input_token, qty)
             else:
                 return self._token_to_token_swap_input(input_token, qty, output_token)
@@ -165,10 +167,10 @@ class UniswapWrapper:
     def make_trade_output(self, input_token, output_token, qty):
         """Make a trade by defining the qty of the output token."""
         qty = int(qty)
-        if input_token == 'eth':
+        if input_token == "eth":
             return self._eth_to_token_swap_output(output_token, qty)
         else:
-            if output_token == 'eth':
+            if output_token == "eth":
                 return self._token_to_eth_swap_output(input_token, qty)
             else:
                 return self._token_to_token_swap_output(input_token, qty, output_token)
@@ -218,9 +220,17 @@ class UniswapWrapper:
     def _token_to_token_swap_output(self, input_token, qty, output_token):
         """Convert tokens to tokens given an output amount."""
         token_funcs = self.contract[input_token].functions
-        max_input_token, max_eth_sold = self._calculate_max_input_token(input_token, qty, output_token)
+        max_input_token, max_eth_sold = self._calculate_max_input_token(
+            input_token, qty, output_token
+        )
         tx_params = self._get_tx_params()
-        func_params = [qty, max_input_token, max_eth_sold, self._deadline(), self.token_address[output_token]]
+        func_params = [
+            qty,
+            max_input_token,
+            max_eth_sold,
+            self._deadline(),
+            self.token_address[output_token],
+        ]
         function = token_funcs.tokenToTokenSwapOutput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
@@ -230,7 +240,9 @@ class UniswapWrapper:
         max_approval = self.max_approval_int if not max_approval else max_approval
         tx_params = self._get_tx_params()
         exchange_addr = self.token_exchange_address[token]
-        function = self.erc20_contract[token].functions.approve(exchange_addr, max_approval)
+        function = self.erc20_contract[token].functions.approve(
+            exchange_addr, max_approval
+        )
         tx = self._build_and_send_tx(function, tx_params)
         self.w3.eth.waitForTransactionReceipt(tx, timeout=6000)
         # Add extra sleep to let tx propogate correctly
