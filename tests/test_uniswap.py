@@ -27,7 +27,7 @@ def web3_provider():
 class TestUniswap(object):
 
     ONE_ETH = 1*10**18
-    ZERO_ADDRESS = '0x0000000000000000000000000000000000000001'
+    ZERO_ADDRESS = '0xD6aE8250b8348C94847280928c79fb3b63cA453e'
 
     # ------ Exchange ------------------------------------------------------------------
     def test_get_fee_maker(self, client):
@@ -109,7 +109,7 @@ class TestUniswap(object):
         assert bool(r)
 
     # ------ Liquidity -----------------------------------------------------------------
-    @pytest.mark.skip
+    # @pytest.mark.skip
     @pytest.mark.parametrize("token, max_eth", [
         ("bat", 0.00001 * ONE_ETH),
         ("dai", 0.00001 * ONE_ETH),
@@ -121,7 +121,7 @@ class TestUniswap(object):
         tx = web3_provider.eth.waitForTransactionReceipt(r, timeout=6000)
         assert tx.status
 
-    @pytest.mark.skip
+    # @pytest.mark.skip
     @pytest.mark.parametrize("token, max_token", [
         ("bat", 0.00001 * ONE_ETH),
         ("dai", 0.00001 * ONE_ETH),
@@ -140,7 +140,7 @@ class TestUniswap(object):
         ("bat", "eth", 0.00001 * ONE_ETH, None),
         ("dai", "bat", 0.00001 * ONE_ETH, None),
         ("eth", "bat", 0.00001 * ONE_ETH, ZERO_ADDRESS),
-        # ("bat", "eth", 0.00001 * ONE_ETH, ZERO_ADDRESS), # This test fails for some reason
+        ("bat", "eth", 0.00001 * ONE_ETH, ZERO_ADDRESS),
         ("dai", "bat", 0.00001 * ONE_ETH, ZERO_ADDRESS),
         pytest.param("dai", "btc", ONE_ETH, None,
                      marks=pytest.mark.xfail)
@@ -158,7 +158,7 @@ class TestUniswap(object):
         ("bat", "eth", 0.00001 * ONE_ETH, None),
         ("dai", "bat", 0.00001 * ONE_ETH, None),
         ("eth", "bat", 0.00001 * ONE_ETH, ZERO_ADDRESS),
-        # ("bat", "eth", 0.00001 * ONE_ETH, ZERO_ADDRESS), # This test fails for some reason
+        ("bat", "eth", 0.00001 * ONE_ETH, ZERO_ADDRESS),
         ("dai", "bat", 0.00001 * ONE_ETH, ZERO_ADDRESS),
         pytest.param("dai", "btc", ONE_ETH, None,
                      marks=pytest.mark.xfail)

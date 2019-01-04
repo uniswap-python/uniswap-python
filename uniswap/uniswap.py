@@ -137,7 +137,9 @@ class UniswapWrapper:
     def add_liquidity(self, token, max_eth, min_liquidity=1):
         """Add liquidity to the pool."""
         tx_params = self._get_tx_params(int(max_eth))
-        max_token = int(max_eth * self.get_exchange_rate(token))
+        # Add 1 to avoid rounding errors, per
+        # https://hackmd.io/hthz9hXKQmSyXfMbPsut1g#Add-Liquidity-Calculations
+        max_token = int(max_eth * self.get_exchange_rate(token)) + 10
         func_params = [min_liquidity, max_token, self._deadline()]
         function = self.contract[token].functions.addLiquidity(*func_params)
         return self._build_and_send_tx(function, tx_params)
