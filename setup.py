@@ -15,7 +15,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="uniswap-python",
-    version="0.3.1",
+    version="0.3.2",
     author="Shane Fontaine",
     author_email="shane6fontaine@gmail.com",
     license='MIT',
