@@ -27,7 +27,7 @@ def web3_provider():
 class TestUniswap(object):
 
     ONE_ETH = 1*10**18
-
+    ZERO_ADDRESS = '0x0000000000000000000000000000000000000001'
 
     # ------ Exchange ------------------------------------------------------------------
     def test_get_fee_maker(self, client):
@@ -133,27 +133,35 @@ class TestUniswap(object):
         tx = web3_provider.eth.waitForTransactionReceipt(r)
         assert tx.status
 
-    # ------ Trading -------------------------------------------------------------------
-    @pytest.mark.parametrize("input_token, output_token, qty", [
-        ("eth", "bat", 0.00000005 * ONE_ETH),
-        ("bat", "eth", 0.00000005 * ONE_ETH),
-        ("dai", "bat", 0.00000001 * ONE_ETH),
-        pytest.param("dai", "btc", ONE_ETH,
+    # ------ Make Trade ----------------------------------------------------------------
+    @pytest.mark.skip
+    @pytest.mark.parametrize("input_token, output_token, qty, recipient", [
+        ("eth", "bat", 0.00000005 * ONE_ETH, None),
+        ("bat", "eth", 0.00000005 * ONE_ETH, None),
+        ("dai", "bat", 0.00000001 * ONE_ETH, None),
+        ("eth", "bat", 0.00000005 * ONE_ETH, ZERO_ADDRESS),
+        ("bat", "eth", 0.00000005 * ONE_ETH, ZERO_ADDRESS),
+        ("dai", "bat", 0.00000001 * ONE_ETH, ZERO_ADDRESS),
+        pytest.param("dai", "btc", ONE_ETH, None,
                      marks=pytest.mark.xfail)
         ])
-    def test_make_trade(self, client, web3_provider, input_token, output_token, qty):
-        r = client.make_trade(input_token, output_token, qty)
+    def test_make_trade(self, client, web3_provider, input_token, output_token, qty, recipient):
+        r = client.make_trade(input_token, output_token, qty, recipient)
         tx = web3_provider.eth.waitForTransactionReceipt(r)
         assert tx.status
 
-    @pytest.mark.parametrize("input_token, output_token, qty", [
-        ("eth", "bat", 0.00000005 * ONE_ETH),
-        ("bat", "eth", 0.00000005 * ONE_ETH),
-        ("dai", "bat", 0.00000001 * ONE_ETH),
-        pytest.param("dai", "btc", ONE_ETH,
+    @pytest.mark.skip
+    @pytest.mark.parametrize("input_token, output_token, qty, recipient", [
+        ("eth", "bat", 0.00000005 * ONE_ETH, None),
+        ("bat", "eth", 0.00000005 * ONE_ETH, None),
+        ("dai", "bat", 0.00000001 * ONE_ETH, None),
+        ("eth", "bat", 0.00000005 * ONE_ETH, ZERO_ADDRESS),
+        ("bat", "eth", 0.00000005 * ONE_ETH, ZERO_ADDRESS),
+        ("dai", "bat", 0.00000001 * ONE_ETH, ZERO_ADDRESS),
+        pytest.param("dai", "btc", ONE_ETH, None,
                      marks=pytest.mark.xfail)
         ])
-    def test_make_trade_output(self, client, web3_provider, input_token, output_token, qty):
-        r = client.make_trade_output(input_token, output_token, qty)
+    def test_make_trade_output(self, client, web3_provider, input_token, output_token, qty, recipient):
+        r = client.make_trade_output(input_token, output_token, qty, recipient)
         tx = web3_provider.eth.waitForTransactionReceipt(r)
         assert tx.status
