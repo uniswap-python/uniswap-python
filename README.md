@@ -167,6 +167,9 @@ To run the full test suite and ignore warnings, in the project directory run:
 python -m pytest -W ignore::DeprecationWarning
 ```
 
+## Ownership Disclosure
+- I own some BAT and DAI tokens that are seen in the examples above. These tokens are used only for example purposes and are not meant to be an endorsement. I am not affiliated with BAT, Brave, Basic Attention Token, Brave Browser, DAI, Maker, MakerDAO, or any subsidiaries.
+
 ## Changelog
 _0.3.2_
 - Add ability to transfer tokens after a trade
