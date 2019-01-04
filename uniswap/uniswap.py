@@ -174,6 +174,7 @@ class UniswapWrapper:
                 return self._token_to_token_swap_output(input_token, qty, output_token)
 
     def _eth_to_token_swap_input(self, output_token, qty):
+        """Convert ETH to tokens given an input amount."""
         token_funcs = self.contract[output_token].functions
         tx_params = self._get_tx_params(qty)
         func_params = [qty, self._deadline()]
@@ -181,6 +182,7 @@ class UniswapWrapper:
         return self._build_and_send_tx(function, tx_params)
 
     def _token_to_eth_swap_input(self, input_token, qty):
+        """Convert tokens to ETH given an input amount."""
         token_funcs = self.contract[input_token].functions
         tx_params = self._get_tx_params()
         func_params = [qty, 1, self._deadline()]
@@ -188,6 +190,7 @@ class UniswapWrapper:
         return self._build_and_send_tx(function, tx_params)
 
     def _token_to_token_swap_input(self, input_token, qty, output_token):
+        """Convert tokens to tokens given an input amount."""
         token_funcs = self.contract[input_token].functions
         tx_params = self._get_tx_params()
         func_params = [qty, 1, 1, self._deadline(), self.token_address[output_token]]
@@ -195,6 +198,7 @@ class UniswapWrapper:
         return self._build_and_send_tx(function, tx_params)
 
     def _eth_to_token_swap_output(self, output_token, qty):
+        """Convert ETH to tokens given an output amount."""
         token_funcs = self.contract[output_token].functions
         eth_qty = self.get_eth_token_output_price(output_token, qty)
         tx_params = self._get_tx_params(eth_qty)
@@ -203,16 +207,16 @@ class UniswapWrapper:
         return self._build_and_send_tx(function, tx_params)
 
     def _token_to_eth_swap_output(self, input_token, qty):
+        """Convert tokens to ETH given an output amount."""
         token_funcs = self.contract[input_token].functions
         max_token = self.get_token_eth_output_price(input_token, qty)
-        print(max_token)
-        time.sleep(100)
         tx_params = self._get_tx_params()
         func_params = [qty, max_token, self._deadline()]
         function = token_funcs.tokenToEthSwapOutput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
     def _token_to_token_swap_output(self, input_token, qty, output_token):
+        """Convert tokens to tokens given an output amount."""
         token_funcs = self.contract[input_token].functions
         max_input_token, max_eth_sold = self._calculate_max_input_token(input_token, qty, output_token)
         tx_params = self._get_tx_params()
