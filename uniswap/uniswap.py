@@ -166,12 +166,12 @@ class UniswapWrapper:
         """Make a trade by defining the qty of the output token."""
         qty = int(qty)
         if input_token == 'eth':
-            return self._eth_to_token_swap_input(output_token, qty, self._deadline())
+            return self._eth_to_token_swap_output(output_token, qty)
         else:
             if output_token == 'eth':
-                return self._token_to_eth_swap_input(input_token, qty, self._deadline())
+                return self._token_to_eth_swap_output(input_token, qty)
             else:
-                return self._token_to_token_swap_input(input_token, qty, output_token, self._deadline())
+                return self._token_to_token_swap_output(input_token, qty, output_token)
 
     def _eth_to_token_swap_input(self, output_token, qty):
         token_funcs = self.contract[output_token].functions
@@ -192,6 +192,32 @@ class UniswapWrapper:
         tx_params = self._get_tx_params()
         func_params = [qty, 1, 1, self._deadline(), self.token_address[output_token]]
         function = token_funcs.tokenToTokenSwapInput(*func_params)
+        return self._build_and_send_tx(function, tx_params)
+
+    def _eth_to_token_swap_output(self, output_token, qty):
+        token_funcs = self.contract[output_token].functions
+        eth_qty = self.get_eth_token_output_price(output_token, qty)
+        tx_params = self._get_tx_params(eth_qty)
+        func_params = [qty, self._deadline()]
+        function = token_funcs.ethToTokenSwapOutput(*func_params)
+        return self._build_and_send_tx(function, tx_params)
+
+    def _token_to_eth_swap_output(self, input_token, qty):
+        token_funcs = self.contract[input_token].functions
+        max_token = self.get_token_eth_output_price(input_token, qty)
+        print(max_token)
+        time.sleep(100)
+        tx_params = self._get_tx_params()
+        func_params = [qty, max_token, self._deadline()]
+        function = token_funcs.tokenToEthSwapOutput(*func_params)
+        return self._build_and_send_tx(function, tx_params)
+
+    def _token_to_token_swap_output(self, input_token, qty, output_token):
+        token_funcs = self.contract[input_token].functions
+        max_input_token, max_eth_sold = self._calculate_max_input_token(input_token, qty, output_token)
+        tx_params = self._get_tx_params()
+        func_params = [qty, max_input_token, max_eth_sold, self._deadline(), self.token_address[output_token]]
+        function = token_funcs.tokenToTokenSwapOutput(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
     # ------ Approval Utils ------------------------------------------------------------
@@ -217,7 +243,7 @@ class UniswapWrapper:
         else:
             return False
 
-    # ------ Tx Utils-------------------------------------------------------------------
+    # ------ Tx Utils ------------------------------------------------------------------
     def _deadline(self):
         """Get a predefined deadline."""
         return int(time.time()) + 1000
@@ -239,6 +265,28 @@ class UniswapWrapper:
             "nonce": self.w3.eth.getTransactionCount(self.address),
         }
 
+    # ------ Price Calculation Utils ---------------------------------------------------
+    def _calculate_max_input_token(self, input_token, qty, output_token):
+        """Calculate the max input and max eth sold for a token to token output swap.
+            Equation from: https://hackmd.io/hthz9hXKQmSyXfMbPsut1g"""
+        output_amount_b = qty
+        input_reserve_b = self.get_eth_balance(output_token)
+        output_reserve_b = self.get_token_balance(output_token)
+
+        numerator_b = output_amount_b * input_reserve_b * 1000
+        denominator_b = (output_reserve_b - output_amount_b) * 997
+        input_about_b = numerator_b / denominator_b + 1
+
+        output_amount_a = input_about_b
+        input_reserve_a = self.get_token_balance(input_token)
+        output_reserve_a = self.get_eth_balance(input_token)
+        numerator_a = output_amount_a * input_reserve_a * 1000
+        denominator_a = (output_reserve_a - output_amount_a) * 997
+        input_amount_a = numerator_a / denominator_a - 1
+
+        return int(input_amount_a), int(1.2 * input_about_b)
+
+
 if __name__ == "__main__":
     address = os.environ["ETH_ADDRESS"]
     priv_key = os.environ["ETH_PRIV_KEY"]
@@ -246,8 +294,8 @@ if __name__ == "__main__":
     us = UniswapWrapper(address, priv_key)
     # us = UniswapWrapper(address, priv_key, provider)
     one_eth = 1 * 10 ** 18
-    qty = 0.000001 * one_eth
-    input_token = "bat"
-    output_token = "dai"
-
+    qty = 0.0001 * one_eth
+    input_token = "dai"
+    output_token = "bat"
+    # print(us.get_eth_token_output_price(input_token, int(qty)))
     print(us.make_trade_output(input_token, output_token, qty))
