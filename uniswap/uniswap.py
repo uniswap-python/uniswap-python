@@ -10,8 +10,10 @@ class UniswapWrapper:
         # Initialize web3. Extra provider for testing.
         if not provider:
             self.provider = os.environ["PROVIDER"]
+            self.network = "mainnet"
         else:
             self.provider = provider
+            self.network = "testnet"
 
         self.w3 = Web3(Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60}))
         self.address = address
@@ -30,13 +32,8 @@ class UniswapWrapper:
 
         # Initialize address and contract
         path = "./uniswap/assets/"
-        # Mainnet vs. testnet addressess
-        if not provider:
-            with open(os.path.abspath(path + "contract_addresses.JSON")) as f:
-                token_and_exchange_addresses = json.load(f)
-        else:
-            with open(os.path.abspath(path + "contract_addresses_testnet.JSON")) as f:
-                token_and_exchange_addresses = json.load(f)
+        with open(os.path.abspath(path + "contract_addresses.JSON")) as f:
+            token_and_exchange_addresses = json.load(f)[self.network]
         with open(os.path.abspath(path + "uniswap_exchange.abi")) as f:
             exchange_abi = json.load(f)
         with open(os.path.abspath(path + "erc20.abi")) as f:
