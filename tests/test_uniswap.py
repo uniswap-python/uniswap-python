@@ -112,7 +112,7 @@ class TestUniswap(object):
         assert bool(r)
 
     # ------ Liquidity -----------------------------------------------------------------
-    # @pytest.mark.skip
+    @pytest.mark.skip
     @pytest.mark.parametrize("token, max_eth", [
         (bat, 0.00001 * ONE_ETH),
         (dai, 0.00001 * ONE_ETH),
@@ -124,7 +124,7 @@ class TestUniswap(object):
         tx = web3_provider.eth.waitForTransactionReceipt(r, timeout=6000)
         assert tx.status
 
-    # @pytest.mark.skip
+    @pytest.mark.skip
     @pytest.mark.parametrize("token, max_token", [
         (bat, 0.00001 * ONE_ETH),
         (dai, 0.00001 * ONE_ETH),
@@ -137,7 +137,7 @@ class TestUniswap(object):
         assert tx.status
 
     # ------ Make Trade ----------------------------------------------------------------
-    # @pytest.mark.skip
+    @pytest.mark.skip
     @pytest.mark.parametrize("input_token, output_token, qty, recipient", [
         (eth, bat, 0.00001 * ONE_ETH, None),
         (bat, eth, 0.00001 * ONE_ETH, None),
@@ -155,7 +155,7 @@ class TestUniswap(object):
         tx = web3_provider.eth.getTransactionReceipt(r)
         assert tx.status
 
-    # @pytest.mark.skip
+    @pytest.mark.skip
     @pytest.mark.parametrize("input_token, output_token, qty, recipient", [
         (eth, bat, 0.00001 * ONE_ETH, None),
         (bat, eth, 0.00001 * ONE_ETH, None),
