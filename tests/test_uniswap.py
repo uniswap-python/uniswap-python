@@ -112,7 +112,7 @@ class TestUniswap(object):
         assert bool(r)
 
     # ------ Liquidity -----------------------------------------------------------------
-    @pytest.mark.skip
+    # @pytest.mark.skip
     @pytest.mark.parametrize("token, max_eth", [
         (bat, 0.00001 * ONE_ETH),
         (dai, 0.00001 * ONE_ETH),
