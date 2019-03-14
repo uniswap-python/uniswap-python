@@ -1,5 +1,7 @@
-![unipy](https://user-images.githubusercontent.com/9441295/54372021-b7a99280-4637-11e9-864d-7c515a79d4fa.png)
-
+![unipy]()
+<p align="center">
+  <img width="350" height="200" src="https://user-images.githubusercontent.com/9441295/54372021-b7a99280-4637-11e9-864d-7c515a79d4fa.png">
+</p>
 # uniswap-python
 
 [![Build Status](https://travis-ci.org/shanefontaine/uniswap-python.svg?branch=master)](https://travis-ci.org/shanefontaine/uniswap-python)
