@@ -3,7 +3,6 @@
   <img src="https://github.com/shanefontaine/uniswap-python/blob/master/uniswap/assets/unipy.png" alt="logo" width="600" />
   <br />
   <br />
-  <br />
 </h3>
 
 # uniswap-python
