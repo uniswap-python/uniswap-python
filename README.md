@@ -1,3 +1,11 @@
+<h3 align="center">
+  <br />
+  <img src="https://github.com/shanefontaine/uniswap-python/blob/master/uniswap/assets/unipy.png" alt="logo" width="600" />
+  <br />
+  <br />
+  <br />
+</h3>
+
 # uniswap-python
 
 [![Build Status](https://travis-ci.org/shanefontaine/uniswap-python.svg?branch=master)](https://travis-ci.org/shanefontaine/uniswap-python)
