@@ -6,18 +6,24 @@ from web3 import Web3
 
 
 class UniswapWrapper:
-    def __init__(self, address, private_key, provider=None):
-        # Initialize web3. Extra provider for testing.
-        if not provider:
-            self.provider = os.environ["PROVIDER"]
-            self.network = "mainnet"
-        else:
-            self.provider = provider
-            self.network = "testnet"
+    def __init__(self, address, private_key, provider=None, web3=None):
 
-        self.w3 = Web3(Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60}))
+        if not web3:
+            # Initialize web3. Extra provider for testing.
+            if not provider:
+                self.provider = os.environ["PROVIDER"]
+                self.network = "mainnet"
+            else:
+                self.provider = provider
+                self.network = "testnet"
+
+            self.w3 = Web3(Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60}))
+        else:
+            self.w3 = web3
+            self.network = "mainnet"
         self.address = address
         self.private_key = private_key
+
 
         # This code automatically approves you for trading on the exchange.
         # max_approval is to allow the contract to exchange on your behalf.
@@ -31,7 +37,7 @@ class UniswapWrapper:
         self.max_approval_check_int = int(self.max_approval_check_hex, 16)
 
         # Initialize address and contract
-        path = "./uniswap/assets/"
+        path = f"{os.path.dirname(os.path.abspath(__file__))}/assets/"
         with open(os.path.abspath(path + "contract_addresses.JSON")) as f:
             token_and_exchange_addresses = json.load(f)[self.network]
         with open(os.path.abspath(path + "uniswap_exchange.abi")) as f:
@@ -348,3 +354,4 @@ if __name__ == "__main__":
 
     print(us.make_trade_output(bat_test, eth_test, 0.00001 * ONE_ETH, ZERO_ADDRESS))
     # print(us.make_trade_output(input_token, output_token, qty, ZERO_ADDRESS))
+
