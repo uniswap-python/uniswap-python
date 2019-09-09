@@ -48,7 +48,7 @@ PROVIDER  # HTTP Provider for web3
 Only some endpoints in the API are available to everyone. The public endpoints can be reached using PublicClient
 
 ```python
-import uniswap
+from uniswap import uniswap
 uniswap_wrapper = uniswap.UniswapWrapper()
 eth = "0x0000000000000000000000000000000000000000"
 bat = "0x0D8775F648430679A709E98d2b0Cb6250d2887EF"
