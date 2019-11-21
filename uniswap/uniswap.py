@@ -14,13 +14,18 @@ class UniswapWrapper:
     def __init__(self, address: str, private_key: str, provider: str = None, web3: Web3 = None):
         if not web3:
             # Initialize web3. Extra provider for testing.
-            self.network = os.getenv("UNISWAP_NET", None) or ("mainnet" if not provider else "testnet")
             self.provider = provider or os.environ["PROVIDER"]
-            logger.info(f"Using {self.provider} ('{self.network}')")
             self.w3 = Web3(Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60}))
         else:
             self.w3 = web3
+        netid = int(self.w3.net.version)
+        if netid == 1:
             self.network = "mainnet"
+        elif netid == 4:
+            self.network = "testnet"
+        else:
+            raise Exception(f"Unknown netid: {netid}")
+        logger.info(f"Using {self.w3} ('{self.network}')")
         self.address = address
         self.private_key = private_key
 
