@@ -99,21 +99,21 @@ class UniswapWrapper:
         return 0.003
 
     # ------ Market --------------------------------------------------------------------
-    def get_eth_token_input_price(self, token, qty):
+    def get_eth_token_input_price(self, token: str, qty: int):
         """Public price for ETH to Token trades with an exact input."""
-        return self.exchange_contract[token].call().getEthToTokenInputPrice(qty)
+        return self.exchange_contract[token].functions.getEthToTokenInputPrice(qty).call()
 
-    def get_token_eth_input_price(self, token, qty):
+    def get_token_eth_input_price(self, token: str, qty: int):
         """Public price for token to ETH trades with an exact input."""
-        return self.exchange_contract[token].call().getTokenToEthInputPrice(qty)
+        return self.exchange_contract[token].functions.getTokenToEthInputPrice(qty).call()
 
-    def get_eth_token_output_price(self, token, qty):
+    def get_eth_token_output_price(self, token: str, qty: int):
         """Public price for ETH to Token trades with an exact output."""
-        return self.exchange_contract[token].call().getEthToTokenOutputPrice(qty)
+        return self.exchange_contract[token].functions.getEthToTokenOutputPrice(qty).call()
 
-    def get_token_eth_output_price(self, token, qty):
+    def get_token_eth_output_price(self, token: str, qty: int):
         """Public price for token to ETH trades with an exact output."""
-        return self.exchange_contract[token].call().getTokenToEthOutputPrice(qty)
+        return self.exchange_contract[token].functions.getTokenToEthOutputPrice(qty).call()
 
     # ------ ERC20 Pool ----------------------------------------------------------------
     def get_eth_balance(self, token):
