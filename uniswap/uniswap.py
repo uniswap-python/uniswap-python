@@ -1,29 +1,28 @@
 import os
 import json
 import time
+import logging
 
 from web3 import Web3
 
+ETH_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+logger = logging.getLogger(__name__)
+
 
 class UniswapWrapper:
-    def __init__(self, address, private_key, provider=None, web3=None):
-
+    def __init__(self, address: str, private_key: str, provider: str = None, web3: Web3 = None):
         if not web3:
             # Initialize web3. Extra provider for testing.
-            if not provider:
-                self.provider = os.environ["PROVIDER"]
-                self.network = "mainnet"
-            else:
-                self.provider = provider
-                self.network = "testnet"
-
+            self.network = os.getenv("UNISWAP_NET", None) or ("mainnet" if not provider else "testnet")
+            self.provider = provider or os.environ["PROVIDER"]
+            logger.info(f"Using {self.provider} ('{self.network}')")
             self.w3 = Web3(Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60}))
         else:
             self.w3 = web3
             self.network = "mainnet"
         self.address = address
         self.private_key = private_key
-
 
         # This code automatically approves you for trading on the exchange.
         # max_approval is to allow the contract to exchange on your behalf.
@@ -122,12 +121,16 @@ class UniswapWrapper:
 
     def get_token_balance(self, token):
         """Get the balance of a token in an exchange contract."""
+        print(self.erc20_contract)
+        print(token)
+        print(self.erc20_contract[token])
+        print(self.exchange_address_from_token[token])
         return (
             self.erc20_contract[token]
-            .call()
+            .functions
             .balanceOf(self.exchange_address_from_token[token])
+            .call()
         )
-
 
     # TODO: ADD TOTAL SUPPLY
     def get_exchange_rate(self, token):
@@ -173,10 +176,10 @@ class UniswapWrapper:
     def make_trade_output(self, input_token, output_token, qty, recipient=None):
         """Make a trade by defining the qty of the output token."""
         qty = int(qty)
-        if input_token == "eth":
+        if input_token == ETH_ADDRESS:
             return self._eth_to_token_swap_output(output_token, qty, recipient)
         else:
-            if output_token == "eth":
+            if output_token == ETH_ADDRESS:
                 return self._token_to_eth_swap_output(input_token, qty, recipient)
             else:
                 return self._token_to_token_swap_output(input_token, qty, output_token, recipient)
@@ -282,7 +285,7 @@ class UniswapWrapper:
         """Check to see if the exchange and token is approved."""
         exchange_addr = self.exchange_address_from_token[token]
         amount = (
-            self.erc20_contract[token].call().allowance(self.address, exchange_addr)
+            self.erc20_contract[token].functions.allowance(self.address, exchange_addr).call()
         )
         if amount >= self.max_approval_check_int:
             return True
@@ -333,7 +336,7 @@ class UniswapWrapper:
         return int(input_amount_a), int(1.2 * input_about_b)
 
 
-if __name__ == "__main__":
+def main():
     address = os.environ["ETH_ADDRESS"]
     priv_key = os.environ["ETH_PRIV_KEY"]
     provider = os.environ["TESTNET_PROVIDER"]
@@ -355,3 +358,6 @@ if __name__ == "__main__":
     print(us.make_trade_output(bat_test, eth_test, 0.00001 * ONE_ETH, ZERO_ADDRESS))
     # print(us.make_trade_output(input_token, output_token, qty, ZERO_ADDRESS))
 
+
+if __name__ == "__main__":
+    main()
