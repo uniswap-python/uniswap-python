@@ -2,6 +2,7 @@ import os
 import json
 import time
 import logging
+from typing import List, Any, Dict, Optional
 
 from web3 import Web3
 
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class UniswapWrapper:
-    def __init__(self, address: str, private_key: str, provider: str = None, web3: Web3 = None):
+    def __init__(self, address: str, private_key: str, provider: str = None, web3: Web3 = None) -> None:
         if not web3:
             # Initialize web3. Extra provider for testing.
             self.provider = provider or os.environ["PROVIDER"]
@@ -29,12 +30,13 @@ class UniswapWrapper:
         self.address = address
         self.private_key = private_key
 
+        self.last_nonce = self.w3.eth.getTransactionCount(self.address)
+
         # This code automatically approves you for trading on the exchange.
         # max_approval is to allow the contract to exchange on your behalf.
         # max_approval_check checks that current approval is above a reasonable number
         # The program cannot check for max_approval each time because it decreases
         # with each trade.
-        self.eth_address = "0x0000000000000000000000000000000000000000"
         self.max_approval_hex = "0x" + "f" * 64
         self.max_approval_int = int(self.max_approval_hex, 16)
         self.max_approval_check_hex = "0x" + "0" * 15 + "f" * 49
@@ -51,10 +53,10 @@ class UniswapWrapper:
 
         # Define exchange address, contract instance, and token_instance based on
         # token address
-        self.exchange_address_from_token = {}
-        self.token_address_from_exchange = {}
-        self.exchange_contract = {}
-        self.erc20_contract = {}
+        self.exchange_address_from_token: Dict[str, str] = {}
+        self.token_address_from_exchange: Dict[str, str] = {}
+        self.exchange_contract: Dict[str, Any] = {}
+        self.erc20_contract: Dict[str, Any] = {}
 
         for token_address, exchange_address in token_and_exchange_addresses.items():
             self.exchange_address_from_token[token_address] = exchange_address
@@ -73,12 +75,12 @@ class UniswapWrapper:
 
         def approved(self, *args):
             # Check to see if the first token is actually ETH
-            token = args[0] if args[0] != self.eth_address else None
+            token = args[0] if args[0] != ETH_ADDRESS else None
             token_two = None
 
             # Check second token, if needed
             if method.__name__ == "make_trade" or method.__name__ == "make_trade_output":
-                token_two = args[1] if args[1] != self.eth_address else None
+                token_two = args[1] if args[1] != ETH_ADDRESS else None
 
             # Approve both tokens, if needed
             if token:
@@ -94,12 +96,12 @@ class UniswapWrapper:
         return approved
 
     # ------ Exchange ------------------------------------------------------------------
-    def get_fee_maker(self):
+    def get_fee_maker(self) -> float:
         """Get the maker fee."""
         return 0
 
-    def get_fee_taker(self):
-        """Get the maker fee."""
+    def get_fee_taker(self) -> float:
+        """Get the taker fee."""
         return 0.003
 
     # ------ Market --------------------------------------------------------------------
@@ -169,10 +171,10 @@ class UniswapWrapper:
     def make_trade(self, input_token, output_token, qty, recipient=None):
         """Make a trade by defining the qty of the input token."""
         qty = int(qty)
-        if input_token == "eth":
+        if input_token == ETH_ADDRESS:
             return self._eth_to_token_swap_input(output_token, qty, recipient)
         else:
-            if output_token == "eth":
+            if output_token == ETH_ADDRESS:
                 return self._token_to_eth_swap_input(input_token, qty, recipient)
             else:
                 return self._token_to_token_swap_input(input_token, qty, output_token, recipient)
@@ -308,15 +310,21 @@ class UniswapWrapper:
         signed_txn = self.w3.eth.account.signTransaction(
             transaction, private_key=self.private_key
         )
-        return self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+        # TODO: This needs to get more complicated if we want to support replacing a transaction
+        # FIXME: This does not play nice if transactions are sent from other places using the same wallet.
+        try:
+            return self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+        finally:
+            logger.debug(f"nonce: {tx_params['nonce']}")
+            self.last_nonce = tx_params["nonce"] + 1
 
-    def _get_tx_params(self, value=0, gas=150000):
+    def _get_tx_params(self, value=0, gas=150000) -> Dict[str, Any]:
         """Get generic transaction parameters."""
         return {
             "from": self.address,
             "value": value,
             "gas": gas,
-            "nonce": self.w3.eth.getTransactionCount(self.address),
+            "nonce": max(self.last_nonce, self.w3.eth.getTransactionCount(self.address)),
         }
 
     # ------ Price Calculation Utils ---------------------------------------------------
