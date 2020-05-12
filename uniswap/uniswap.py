@@ -12,11 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 class UniswapWrapper:
-    def __init__(self, address: str, private_key: str, provider: str = None, web3: Web3 = None) -> None:
+    def __init__(
+        self, address: str, private_key: str, provider: str = None, web3: Web3 = None
+    ) -> None:
         if not web3:
             # Initialize web3. Extra provider for testing.
             self.provider = provider or os.environ["PROVIDER"]
-            self.w3 = Web3(Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60}))
+            self.w3 = Web3(
+                Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60})
+            )
         else:
             self.w3 = web3
         netid = int(self.w3.net.version)
@@ -67,7 +71,6 @@ class UniswapWrapper:
                 address=token_address, abi=erc20_abi
             )
 
-
     # ------ Decorators ----------------------------------------------------------------
     def check_approval(method):
         """Decorator to check if user is approved for a token. It approves them if they
@@ -79,7 +82,10 @@ class UniswapWrapper:
             token_two = None
 
             # Check second token, if needed
-            if method.__name__ == "make_trade" or method.__name__ == "make_trade_output":
+            if (
+                method.__name__ == "make_trade"
+                or method.__name__ == "make_trade_output"
+            ):
                 token_two = args[1] if args[1] != ETH_ADDRESS else None
 
             # Approve both tokens, if needed
@@ -107,19 +113,27 @@ class UniswapWrapper:
     # ------ Market --------------------------------------------------------------------
     def get_eth_token_input_price(self, token: str, qty: int):
         """Public price for ETH to Token trades with an exact input."""
-        return self.exchange_contract[token].functions.getEthToTokenInputPrice(qty).call()
+        return (
+            self.exchange_contract[token].functions.getEthToTokenInputPrice(qty).call()
+        )
 
     def get_token_eth_input_price(self, token: str, qty: int):
         """Public price for token to ETH trades with an exact input."""
-        return self.exchange_contract[token].functions.getTokenToEthInputPrice(qty).call()
+        return (
+            self.exchange_contract[token].functions.getTokenToEthInputPrice(qty).call()
+        )
 
     def get_eth_token_output_price(self, token: str, qty: int):
         """Public price for ETH to Token trades with an exact output."""
-        return self.exchange_contract[token].functions.getEthToTokenOutputPrice(qty).call()
+        return (
+            self.exchange_contract[token].functions.getEthToTokenOutputPrice(qty).call()
+        )
 
     def get_token_eth_output_price(self, token: str, qty: int):
         """Public price for token to ETH trades with an exact output."""
-        return self.exchange_contract[token].functions.getTokenToEthOutputPrice(qty).call()
+        return (
+            self.exchange_contract[token].functions.getTokenToEthOutputPrice(qty).call()
+        )
 
     # ------ ERC20 Pool ----------------------------------------------------------------
     def get_eth_balance(self, token):
@@ -130,8 +144,7 @@ class UniswapWrapper:
         """Get the balance of a token in an exchange contract."""
         return (
             self.erc20_contract[token]
-            .functions
-            .balanceOf(self.exchange_address_from_token[token])
+            .functions.balanceOf(self.exchange_address_from_token[token])
             .call()
         )
 
@@ -173,7 +186,9 @@ class UniswapWrapper:
             if output_token == ETH_ADDRESS:
                 return self._token_to_eth_swap_input(input_token, qty, recipient)
             else:
-                return self._token_to_token_swap_input(input_token, qty, output_token, recipient)
+                return self._token_to_token_swap_input(
+                    input_token, qty, output_token, recipient
+                )
 
     @check_approval
     def make_trade_output(self, input_token, output_token, qty, recipient=None):
@@ -185,7 +200,9 @@ class UniswapWrapper:
             if output_token == ETH_ADDRESS:
                 return self._token_to_eth_swap_output(input_token, qty, recipient)
             else:
-                return self._token_to_token_swap_output(input_token, qty, output_token, recipient)
+                return self._token_to_token_swap_output(
+                    input_token, qty, output_token, recipient
+                )
 
     def _eth_to_token_swap_input(self, output_token, qty, recipient):
         """Convert ETH to tokens given an input amount."""
@@ -288,7 +305,9 @@ class UniswapWrapper:
         """Check to see if the exchange and token is approved."""
         exchange_addr = self.exchange_address_from_token[token]
         amount = (
-            self.erc20_contract[token].functions.allowance(self.address, exchange_addr).call()
+            self.erc20_contract[token]
+            .functions.allowance(self.address, exchange_addr)
+            .call()
         )
         if amount >= self.max_approval_check_int:
             return True
@@ -320,7 +339,9 @@ class UniswapWrapper:
             "from": self.address,
             "value": value,
             "gas": gas,
-            "nonce": max(self.last_nonce, self.w3.eth.getTransactionCount(self.address)),
+            "nonce": max(
+                self.last_nonce, self.w3.eth.getTransactionCount(self.address)
+            ),
         }
 
     # ------ Price Calculation Utils ---------------------------------------------------
@@ -354,7 +375,7 @@ def main():
     # us = UniswapWrapper(address, priv_key)
     us = UniswapWrapper(address, priv_key, provider)
     ONE_ETH = 1 * 10 ** 18
-    ZERO_ADDRESS = '0xD6aE8250b8348C94847280928c79fb3b63cA453e'
+    ZERO_ADDRESS = "0xD6aE8250b8348C94847280928c79fb3b63cA453e"
     qty = 0.00000005 * ONE_ETH
     eth_main = "0x0000000000000000000000000000000000000000"
     bat_main = "0x0D8775F648430679A709E98d2b0Cb6250d2887EF"
