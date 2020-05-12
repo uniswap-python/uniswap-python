@@ -128,10 +128,6 @@ class UniswapWrapper:
 
     def get_token_balance(self, token):
         """Get the balance of a token in an exchange contract."""
-        print(self.erc20_contract)
-        print(token)
-        print(self.erc20_contract[token])
-        print(self.exchange_address_from_token[token])
         return (
             self.erc20_contract[token]
             .functions
