@@ -2,13 +2,22 @@ import os
 import json
 import time
 import logging
+import functools
 from typing import List, Any, Dict, Optional
 
 from web3 import Web3
+from web3.eth import Contract
 
 ETH_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 logger = logging.getLogger(__name__)
+
+
+def _load_abi(name: str) -> str:
+    path = f"{os.path.dirname(os.path.abspath(__file__))}/assets/"
+    with open(os.path.abspath(path + f"{name}.abi")) as f:
+        abi = json.load(f)
+    return abi
 
 
 class UniswapWrapper:
@@ -27,7 +36,7 @@ class UniswapWrapper:
         if netid == 1:
             self.network = "mainnet"
         elif netid == 4:
-            self.network = "testnet"
+            self.network = "rinkeby"
         else:
             raise Exception(f"Unknown netid: {netid}")
         logger.info(f"Using {self.w3} ('{self.network}')")
@@ -46,30 +55,44 @@ class UniswapWrapper:
         self.max_approval_check_hex = "0x" + "0" * 15 + "f" * 49
         self.max_approval_check_int = int(self.max_approval_check_hex, 16)
 
-        # Initialize address and contract
-        path = f"{os.path.dirname(os.path.abspath(__file__))}/assets/"
-        with open(os.path.abspath(path + "contract_addresses.JSON")) as f:
-            token_and_exchange_addresses = json.load(f)[self.network]
-        with open(os.path.abspath(path + "uniswap_exchange.abi")) as f:
-            exchange_abi = json.load(f)
-        with open(os.path.abspath(path + "erc20.abi")) as f:
-            erc20_abi = json.load(f)
+        factory_contract_addresses = {
+            "mainnet": "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95",
+            "ropsten": "0x9c83dCE8CA20E9aAF9D3efc003b2ea62aBC08351",
+            "rinkeby": "0xf5D915570BC477f9B8D6C0E980aA81757A3AaC36",
+            "kovan": "0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30",
+            "görli": "0x6Ce570d02D73d4c384b46135E87f8C592A8c86dA",
+        }
+        self.factory_contract = self._load_contract(
+            abi_name="factory_contract",
+            address=factory_contract_addresses[self.network],
+        )
+        logger.info(f"Using factory contract: {self.factory_contract}")
 
-        # Define exchange address, contract instance, and token_instance based on
-        # token address
-        self.exchange_address_from_token: Dict[str, str] = {}
-        self.token_address_from_exchange: Dict[str, str] = {}
-        self.exchange_contract: Dict[str, Any] = {}
-        self.erc20_contract: Dict[str, Any] = {}
+    def exchange_address_from_token(self, token_addr: str) -> str:
+        return self.factory_contract.functions.getExchange(token_addr).call()
 
-        for token_address, exchange_address in token_and_exchange_addresses.items():
-            self.exchange_address_from_token[token_address] = exchange_address
-            self.exchange_contract[token_address] = self.w3.eth.contract(
-                address=exchange_address, abi=exchange_abi
-            )
-            self.erc20_contract[token_address] = self.w3.eth.contract(
-                address=token_address, abi=erc20_abi
-            )
+    def token_address_from_exchange(self, exchange_addr: str):
+        return (
+            self.exchange_contract(ex_addr=exchange_addr)
+            .functions.tokenAddress(exchange_addr)
+            .call()
+        )
+
+    @functools.lru_cache()
+    def exchange_contract(self, token_addr: str = None, ex_addr: str = None):
+        if not ex_addr and token_addr:
+            ex_addr = self.exchange_address_from_token(token_addr)
+        assert ex_addr
+        contract = self._load_contract(abi_name="uniswap_exchange", address=ex_addr)
+        print(f"Exchange contract: {contract} {contract.address}")
+        return contract
+
+    @functools.lru_cache()
+    def erc20_contract(self, token_addr: str) -> Contract:
+        return self._load_contract(abi_name="erc20", address=token_addr)
+
+    def _load_contract(self, abi_name: str, address: str) -> Contract:
+        return self.w3.eth.contract(address=address, abi=_load_abi(abi_name))  # type: ignore
 
     # ------ Decorators ----------------------------------------------------------------
     def check_approval(method):
@@ -114,37 +137,37 @@ class UniswapWrapper:
     def get_eth_token_input_price(self, token: str, qty: int):
         """Public price for ETH to Token trades with an exact input."""
         return (
-            self.exchange_contract[token].functions.getEthToTokenInputPrice(qty).call()
+            self.exchange_contract(token).functions.getEthToTokenInputPrice(qty).call()
         )
 
     def get_token_eth_input_price(self, token: str, qty: int):
         """Public price for token to ETH trades with an exact input."""
         return (
-            self.exchange_contract[token].functions.getTokenToEthInputPrice(qty).call()
+            self.exchange_contract(token).functions.getTokenToEthInputPrice(qty).call()
         )
 
     def get_eth_token_output_price(self, token: str, qty: int):
         """Public price for ETH to Token trades with an exact output."""
         return (
-            self.exchange_contract[token].functions.getEthToTokenOutputPrice(qty).call()
+            self.exchange_contract(token).functions.getEthToTokenOutputPrice(qty).call()
         )
 
     def get_token_eth_output_price(self, token: str, qty: int):
         """Public price for token to ETH trades with an exact output."""
         return (
-            self.exchange_contract[token].functions.getTokenToEthOutputPrice(qty).call()
+            self.exchange_contract(token).functions.getTokenToEthOutputPrice(qty).call()
         )
 
     # ------ ERC20 Pool ----------------------------------------------------------------
     def get_eth_balance(self, token):
         """Get the balance of ETH in an exchange contract."""
-        return self.w3.eth.getBalance(self.exchange_address_from_token[token])
+        return self.w3.eth.getBalance(self.exchange_address_from_token(token))
 
     def get_token_balance(self, token):
         """Get the balance of a token in an exchange contract."""
         return (
-            self.erc20_contract[token]
-            .functions.balanceOf(self.exchange_address_from_token[token])
+            self.erc20_contract(token)
+            .functions.balanceOf(self.exchange_address_from_token(token))
             .call()
         )
 
@@ -164,7 +187,7 @@ class UniswapWrapper:
         # https://hackmd.io/hthz9hXKQmSyXfMbPsut1g#Add-Liquidity-Calculations
         max_token = int(max_eth * self.get_exchange_rate(token)) + 10
         func_params = [min_liquidity, max_token, self._deadline()]
-        function = self.exchange_contract[token].functions.addLiquidity(*func_params)
+        function = self.exchange_contract(token).functions.addLiquidity(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
     @check_approval
@@ -172,7 +195,7 @@ class UniswapWrapper:
         """Remove liquidity from the pool."""
         tx_params = self._get_tx_params()
         func_params = [int(max_token), 1, 1, self._deadline()]
-        function = self.exchange_contract[token].functions.removeLiquidity(*func_params)
+        function = self.exchange_contract(token).functions.removeLiquidity(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
     # ------ Make Trade ----------------------------------------------------------------
@@ -206,7 +229,7 @@ class UniswapWrapper:
 
     def _eth_to_token_swap_input(self, output_token, qty, recipient):
         """Convert ETH to tokens given an input amount."""
-        token_funcs = self.exchange_contract[output_token].functions
+        token_funcs = self.exchange_contract(output_token).functions
         tx_params = self._get_tx_params(qty)
         func_params = [qty, self._deadline()]
         if not recipient:
@@ -218,7 +241,7 @@ class UniswapWrapper:
 
     def _token_to_eth_swap_input(self, input_token, qty, recipient):
         """Convert tokens to ETH given an input amount."""
-        token_funcs = self.exchange_contract[input_token].functions
+        token_funcs = self.exchange_contract(input_token).functions
         tx_params = self._get_tx_params()
         func_params = [qty, 1, self._deadline()]
         if not recipient:
@@ -230,7 +253,7 @@ class UniswapWrapper:
 
     def _token_to_token_swap_input(self, input_token, qty, output_token, recipient):
         """Convert tokens to tokens given an input amount."""
-        token_funcs = self.exchange_contract[input_token].functions
+        token_funcs = self.exchange_contract(input_token).functions
         tx_params = self._get_tx_params()
         func_params = [qty, 1, 1, self._deadline(), output_token]
         if not recipient:
@@ -242,7 +265,7 @@ class UniswapWrapper:
 
     def _eth_to_token_swap_output(self, output_token, qty, recipient):
         """Convert ETH to tokens given an output amount."""
-        token_funcs = self.exchange_contract[output_token].functions
+        token_funcs = self.exchange_contract(output_token).functions
         eth_qty = self.get_eth_token_output_price(output_token, qty)
         tx_params = self._get_tx_params(eth_qty)
         func_params = [qty, self._deadline()]
@@ -255,7 +278,7 @@ class UniswapWrapper:
 
     def _token_to_eth_swap_output(self, input_token, qty, recipient):
         """Convert tokens to ETH given an output amount."""
-        token_funcs = self.exchange_contract[input_token].functions
+        token_funcs = self.exchange_contract(input_token).functions
         max_token = self.get_token_eth_output_price(input_token, qty)
         tx_params = self._get_tx_params()
         func_params = [qty, max_token, self._deadline()]
@@ -268,7 +291,7 @@ class UniswapWrapper:
 
     def _token_to_token_swap_output(self, input_token, qty, output_token, recipient):
         """Convert tokens to tokens given an output amount."""
-        token_funcs = self.exchange_contract[input_token].functions
+        token_funcs = self.exchange_contract(input_token).functions
         max_input_token, max_eth_sold = self._calculate_max_input_token(
             input_token, qty, output_token
         )
@@ -292,8 +315,8 @@ class UniswapWrapper:
         """Give an exchange max approval of a token."""
         max_approval = self.max_approval_int if not max_approval else max_approval
         tx_params = self._get_tx_params()
-        exchange_addr = self.exchange_address_from_token[token]
-        function = self.erc20_contract[token].functions.approve(
+        exchange_addr = self.exchange_address_from_token(token)
+        function = self.erc20_contract(token).functions.approve(
             exchange_addr, max_approval
         )
         tx = self._build_and_send_tx(function, tx_params)
@@ -303,9 +326,9 @@ class UniswapWrapper:
 
     def _is_approved(self, token):
         """Check to see if the exchange and token is approved."""
-        exchange_addr = self.exchange_address_from_token[token]
+        exchange_addr = self.exchange_address_from_token(token)
         amount = (
-            self.erc20_contract[token]
+            self.erc20_contract(token)
             .functions.allowance(self.address, exchange_addr)
             .call()
         )
