@@ -3,7 +3,7 @@ import json
 import time
 import logging
 import functools
-from typing import List, Any, Dict, Optional
+from typing import List, Any, Dict, Optional, Callable
 
 from web3 import Web3
 from web3.eth import Contract
@@ -24,14 +24,18 @@ class UniswapWrapper:
     def __init__(
         self, address: str, private_key: str, provider: str = None, web3: Web3 = None
     ) -> None:
-        if not web3:
+        self.address = address
+        self.private_key = private_key
+
+        if web3:
+            self.w3 = web3
+        else:
             # Initialize web3. Extra provider for testing.
             self.provider = provider or os.environ["PROVIDER"]
-            self.w3 = Web3(
-                Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60})
+            self.w3: Web3 = Web3(
+                Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60})  # type: ignore
             )
-        else:
-            self.w3 = web3
+
         netid = int(self.w3.net.version)
         if netid == 1:
             self.network = "mainnet"
@@ -40,8 +44,6 @@ class UniswapWrapper:
         else:
             raise Exception(f"Unknown netid: {netid}")
         logger.info(f"Using {self.w3} ('{self.network}')")
-        self.address = address
-        self.private_key = private_key
 
         self.last_nonce = self.w3.eth.getTransactionCount(self.address)
 
@@ -67,6 +69,44 @@ class UniswapWrapper:
             address=factory_contract_addresses[self.network],
         )
         logger.info(f"Using factory contract: {self.factory_contract}")
+
+    def get_all_tokens(self) -> List[dict]:
+        # FIXME: This is a very expensive operation, would benefit greatly from caching
+        tokenCount = self.factory_contract.functions.tokenCount().call()
+        tokens = []
+        for i in range(tokenCount):
+            address = self.factory_contract.functions.getTokenWithId(i).call()
+            print(address)
+            if address == "0x0000000000000000000000000000000000000000":
+                # Token is ETH
+                continue
+            try:
+                token = self.get_token(address)
+            except Exception:
+                # continue
+                raise
+            tokens.append(token)
+        print(tokens)
+        return tokens
+
+    def get_token(self, address: str) -> dict:
+        # FIXME: This function should always return the same output for the same input
+        #        and would therefore benefit from caching
+        token_contract = self._load_contract(abi_name="erc20", address=address)
+        try:
+            symbol = token_contract.functions.symbol().call()
+            name = token_contract.functions.name().call()
+        except Exception as e:
+            logger.warning(
+                f"Exception occurred while trying to get token {address}: {e}"
+            )
+            raise
+        return {"name": name, "symbol": symbol}
+
+    def get_new_exchanges(self):
+        new_exchange_event = self.factory_contract.events.NewExchange
+        print(new_exchange_event)
+        raise NotImplementedError
 
     def exchange_address_from_token(self, token_addr: str) -> str:
         return self.factory_contract.functions.getExchange(token_addr).call()
@@ -95,7 +135,7 @@ class UniswapWrapper:
         return self.w3.eth.contract(address=address, abi=_load_abi(abi_name))  # type: ignore
 
     # ------ Decorators ----------------------------------------------------------------
-    def check_approval(method):
+    def check_approval(method: Callable[..., Any]):
         """Decorator to check if user is approved for a token. It approves them if they
             need to be approved."""
 
