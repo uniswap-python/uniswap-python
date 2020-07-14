@@ -22,10 +22,16 @@ def _load_abi(name: str) -> str:
 
 class UniswapWrapper:
     def __init__(
-        self, address: str, private_key: str, provider: str = None, web3: Web3 = None
+        self,
+        address: str,
+        private_key: str,
+        provider: str = None,
+        web3: Web3 = None,
+        version: int = 1,
     ) -> None:
         self.address = address
         self.private_key = private_key
+        self.version = version
 
         if web3:
             self.w3 = web3
@@ -57,17 +63,29 @@ class UniswapWrapper:
         self.max_approval_check_hex = "0x" + "0" * 15 + "f" * 49
         self.max_approval_check_int = int(self.max_approval_check_hex, 16)
 
-        factory_contract_addresses = {
-            "mainnet": "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95",
-            "ropsten": "0x9c83dCE8CA20E9aAF9D3efc003b2ea62aBC08351",
-            "rinkeby": "0xf5D915570BC477f9B8D6C0E980aA81757A3AaC36",
-            "kovan": "0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30",
-            "görli": "0x6Ce570d02D73d4c384b46135E87f8C592A8c86dA",
-        }
-        self.factory_contract = self._load_contract(
-            abi_name="factory_contract",
-            address=factory_contract_addresses[self.network],
-        )
+        if self.version == 1:
+            factory_contract_addresses = {
+                "mainnet": "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95",
+                "ropsten": "0x9c83dCE8CA20E9aAF9D3efc003b2ea62aBC08351",
+                "rinkeby": "0xf5D915570BC477f9B8D6C0E980aA81757A3AaC36",
+                "kovan": "0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30",
+                "görli": "0x6Ce570d02D73d4c384b46135E87f8C592A8c86dA",
+            }
+
+            self.factory_contract = self._load_contract(
+                abi_name="factory_contract",
+                address=factory_contract_addresses[self.network],
+            )
+        elif self.version == 2:
+            # For v2 the address is the same on mainnet, Ropsten, Rinkeby, Görli, and Kovan
+            # https://uniswap.org/docs/v2/smart-contracts/factory
+            factory_contract_address_v2 = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
+            self.factory_contract = self._load_contract(
+                abi_name="UniswapV2Factory", address=factory_contract_address_v2,
+            )
+        else:
+            raise Exception("Invalid version, only 1 or 2 supported")
+
         logger.info(f"Using factory contract: {self.factory_contract}")
 
     def get_all_tokens(self) -> List[dict]:
