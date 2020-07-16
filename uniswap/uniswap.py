@@ -20,6 +20,33 @@ def _load_abi(name: str) -> str:
     return abi
 
 
+def check_approval(method: Callable[..., Any]):
+    """Decorator to check if user is approved for a token. It approves them if they
+        need to be approved."""
+
+    def approved(self, *args):
+        # Check to see if the first token is actually ETH
+        token = args[0] if args[0] != ETH_ADDRESS else None
+        token_two = None
+
+        # Check second token, if needed
+        if method.__name__ == "make_trade" or method.__name__ == "make_trade_output":
+            token_two = args[1] if args[1] != ETH_ADDRESS else None
+
+        # Approve both tokens, if needed
+        if token:
+            is_approved = self._is_approved(token)
+            if not is_approved:
+                self.approve_exchange(token)
+        if token_two:
+            is_approved = self._is_approved(token_two)
+            if not is_approved:
+                self.approve_exchange(token_two)
+        return method(self, *args)
+
+    return approved
+
+
 class UniswapWrapper:
     def __init__(
         self,
@@ -38,7 +65,7 @@ class UniswapWrapper:
         else:
             # Initialize web3. Extra provider for testing.
             self.provider = provider or os.environ["PROVIDER"]
-            self.w3: Web3 = Web3(
+            self.w3 = Web3(
                 Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60})  # type: ignore
             )
 
@@ -140,9 +167,11 @@ class UniswapWrapper:
     def exchange_contract(self, token_addr: str = None, ex_addr: str = None):
         if not ex_addr and token_addr:
             ex_addr = self.exchange_address_from_token(token_addr)
-        assert ex_addr
+        if ex_addr is None:
+            # TODO: Give proper exception
+            raise Exception("Couldn't get exchange for {token_addr}")
         contract = self._load_contract(abi_name="uniswap_exchange", address=ex_addr)
-        print(f"Exchange contract: {contract} {contract.address}")
+        logger.info(f"Loaded exchange contract {contract} at {contract.address}")
         return contract
 
     @functools.lru_cache()
@@ -151,36 +180,6 @@ class UniswapWrapper:
 
     def _load_contract(self, abi_name: str, address: str) -> Contract:
         return self.w3.eth.contract(address=address, abi=_load_abi(abi_name))  # type: ignore
-
-    # ------ Decorators ----------------------------------------------------------------
-    def check_approval(method: Callable[..., Any]):
-        """Decorator to check if user is approved for a token. It approves them if they
-            need to be approved."""
-
-        def approved(self, *args):
-            # Check to see if the first token is actually ETH
-            token = args[0] if args[0] != ETH_ADDRESS else None
-            token_two = None
-
-            # Check second token, if needed
-            if (
-                method.__name__ == "make_trade"
-                or method.__name__ == "make_trade_output"
-            ):
-                token_two = args[1] if args[1] != ETH_ADDRESS else None
-
-            # Approve both tokens, if needed
-            if token:
-                is_approved = self._is_approved(token)
-                if not is_approved:
-                    self.approve_exchange(token)
-            if token_two:
-                is_approved = self._is_approved(token_two)
-                if not is_approved:
-                    self.approve_exchange(token_two)
-            return method(self, *args)
-
-        return approved
 
     # ------ Exchange ------------------------------------------------------------------
     def get_fee_maker(self) -> float:
