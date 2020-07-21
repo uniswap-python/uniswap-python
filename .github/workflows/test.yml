@@ -1,0 +1,36 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip poetry
+        poetry install
+    - name: Typecheck
+      run: |
+        make typecheck
+    - name: Test
+      env:
+        ETH_ADDRESS: ${{ secrets.ETH_ADDRESS }}
+        ETH_PRIV_KEY: ${{ secrets.ETH_PRIV_KEY }}
+        WEB3_INFURA_PROJECT_ID: ${{ secrets.WEB3_INFURA_PROJECT_ID }}
+        WEB3_INFURA_API_SECRET: ${{ secrets.WEB3_INFURA_API_SECRET }}
+      run: |
+        make test
