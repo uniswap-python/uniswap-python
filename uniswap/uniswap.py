@@ -3,7 +3,7 @@ import json
 import time
 import logging
 import functools
-from typing import List, Any, Optional, Callable, Union, Tuple
+from typing import List, Any, Optional, Callable, Union, Tuple, Dict
 
 from web3 import Web3
 from web3.eth import Contract
@@ -24,6 +24,16 @@ logger = logging.getLogger(__name__)
 
 
 AddressLike = Union[Address, ChecksumAddress, ENS]
+
+
+class InvalidToken(Exception):
+    def __init__(self, address: Any) -> None:
+        Exception.__init__(self, f"Invalid token address: {address}")
+
+
+class InsufficientBalance(Exception):
+    def __init__(self, had: int, needed: int) -> None:
+        Exception.__init__(self, f"Insufficient balance. Had {had}, needed {needed}")
 
 
 def _load_abi(name: str) -> str:
@@ -75,8 +85,21 @@ def _addr_to_str(a: AddressLike) -> str:
         addr: str = Web3.toChecksumAddress("0x" + bytes(a).hex())
         return addr
     elif isinstance(a, str):
-        # Address is ENS
-        raise Exception("ENS not supported for this operation")
+        if a.endswith(".ens"):
+            # Address is ENS
+            raise Exception("ENS not supported for this operation")
+        elif a.startswith("0x"):
+            addr = Web3.toChecksumAddress(a)
+            return addr
+        else:
+            raise InvalidToken(a)
+
+
+def _validate_address(a: AddressLike) -> None:
+    assert _addr_to_str(a)
+
+
+_netid_to_name = {1: "mainnet", 4: "rinkeby"}
 
 
 class Uniswap:
@@ -104,10 +127,8 @@ class Uniswap:
             )
 
         netid = int(self.w3.net.version)
-        if netid == 1:
-            self.network = "mainnet"
-        elif netid == 4:
-            self.network = "rinkeby"
+        if netid in _netid_to_name:
+            self.network = _netid_to_name[netid]
         else:
             raise Exception(f"Unknown netid: {netid}")
         logger.info(f"Using {self.w3} ('{self.network}')")
@@ -119,9 +140,9 @@ class Uniswap:
         # max_approval_check checks that current approval is above a reasonable number
         # The program cannot check for max_approval each time because it decreases
         # with each trade.
-        self.max_approval_hex = "0x" + "f" * 64
+        self.max_approval_hex = f"0x{64 * 'f'}"
         self.max_approval_int = int(self.max_approval_hex, 16)
-        self.max_approval_check_hex = "0x" + "0" * 15 + "f" * 49
+        self.max_approval_check_hex = f"0x{15 * '0'}{49 * 'f'}"
         self.max_approval_check_int = int(self.max_approval_check_hex, 16)
 
         if self.version == 1:
@@ -161,11 +182,7 @@ class Uniswap:
             if address == "0x0000000000000000000000000000000000000000":
                 # Token is ETH
                 continue
-            try:
-                token = self.get_token(address)
-            except Exception:
-                # continue
-                raise
+            token = self.get_token(address)
             tokens.append(token)
         print(tokens)
         return tokens
@@ -181,7 +198,7 @@ class Uniswap:
             logger.warning(
                 f"Exception occurred while trying to get token {_addr_to_str(address)}: {e}"
             )
-            raise
+            raise InvalidToken(address)
         return {"name": name, "symbol": symbol}
 
     def get_new_exchanges(self) -> None:
@@ -193,6 +210,7 @@ class Uniswap:
         ex_addr: AddressLike = self.factory_contract.functions.getExchange(
             token_addr
         ).call()
+        # TODO: What happens if the token doesn't have an exchange/doesn't exist? Should probably raise an Exception (and test it)
         return ex_addr
 
     def token_address_from_exchange(self, exchange_addr: AddressLike) -> Address:
@@ -210,8 +228,7 @@ class Uniswap:
         if not ex_addr and token_addr:
             ex_addr = self.exchange_address_from_token(token_addr)
         if ex_addr is None:
-            # TODO: Give proper exception
-            raise Exception("Couldn't get exchange for {token_addr}")
+            raise InvalidToken(token_addr)
         if self.version == 1:
             abi_name = "uniswap-v1/exchange"
         elif self.version == 2:
@@ -239,13 +256,13 @@ class Uniswap:
         return 0.003
 
     # ------ Market --------------------------------------------------------------------
-    def get_eth_token_input_price(self, token: AddressLike, qty: int) -> Wei:
+    def get_eth_token_input_price(self, token: AddressLike, qty: Wei) -> Wei:
         """Public price for ETH to Token trades with an exact input."""
         ex = self.exchange_contract(token)
         price: Wei = ex.functions.getEthToTokenInputPrice(qty).call()
         return price
 
-    def get_token_eth_input_price(self, token: AddressLike, qty: Wei) -> int:
+    def get_token_eth_input_price(self, token: AddressLike, qty: int) -> int:
         """Public price for token to ETH trades with an exact input."""
         ex = self.exchange_contract(token)
         price: int = ex.functions.getTokenToEthInputPrice(qty).call()
@@ -263,13 +280,27 @@ class Uniswap:
         price: int = ex.functions.getTokenToEthOutputPrice(qty).call()
         return price
 
+    # ------ Wallet balance ------------------------------------------------------------
+    def get_eth_balance(self) -> Wei:
+        """Get the balance of ETH in a wallet."""
+        return self.w3.eth.getBalance(self.address)
+
+    def get_token_balance(self, token: AddressLike) -> int:
+        """Get the balance of a token in a wallet."""
+        _validate_address(token)
+        if _addr_to_str(token) == ETH_ADDRESS:
+            return self.get_eth_balance()
+        erc20 = self.erc20_contract(token)
+        balance: int = erc20.functions.balanceOf(self.address).call()
+        return balance
+
     # ------ ERC20 Pool ----------------------------------------------------------------
-    def get_eth_balance(self, token: AddressLike) -> int:
+    def get_ex_eth_balance(self, token: AddressLike) -> int:
         """Get the balance of ETH in an exchange contract."""
         ex_addr: AddressLike = self.exchange_address_from_token(token)
         return self.w3.eth.getBalance(ex_addr)
 
-    def get_token_balance(self, token: AddressLike) -> int:
+    def get_ex_token_balance(self, token: AddressLike) -> int:
         """Get the balance of a token in an exchange contract."""
         erc20 = self.erc20_contract(token)
         balance: int = erc20.functions.balanceOf(
@@ -280,8 +311,8 @@ class Uniswap:
     # TODO: ADD TOTAL SUPPLY
     def get_exchange_rate(self, token: AddressLike) -> float:
         """Get the current ETH/token exchange rate of the token."""
-        eth_reserve = self.get_eth_balance(token)
-        token_reserve = self.get_token_balance(token)
+        eth_reserve = self.get_ex_eth_balance(token)
+        token_reserve = self.get_ex_token_balance(token)
         return token_reserve / eth_reserve
 
     # ------ Liquidity -----------------------------------------------------------------
@@ -318,6 +349,7 @@ class Uniswap:
         if input_token == ETH_ADDRESS:
             return self._eth_to_token_swap_input(output_token, Wei(qty), recipient)
         else:
+            assert self.get_token_balance(input_token) > qty
             if output_token == ETH_ADDRESS:
                 return self._token_to_eth_swap_input(input_token, qty, recipient)
             else:
@@ -335,10 +367,14 @@ class Uniswap:
     ) -> HexBytes:
         """Make a trade by defining the qty of the output token."""
         if input_token == ETH_ADDRESS:
+            assert self.get_eth_balance() > self.get_eth_token_output_price(
+                output_token, qty
+            )
             return self._eth_to_token_swap_output(output_token, qty, recipient)
         else:
             if output_token == ETH_ADDRESS:
-                return self._token_to_eth_swap_output(input_token, Wei(qty), recipient)
+                qty = Wei(qty)
+                return self._token_to_eth_swap_output(input_token, qty, recipient)
             else:
                 return self._token_to_token_swap_output(
                     input_token, qty, output_token, recipient
@@ -348,6 +384,10 @@ class Uniswap:
         self, output_token: AddressLike, qty: Wei, recipient: Optional[AddressLike]
     ) -> HexBytes:
         """Convert ETH to tokens given an input amount."""
+        eth_balance = self.get_eth_balance()
+        if qty > eth_balance:
+            raise InsufficientBalance(eth_balance, qty)
+
         token_funcs = self.exchange_contract(output_token).functions
         tx_params = self._get_tx_params(qty)
         func_params: List[Any] = [qty, self._deadline()]
@@ -362,6 +402,12 @@ class Uniswap:
         self, input_token: AddressLike, qty: int, recipient: Optional[AddressLike]
     ) -> HexBytes:
         """Convert tokens to ETH given an input amount."""
+        # Balance check
+        input_balance = self.get_token_balance(input_token)
+        cost = self.get_token_eth_input_price(input_token, qty)
+        if cost > input_balance:
+            raise InsufficientBalance(input_balance, cost)
+
         token_funcs = self.exchange_contract(input_token).functions
         tx_params = self._get_tx_params()
         func_params: List[Any] = [qty, 1, self._deadline()]
@@ -382,7 +428,17 @@ class Uniswap:
         """Convert tokens to tokens given an input amount."""
         token_funcs = self.exchange_contract(input_token).functions
         tx_params = self._get_tx_params()
-        func_params = [qty, 1, 1, self._deadline(), output_token]
+        # TODO: This might not be correct
+        min_tokens_bought, min_eth_bought = self._calculate_max_input_token(
+            input_token, qty, output_token
+        )
+        func_params = [
+            qty,
+            min_tokens_bought,
+            min_eth_bought,
+            self._deadline(),
+            output_token,
+        ]
         if not recipient:
             function = token_funcs.tokenToTokenSwapInput(*func_params)
         else:
@@ -409,10 +465,28 @@ class Uniswap:
         self, input_token: AddressLike, qty: Wei, recipient: Optional[AddressLike]
     ) -> HexBytes:
         """Convert tokens to ETH given an output amount."""
+        # Balance check
+        input_balance = self.get_token_balance(input_token)
+        cost = self.get_token_eth_output_price(input_token, qty)
+        if cost > input_balance:
+            raise InsufficientBalance(input_balance, cost)
+
         token_funcs = self.exchange_contract(input_token).functions
-        max_token = self.get_token_eth_output_price(input_token, qty)
+
+        # From https://uniswap.org/docs/v1/frontend-integration/trade-tokens/
+        outputAmount = qty
+        inputReserve = self.get_ex_token_balance(input_token)
+        outputReserve = self.get_ex_eth_balance(input_token)
+
+        numerator = outputAmount * inputReserve * 1000
+        denominator = (outputReserve - outputAmount) * 997
+        inputAmount = numerator / denominator + 1
+
+        # TODO: Set something reasonable here for slippage
+        max_tokens = int(1.2 * inputAmount)
+
         tx_params = self._get_tx_params()
-        func_params: List[Any] = [qty, max_token, self._deadline()]
+        func_params: List[Any] = [qty, max_tokens, self._deadline()]
         if not recipient:
             function = token_funcs.tokenToEthSwapOutput(*func_params)
         else:
@@ -429,13 +503,13 @@ class Uniswap:
     ) -> HexBytes:
         """Convert tokens to tokens given an output amount."""
         token_funcs = self.exchange_contract(input_token).functions
-        max_input_token, max_eth_sold = self._calculate_max_input_token(
+        max_tokens_sold, max_eth_sold = self._calculate_max_input_token(
             input_token, qty, output_token
         )
         tx_params = self._get_tx_params()
         func_params = [
             qty,
-            max_input_token,
+            max_tokens_sold,
             max_eth_sold,
             self._deadline(),
             output_token,
@@ -458,6 +532,7 @@ class Uniswap:
         function = self.erc20_contract(token).functions.approve(
             exchange_addr, max_approval
         )
+        logger.info(f"Approving {_addr_to_str(token)}...")
         tx = self._build_and_send_tx(function, tx_params)
         self.w3.eth.waitForTransactionReceipt(tx, timeout=6000)
         # Add extra sleep to let tx propogate correctly
@@ -465,6 +540,7 @@ class Uniswap:
 
     def _is_approved(self, token: AddressLike) -> bool:
         """Check to see if the exchange and token is approved."""
+        _validate_address(token)
         exchange_addr = self.exchange_address_from_token(token)
         amount = (
             self.erc20_contract(token)
@@ -478,8 +554,8 @@ class Uniswap:
 
     # ------ Tx Utils ------------------------------------------------------------------
     def _deadline(self) -> int:
-        """Get a predefined deadline."""
-        return int(time.time()) + 1000
+        """Get a predefined deadline. 10min by default (same as the Uniswap SDK)."""
+        return int(time.time()) + 10 * 60
 
     def _build_and_send_tx(
         self, function: ContractFunction, tx_params: Optional[TxParams] = None
@@ -487,6 +563,7 @@ class Uniswap:
         """Build and send a transaction."""
         if not tx_params:
             tx_params = self._get_tx_params()
+        print(function, tx_params)
         transaction = function.buildTransaction(tx_params)
         signed_txn = self.w3.eth.account.signTransaction(
             transaction, private_key=self.private_key
@@ -514,55 +591,107 @@ class Uniswap:
     def _calculate_max_input_token(
         self, input_token: AddressLike, qty: int, output_token: AddressLike
     ) -> Tuple[int, int]:
-        """Calculate the max input and max eth sold for a token to token output swap.
-            Equation from: https://hackmd.io/hthz9hXKQmSyXfMbPsut1g"""
+        """
+        For buy orders (exact output), the cost (input) is calculated.
+        Calculate the max input and max eth sold for a token to token output swap.
+        Equation from:
+         - https://hackmd.io/hthz9hXKQmSyXfMbPsut1g
+         - https://uniswap.org/docs/v1/frontend-integration/trade-tokens/
+        """
+        # Buy TokenB with ETH
         output_amount_b = qty
-        input_reserve_b = self.get_eth_balance(output_token)
-        output_reserve_b = self.get_token_balance(output_token)
+        input_reserve_b = self.get_ex_eth_balance(output_token)
+        output_reserve_b = self.get_ex_token_balance(output_token)
 
+        # Cost
         numerator_b = output_amount_b * input_reserve_b * 1000
         denominator_b = (output_reserve_b - output_amount_b) * 997
-        input_about_b = numerator_b / denominator_b + 1
+        input_amount_b = numerator_b / denominator_b + 1
 
-        output_amount_a = input_about_b
-        input_reserve_a = self.get_token_balance(input_token)
-        output_reserve_a = self.get_eth_balance(input_token)
+        # Buy ETH with TokenA
+        output_amount_a = input_amount_b
+        input_reserve_a = self.get_ex_token_balance(input_token)
+        output_reserve_a = self.get_ex_eth_balance(input_token)
+
+        # Cost
         numerator_a = output_amount_a * input_reserve_a * 1000
         denominator_a = (output_reserve_a - output_amount_a) * 997
         input_amount_a = numerator_a / denominator_a - 1
 
-        return int(input_amount_a), int(1.2 * input_about_b)
+        return int(input_amount_a), int(1.2 * input_amount_b)
 
+    def _calculate_max_output_token(
+        self, output_token: AddressLike, qty: int, input_token: AddressLike
+    ) -> Tuple[int, int]:
+        """
+        For sell orders (exact input), the amount bought (output) is calculated.
+        Similar to _calculate_max_input_token, but for an exact input swap.
+        """
+        # TokenA (ERC20) to ETH conversion
+        inputAmountA = qty
+        inputReserveA = self.get_ex_token_balance(input_token)
+        outputReserveA = self.get_ex_eth_balance(input_token)
 
-def main() -> None:
-    """Buys some testnet BAT and DAI, for use in tests"""
-    from dotenv import load_dotenv, find_dotenv
+        # Cost
+        numeratorA = inputAmountA * outputReserveA * 997
+        denominatorA = inputReserveA * 1000 + inputAmountA * 997
+        outputAmountA = numeratorA / denominatorA
 
-    # Load API keys for Infura from .env file
-    # Needed for web3.auto.infura
-    load_dotenv(find_dotenv())
+        # ETH to TokenB conversion
+        inputAmountB = outputAmountA
+        inputReserveB = self.get_ex_token_balance(output_token)
+        outputReserveB = self.get_ex_eth_balance(output_token)
 
-    from web3.auto.infura.rinkeby import w3
+        # Cost
+        numeratorB = inputAmountB * outputReserveB * 997
+        denominatorB = inputReserveB * 1000 + inputAmountB * 997
+        outputAmountB = numeratorB / denominatorB
 
-    address = os.environ["ETH_ADDRESS"]
-    priv_key = os.environ["ETH_PRIV_KEY"]
+        return int(outputAmountB), int(1.2 * outputAmountA)
 
-    client = Uniswap(_str_to_addr(address), priv_key, web3=w3)
-    ONE_ETH = 1 * 10 ** 18
+    # ------ Test utilities ------------------------------------------------------------
 
-    eth_test = "0x0000000000000000000000000000000000000000"
-    bat_test = "0xDA5B056Cfb861282B4b59d29c9B395bcC238D29B"
-    dai_test = "0x2448eE2641d78CC42D7AD76498917359D961A783"
+    def _buy_test_assets(self) -> None:
+        """
+        Buys some BAT and DAI.
+        Used in testing.
+        """
+        ONE_ETH = 1 * 10 ** 18
+        TEST_AMT = int(0.1 * ONE_ETH)
+        tokens = self._get_token_addresses()
 
-    TEST_AMT = int(0.01 * ONE_ETH)
+        for token_name in ["BAT", "DAI"]:
+            token_addr = tokens[token_name.lower()]
+            price = self.get_eth_token_output_price(_str_to_addr(token_addr), TEST_AMT)
+            print(f"Cost of {TEST_AMT} {token_name}: {price}")
+            print("Buying...")
+            tx = self.make_trade_output(
+                tokens["eth"], tokens[token_name.lower()], TEST_AMT
+            )
+            self.w3.eth.waitForTransactionReceipt(tx)
 
-    for token_name, token_addr in [("BAT", bat_test), ("DAI", dai_test)]:
-        price = client.get_eth_token_output_price(_str_to_addr(token_addr), TEST_AMT)
-        print(f"Cost of {TEST_AMT} {token_name}: {price}")
-        print("Buying...")
-        client.make_trade_output(eth_test, bat_test, TEST_AMT)
-    # print(us.make_trade_output(input_token, output_token, qty))
-
-
-if __name__ == "__main__":
-    main()
+    def _get_token_addresses(self) -> Dict[str, str]:
+        """
+        Returns a dict with addresses for tokens for the current net.
+        Used in testing.
+        """
+        netid = int(self.w3.net.version)
+        netname = _netid_to_name[netid]
+        if netname == "mainnet":
+            return {
+                "eth": "0x0000000000000000000000000000000000000000",
+                "bat": Web3.toChecksumAddress(
+                    "0x0D8775F648430679A709E98d2b0Cb6250d2887EF"
+                ),
+                "dai": Web3.toChecksumAddress(
+                    "0x6b175474e89094c44da98b954eedeac495271d0f"
+                ),
+            }
+        elif netname == "rinkeby":
+            return {
+                "eth": "0x0000000000000000000000000000000000000000",
+                "bat": "0xDA5B056Cfb861282B4b59d29c9B395bcC238D29B",
+                "dai": "0x2448eE2641d78CC42D7AD76498917359D961A783",
+            }
+        else:
+            raise Exception(f"Unknown net '{netname}'")

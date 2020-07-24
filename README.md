@@ -167,12 +167,12 @@ uniswap_wrapper.make_trade_output(bat, dai, 1*10**18, "0x123...") # calls _token
 ## Testing
 Unit tests are under development using the pytest framework. Contributions are welcome!
 
-Test are run on the Rinkeby network.
+Test are run on a fork of the main net using ganache-cli. You need to install it with `npm install -g ganache-cli` before running tests.
 
-To run the full test suite and ignore warnings, in the project directory run:
+To run the full test suite, in the project directory run:
 
 ```
-python -m pytest -W ignore::DeprecationWarning
+make test
 ```
 
 ## Ownership Disclosure
