@@ -19,9 +19,11 @@ class GanacheInstance:
     eth_privkey: str
 
 
-@pytest.fixture(scope="module")
-def client(web3: Web3, ganache: GanacheInstance):
-    uniswap = Uniswap(ganache.eth_address, ganache.eth_privkey, web3=web3)
+@pytest.fixture(scope="module", params=[1, 2])
+def client(request, web3: Web3, ganache: GanacheInstance):
+    uniswap = Uniswap(
+        ganache.eth_address, ganache.eth_privkey, web3=web3, version=request.param
+    )
     uniswap._buy_test_assets()
     return uniswap
 
@@ -148,6 +150,8 @@ class TestUniswap(object):
     def test_get_ex_eth_balance(
         self, client: Uniswap, token,
     ):
+        if not client.version == 1:
+            pytest.skip("Tested method only supported on Uniswap v1")
         r = client.get_ex_eth_balance(token)
         assert r
 
@@ -155,6 +159,8 @@ class TestUniswap(object):
     def test_get_ex_token_balance(
         self, client: Uniswap, token,
     ):
+        if not client.version == 1:
+            pytest.skip("Tested method only supported on Uniswap v1")
         r = client.get_ex_token_balance(token)
         assert r
 
@@ -202,15 +208,15 @@ class TestUniswap(object):
         "input_token, output_token, qty, recipient, expectation",
         [
             # ETH -> Token
-            (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise()),
+            (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> Token
-            (dai, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise()),
+            (dai, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> ETH
-            (bat, eth, 1_000_000 * ONE_WEI, None, does_not_raise()),
-            # (eth, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise()),
-            # (bat, eth, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise()),
-            # (dai, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise()),
-            (dai, "btc", ONE_ETH, None, pytest.raises(InvalidToken)),
+            (bat, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
+            # (eth, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
+            # (bat, eth, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
+            # (dai, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
+            (dai, "btc", ONE_ETH, None, lambda: pytest.raises(InvalidToken)),
         ],
     )
     def test_make_trade(
@@ -223,31 +229,39 @@ class TestUniswap(object):
         recipient,
         expectation,
     ):
-        with expectation:
-            # bal_in_before = client.get_token_balance(input_token)
+        with expectation():
+            bal_in_before = client.get_token_balance(input_token)
 
             r = client.make_trade(input_token, output_token, qty, recipient)
             tx = web3.eth.waitForTransactionReceipt(r)
             assert tx.status  # type: ignore
 
-            # bal_in_after = client.get_token_balance(input_token)
-            # assert bal_in_before - qty == bal_in_after
+            # TODO: Checks for ETH, taking gas into account
+            bal_in_after = client.get_token_balance(input_token)
+            if input_token != self.eth:
+                assert bal_in_before - qty == bal_in_after
 
     @pytest.mark.parametrize(
         "input_token, output_token, qty, recipient, expectation",
         [
             # ETH -> Token
-            (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise()),
+            (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> Token
-            (bat, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise()),
+            (bat, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> ETH
-            (dai, eth, 1_000_000 * ONE_WEI, None, does_not_raise()),
+            (dai, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
             # FIXME: These should probably be uncommented eventually
             # (eth, bat, int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # (bat, eth, int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # (dai, bat, int(0.000001 * ONE_ETH), ZERO_ADDRESS),
-            (dai, eth, 10 ** 18 * ONE_WEI, None, pytest.raises(InsufficientBalance)),
-            (dai, "btc", ONE_ETH, None, pytest.raises(InvalidToken)),
+            (
+                dai,
+                eth,
+                10 ** 18 * ONE_WEI,
+                None,
+                lambda: pytest.raises(InsufficientBalance),
+            ),
+            (dai, "btc", ONE_ETH, None, lambda: pytest.raises(InvalidToken)),
         ],
     )
     def test_make_trade_output(
@@ -260,12 +274,14 @@ class TestUniswap(object):
         recipient,
         expectation,
     ):
-        with expectation:
-            # balance_before = client.get_token_balance(output_token)
+        with expectation():
+            balance_before = client.get_token_balance(output_token)
 
             r = client.make_trade_output(input_token, output_token, qty, recipient)
             tx = web3.eth.waitForTransactionReceipt(r, timeout=30)
             assert tx.status  # type: ignore
 
-            # balance_after = client.get_token_balance(output_token)
-            # assert balance_before == balance_after + qty
+            # TODO: Checks for ETH, taking gas into account
+            balance_after = client.get_token_balance(output_token)
+            if output_token != self.eth:
+                assert balance_before + qty == balance_after
