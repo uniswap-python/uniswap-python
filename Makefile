@@ -1,10 +1,7 @@
-.PHONY: test buy-testassets typecheck lint precommit
+.PHONY: test typecheck lint precommit
 
 test:
 	poetry run pytest -v --cov=uniswap --cov-report html
-
-buy-testassets:
-	poetry run python3 -m uniswap.uniswap
 
 typecheck:
 	poetry run mypy --pretty

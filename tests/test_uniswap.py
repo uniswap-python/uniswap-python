@@ -1,11 +1,13 @@
 import pytest
 import os
+import subprocess
+import shutil
 from typing import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from time import sleep
 
 from web3 import Web3
-from web3.types import Wei
 
 from uniswap import Uniswap, InvalidToken, InsufficientBalance
 
@@ -31,11 +33,15 @@ def web3(ganache: GanacheInstance):
 
 @pytest.fixture(scope="module")
 def ganache() -> Generator[GanacheInstance, None, None]:
-    """Fixture that runs ganache which has forked off mainnet"""
-    import subprocess
-    from time import sleep
-
-    assert "MAINNET_PROVIDER" in os.environ
+    """Fixture that runs ganache-cli which has forked off mainnet"""
+    if not shutil.which("ganache-cli"):
+        raise Exception(
+            "ganache-cli was not found in PATH, you can install it with `npm install -g ganache-cli`"
+        )
+    if "MAINNET_PROVIDER" not in os.environ:
+        raise Exception(
+            "MAINNET_PROVIDER was not set, you need to set it to a mainnet provider (such as Infura) so that we can fork off our testnet"
+        )
 
     port = 10999
     p = subprocess.Popen(
@@ -62,17 +68,16 @@ class TestUniswap(object):
     ONE_WEI = 1
     ONE_ETH = 10 ** 18 * ONE_WEI
 
-    # Why this zero address?
-    ZERO_ADDRESS = "0xD6aE8250b8348C94847280928c79fb3b63cA453e"
+    ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
-    eth = "0x0000000000000000000000000000000000000000"
-
-    # TODO: Detect mainnet vs rinkeby and set accordingly
+    # TODO: Detect mainnet vs rinkeby and set accordingly, like _get_token_addresses in the Uniswap class
     # For Mainnet testing (with `ganache-cli --fork` as per the ganache fixture)
+    eth = "0x0000000000000000000000000000000000000000"
     bat = Web3.toChecksumAddress("0x0D8775F648430679A709E98d2b0Cb6250d2887EF")
     dai = Web3.toChecksumAddress("0x6b175474e89094c44da98b954eedeac495271d0f")
 
     # For Rinkeby
+    # eth = "0x0000000000000000000000000000000000000000"
     # bat = "0xDA5B056Cfb861282B4b59d29c9B395bcC238D29B"
     # dai = "0x2448eE2641d78CC42D7AD76498917359D961A783"
 
