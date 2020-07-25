@@ -292,7 +292,7 @@ class Uniswap:
         elif self.version == 2:
             price = self.router.functions.getAmountsOut(
                 qty, [self.get_weth_address(), token]
-            ).call()[1]
+            ).call()[-1]
         return price
 
     @supports([1, 2])
@@ -304,7 +304,7 @@ class Uniswap:
         else:
             price = self.router.functions.getAmountsOut(
                 qty, [token, self.get_weth_address()]
-            ).call()[1]
+            ).call()[-1]
         return price
 
     @supports([2])
@@ -314,7 +314,7 @@ class Uniswap:
         """Public price for token to token trades with an exact input."""
         price: int = self.router.functions.getAmountsOut(
             qty, [token0, self.get_weth_address(), token1]
-        ).call()[0]
+        ).call()[-1]
         return price
 
     @supports([1, 2])
@@ -346,13 +346,10 @@ class Uniswap:
         self, token0: AddressLike, token1: AddressLike, qty: int
     ) -> int:
         """Public price for token to token trades with an exact output."""
-        if self.version == 2:
-            price: int = self.router.functions.getAmountsIn(
-                qty, [token0, self.get_weth_address(), token1]
-            ).call()[0]
-            return price
-        else:
-            raise NotImplementedError
+        price: int = self.router.functions.getAmountsIn(
+            qty, [token0, self.get_weth_address(), token1]
+        ).call()[0]
+        return price
 
     # ------ Wallet balance ------------------------------------------------------------
     def get_eth_balance(self) -> Wei:
