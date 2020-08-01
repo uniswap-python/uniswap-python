@@ -125,7 +125,7 @@ uniswap_wrapper.add_liquidity(bat, 1*10**18)
 *  [remove_liquidity](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L83)
 ```python
 # Remove liquidity from the pool.
-uniswap_wrapper.removeliquidity(bat, 1*10**18)
+uniswap_wrapper.remove_liquidity(bat, 1*10**18)
 ```
 
 #### Trading
@@ -176,9 +176,31 @@ make test
 ```
 
 ## Ownership Disclosure
+
 *  I own some BAT and DAI tokens that are seen in the examples above. These tokens are used only for example purposes and are not meant to be an endorsement. I am not affiliated with BAT, Brave, Basic Attention Token, Brave Browser, DAI, Maker, MakerDAO, or any subsidiaries.
 
 ## Changelog
+
+_0.4.1_
+
+* Update changelog for PyPi and clean up.
+
+_0.4.0_
+
+_A huge thank you [Erik Bjäreholt](https://github.com/ErikBjare) for adding Uniswap V2 support, as well as all changes in this version!_
+
+* Added support for Uniswap v2
+* Handle arbitrary tokens (by address) using the factory contract
+* Switched from setup.py to pyproject.toml/poetry
+* Switched from Travis to GitHub Actions
+* For CI to work in your repo, you need to set the secret MAINNET_PROVIDER. I use Infura.
+* Running tests on a local fork of mainnet using ganache-cli (started as a fixture)
+* Fixed tests for make_trade and make_trade_output
+* Added type annotations to the entire codebase and check them with mypy in CI
+* Formatted entire codebase with black
+* Moved stuff around such that the basic import becomes from uniswap import Uniswap (instead of from uniswap.uniswap import UniswapWrapper)
+* Fixed misc bugs
+
 _0.3.3_
 *  Provide token inputs as addresses instead of names
 
