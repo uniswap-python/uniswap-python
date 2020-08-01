@@ -1,9 +1,6 @@
-api.txt
-test.py
 *.swp
-contracts/
-.github/
-.github/ISSUE_TEMPLATE
+.*cache
+.env
 
 build/
 dist/
@@ -30,7 +27,6 @@ htmlcov/
 .tox/
 .coverage
 .coverage.*
-.cache
 nosetests.xml
 coverage.xml
 *.cover
@@ -46,7 +42,6 @@ local_settings.py
 
 # Flask stuff:
 instance/
-.webassets-cache
 
 # Scrapy stuff:
 .scrapy
@@ -86,6 +81,3 @@ ENV/
 
 # mkdocs documentation
 /site
-
-# mypy
-.mypy_cache/

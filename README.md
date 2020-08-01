@@ -4,14 +4,15 @@
 
 # uniswap-python
 
-[![Build Status](https://travis-ci.org/shanefontaine/uniswap-python.svg?branch=master)](https://travis-ci.org/shanefontaine/uniswap-python)
+[![GitHub Actions](https://github.com/ErikBjare/uniswap-python/workflows/test/badge.svg)](https://github.com/ErikBjare/uniswap-python/actions)
 [![Downloads](https://pepy.tech/badge/uniswap-python)](https://pepy.tech/project/uniswap-python)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/shanefontaine/uniswap-python/master/LICENSE)
+[![Typechecking: Mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 The unofficial Python client for the [Uniswap](https://uniswap.io/).
 
-_I am in no way affiliated with or funded by Uniswap, uniswap.io, or any subsidiaries or affiliates of any of the previously mentioned entities._
+_The authors are in no way affiliated with or funded by Uniswap, uniswap.io, or any subsidiaries or affiliates of any of the previously mentioned entities._
 
 ## Functionality
 *  A simple to use Python wrapper for all available contract functions and variables
@@ -166,12 +167,12 @@ uniswap_wrapper.make_trade_output(bat, dai, 1*10**18, "0x123...") # calls _token
 ## Testing
 Unit tests are under development using the pytest framework. Contributions are welcome!
 
-Test are run on the Rinkeby network.
+Test are run on a fork of the main net using ganache-cli. You need to install it with `npm install -g ganache-cli` before running tests.
 
-To run the full test suite and ignore warnings, in the project directory run:
+To run the full test suite, in the project directory run:
 
 ```
-python -m pytest -W ignore::DeprecationWarning
+make test
 ```
 
 ## Ownership Disclosure

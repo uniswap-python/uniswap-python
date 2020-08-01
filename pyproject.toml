@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "uniswap-python"
+version = "0.4.0"
+description = "An unofficial Python wrapper for the Uniswap exchange"
+repository = "https://github.com/shanefontaine/uniswap-python"
+readme = "README.md"
+keywords = ["uniswap", "ethereum", "exchange", "trading"]
+authors = ["Shane Fontaine <shane6fontaine@gmail.com>, Erik Bjäreholt <erik@bjareho.lt>"]
+license = "MIT"
+packages = [
+    { include = "uniswap" },
+]
+include = ["uniswap/assets/*.abi", "uniswap/assets/*/*.abi"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Information Technology",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+
+[tool.poetry.dependencies]
+python = "^3.7"
+web3 = "^5.12.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.4.3"
+black = "^19.10b0"
+pytest-cov = "^2.10.0"
+pytest-dotenv = "^0.5.2"
+python-dotenv = "^0.14.0"
+flake8 = "^3.8.3"
+mypy = "^0.782"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
