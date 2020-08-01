@@ -14,6 +14,8 @@ The unofficial Python client for the [Uniswap](https://uniswap.io/).
 
 _The authors are in no way affiliated with or funded by Uniswap, uniswap.io, or any subsidiaries or affiliates of any of the previously mentioned entities._
 
+### This package supports Uniswap V2 as of version 0.4.0.
+
 ## Functionality
 *  A simple to use Python wrapper for all available contract functions and variables
 *  Simple parsing of data returned from the Uniswap contract
@@ -181,9 +183,13 @@ make test
 
 ## Changelog
 
+_0.4.2_
+
+* Add note about Uniswap V2 support
+
 _0.4.1_
 
-* Update changelog for PyPi and clean up.
+* Update changelog for PyPi and clean up
 
 _0.4.0_
 
