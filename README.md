@@ -131,16 +131,16 @@ uniswap_wrapper.remove_liquidity(bat, 1*10**18)
 ```
 
 #### Trading
-*  make_trade
-  *  eth_to_token_input
-    *  [ethToTokenSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L127)
-    *  [ethToTokenTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L162)
-  *  token_to_eth_input
-    *  [tokenToEthSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L202)
-    *  [tokenToEthTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L232)
-  *  token_to_token_input
-    *  [tokenToTokenSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L271)
-    *  [tokenToTokenTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L307)
+* make_trade
+  * eth_to_token_input
+    * [ethToTokenSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L127)
+    * [ethToTokenTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L162)
+  * token_to_eth_input
+    * [tokenToEthSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L202)
+    * [tokenToEthTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L232)
+  * token_to_token_input
+    * [tokenToTokenSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L271)
+    * [tokenToTokenTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L307)
 ```python
 # Make a trade based on the input parameters
 uniswap_wrapper.make_trade(eth, bat, 1*10**18) # calls _eth_to_token_input
@@ -149,16 +149,16 @@ uniswap_wrapper.make_trade(bat, dai, 1*10**18) # calls _token_to_token_input
 uniswap_wrapper.make_trade(eth, bat, 1*10**18, "0x123...") # calls _eth_to_token_input
 ```
 
-*  make_trade_output
-  *  eth_to_token_swap_output
-    *  [ethToTokenSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L167)
-    *  [ethToTokenTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L197)
-  *  token_to_eth_swap_output
-    *  [tokenToEthSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L237)
-    *  [tokenToEthTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L266)
-  *  token_to_token_swap_output
-    *  [tokenTotokenSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L312)
-    *  [tokenTotokenTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L349))
+* make_trade_output
+  * eth_to_token_swap_output
+    * [ethToTokenSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L167)
+    * [ethToTokenTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L197)
+  * token_to_eth_swap_output
+    * [tokenToEthSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L237)
+    * [tokenToEthTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L266)
+  * token_to_token_swap_output
+    * [tokenToTokenSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L312)
+    * [tokenToTokenTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L349))
 ```python
 # Make a trade where the output qty is known based on the input parameters
 uniswap_wrapper.make_trade_output(eth, bat, 1*10**18) # calls _eth_to_token_swap_output
