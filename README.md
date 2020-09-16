@@ -185,7 +185,7 @@ make test
 
 _0.4.3_
 
-* Allow kwargs in `approve` decorator.
+* Allow kwargs in `approved` decorator.
 
 _0.4.2_
 
