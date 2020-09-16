@@ -48,7 +48,7 @@ def check_approval(method: Callable) -> Callable:
         need to be approved."""
 
     @functools.wraps(method)
-    def approved(self: Any, *args: Any) -> Any:
+    def approved(self: Any, *args: Any, **kwargs: Any) -> Any:
         # Check to see if the first token is actually ETH
         token = args[0] if args[0] != ETH_ADDRESS else None
         token_two = None
@@ -66,7 +66,7 @@ def check_approval(method: Callable) -> Callable:
             is_approved = self._is_approved(token_two)
             if not is_approved:
                 self.approve(token_two)
-        return method(self, *args)
+        return method(self, *args, **kwargs)
 
     return approved
 
