@@ -183,6 +183,10 @@ make test
 
 ## Changelog
 
+_0.4.3_
+
+* Allow kwargs in `approve` decorator.
+
 _0.4.2_
 
 * Add note about Uniswap V2 support
