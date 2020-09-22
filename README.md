@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="350" height="200" src="https://user-images.githubusercontent.com/9441295/54372021-b7a99280-4637-11e9-864d-7c515a79d4fa.png">
+  <img width="350" height="290" src="https://user-images.githubusercontent.com/9441295/93878863-9c3d3000-fc8f-11ea-8071-fca01d6de8c4.png">
 </p>
 
 # uniswap-python
