@@ -500,9 +500,8 @@ class Uniswap:
         """Convert tokens to ETH given an input amount."""
         # Balance check
         input_balance = self.get_token_balance(input_token)
-        cost = self.get_token_eth_input_price(input_token, qty)
-        if cost > input_balance:
-            raise InsufficientBalance(input_balance, cost)
+        if qty > input_balance:
+            raise InsufficientBalance(input_balance, qty)
 
         if self.version == 1:
             token_funcs = self.exchange_contract(input_token).functions
@@ -516,10 +515,14 @@ class Uniswap:
         else:
             if recipient is None:
                 recipient = self.address
+            amount_out_min = int(
+                (1 - self.max_slippage)
+                * self.get_token_eth_input_price(input_token, qty)
+            )
             return self._build_and_send_tx(
                 self.router.functions.swapExactTokensForETH(
                     qty,
-                    int((1 - self.max_slippage) * cost),
+                    amount_out_min,
                     [input_token, self.get_weth_address()],
                     recipient,
                     self._deadline(),
