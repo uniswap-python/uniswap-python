@@ -17,12 +17,15 @@ from web3.types import (
     Nonce,
     HexBytes,
 )
+from eth_utils import is_same_address
+from eth_typing import AnyAddress
 
 ETH_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 logger = logging.getLogger(__name__)
 
 
+# TODO: Consider dropping support for ENS altogether and instead use AnyAddress
 AddressLike = Union[Address, ChecksumAddress, ENS]
 
 
@@ -263,9 +266,11 @@ class Uniswap:
     def erc20_contract(self, token_addr: AddressLike) -> Contract:
         return self._load_contract(abi_name="erc20", address=token_addr)
 
+    @functools.lru_cache()
     @supports([2])
-    def get_weth_address(self) -> Address:
-        address: Address = self.router.functions.WETH().call()
+    def get_weth_address(self) -> ChecksumAddress:
+        # Contract calls should always return checksummed addresses
+        address: ChecksumAddress = self.router.functions.WETH().call()
         return address
 
     def _load_contract(self, abi_name: str, address: AddressLike) -> Contract:
@@ -309,9 +314,16 @@ class Uniswap:
 
     @supports([2])
     def get_token_token_input_price(
-        self, token0: AddressLike, token1: AddressLike, qty: int
+        self, token0: AnyAddress, token1: AnyAddress, qty: int
     ) -> int:
         """Public price for token to token trades with an exact input."""
+        # If one of the tokens are WETH, delegate to appropriate call.
+        # See: https://github.com/shanefontaine/uniswap-python/issues/22
+        if is_same_address(token0, self.get_weth_address()):
+            return int(self.get_eth_token_input_price(token1, qty))
+        elif is_same_address(token1, self.get_weth_address()):
+            return int(self.get_token_eth_input_price(token0, qty))
+
         price: int = self.router.functions.getAmountsOut(
             qty, [token0, self.get_weth_address(), token1]
         ).call()[-1]
@@ -343,9 +355,17 @@ class Uniswap:
 
     @supports([2])
     def get_token_token_output_price(
-        self, token0: AddressLike, token1: AddressLike, qty: int
+        self, token0: AnyAddress, token1: AnyAddress, qty: int
     ) -> int:
         """Public price for token to token trades with an exact output."""
+        # If one of the tokens are WETH, delegate to appropriate call.
+        # See: https://github.com/shanefontaine/uniswap-python/issues/22
+        # TODO: Will these equality checks always work? (Address vs ChecksumAddress vs str)
+        if is_same_address(token0, self.get_weth_address()):
+            return int(self.get_eth_token_output_price(token1, qty))
+        elif is_same_address(token1, self.get_weth_address()):
+            return int(self.get_token_eth_output_price(token0, qty))
+
         price: int = self.router.functions.getAmountsIn(
             qty, [token0, self.get_weth_address(), token1]
         ).call()[0]

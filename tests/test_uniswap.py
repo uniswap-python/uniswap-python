@@ -75,6 +75,7 @@ class TestUniswap(object):
     # TODO: Detect mainnet vs rinkeby and set accordingly, like _get_token_addresses in the Uniswap class
     # For Mainnet testing (with `ganache-cli --fork` as per the ganache fixture)
     eth = "0x0000000000000000000000000000000000000000"
+    weth = Web3.toChecksumAddress("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2")
     bat = Web3.toChecksumAddress("0x0D8775F648430679A709E98d2b0Cb6250d2887EF")
     dai = Web3.toChecksumAddress("0x6b175474e89094c44da98b954eedeac495271d0f")
 
@@ -120,6 +121,22 @@ class TestUniswap(object):
         assert r
 
     @pytest.mark.parametrize(
+        "token0, token1, qty",
+        [
+            (bat, dai, ONE_ETH),
+            (dai, bat, ONE_ETH),
+            (bat, dai, 2 * ONE_ETH),
+            (weth, dai, ONE_ETH),
+            (dai, weth, ONE_ETH),
+        ],
+    )
+    def test_get_token_token_input_price(self, client, token0, token1, qty):
+        if not client.version == 2:
+            pytest.skip("Tested method only supported on Uniswap v2")
+        r = client.get_token_token_input_price(token0, token1, qty)
+        assert r
+
+    @pytest.mark.parametrize(
         "token, qty",
         [
             (bat, ONE_ETH),
@@ -143,6 +160,22 @@ class TestUniswap(object):
     )
     def test_get_token_eth_output_price(self, client, token, qty):
         r = client.get_token_eth_output_price(token, qty)
+        assert r
+
+    @pytest.mark.parametrize(
+        "token0, token1, qty",
+        [
+            (bat, dai, ONE_ETH),
+            (dai, bat, ONE_ETH),
+            (bat, dai, 2 * ONE_ETH),
+            (weth, dai, ONE_ETH),
+            (dai, weth, ONE_ETH),
+        ],
+    )
+    def test_get_token_token_output_price(self, client, token0, token1, qty):
+        if not client.version == 2:
+            pytest.skip("Tested method only supported on Uniswap v2")
+        r = client.get_token_token_output_price(token0, token1, qty)
         assert r
 
     # ------ ERC20 Pool ----------------------------------------------------------------
