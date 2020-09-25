@@ -21,7 +21,6 @@ _The authors are in no way affiliated with or funded by Uniswap, uniswap.io, or 
 *  Simple parsing of data returned from the Uniswap contract
 
 ## Under Development
-*  Run tests on a private chain rather than Rinkeby
 *  Better error handling
 
 ## Getting Started
@@ -52,7 +51,9 @@ Only some endpoints in the API are available to everyone. The public endpoints c
 
 ```python
 from uniswap import Uniswap
-uniswap_wrapper = Uniswap()
+address = "YOUR ADDRESS"          # or "0x0000000000000000000000000000000000000000", if you're not making transactions
+private_key = "YOUR PRIVATE KEY"  # or None, if you're not going to make transactions
+uniswap_wrapper = Uniswap(address, private_key, version=2)  # pass version=2 to use Uniswap v2
 eth = "0x0000000000000000000000000000000000000000"
 bat = "0x0D8775F648430679A709E98d2b0Cb6250d2887EF"
 dai = "0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359"
