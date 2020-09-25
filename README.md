@@ -184,6 +184,12 @@ make test
 
 ## Changelog
 
+_0.4.4_
+
+* General: Add new logo for Uniswap V2
+* Bug fix: invalid balance check (#25)
+* Bug fix: fixed error when passing WETH as token
+
 _0.4.3_
 
 * Allow kwargs in `approved` decorator.
