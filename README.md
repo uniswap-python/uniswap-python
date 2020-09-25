@@ -10,7 +10,7 @@
 [![Typechecking: Mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-The unofficial Python client for the [Uniswap](https://uniswap.io/).
+The unofficial Python client for [Uniswap](https://uniswap.io/).
 
 _The authors are in no way affiliated with or funded by Uniswap, uniswap.io, or any subsidiaries or affiliates of any of the previously mentioned entities._
 
