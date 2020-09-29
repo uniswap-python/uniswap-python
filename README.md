@@ -178,6 +178,10 @@ To run the full test suite, in the project directory run:
 make test
 ```
 
+## Authors
+* [Shane Fontaine](https://twitter.com/shanecoin)
+* [Erik Bjäreholt](https://twitter.com/ErikBjare)
+
 ## Ownership Disclosure
 
 *  I own some BAT and DAI tokens that are seen in the examples above. These tokens are used only for example purposes and are not meant to be an endorsement. I am not affiliated with BAT, Brave, Basic Attention Token, Brave Browser, DAI, Maker, MakerDAO, or any subsidiaries.
