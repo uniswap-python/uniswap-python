@@ -188,11 +188,14 @@ make test
 
 ## Changelog
 
+_0.4.5_
+* Bug fix: Use .eth instead of .ens
+
 _0.4.4_
 
 * General: Add new logo for Uniswap V2
-* Bug fix: invalid balance check (#25)
-* Bug fix: fixed error when passing WETH as token
+* Bug fix: Invalid balance check (#25)
+* Bug fix: Fixed error when passing WETH as token
 
 _0.4.3_
 
