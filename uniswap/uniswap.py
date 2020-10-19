@@ -92,7 +92,7 @@ def supports(versions: List[int]) -> Callable:
 def _str_to_addr(s: str) -> AddressLike:
     if s.startswith("0x"):
         return Address(bytes.fromhex(s[2:]))
-    elif s.endswith(".ens"):
+    elif s.endswith(".eth"):
         return ENS(s)
     else:
         raise Exception("Could't convert string {s} to AddressLike")
@@ -104,7 +104,7 @@ def _addr_to_str(a: AddressLike) -> str:
         addr: str = Web3.toChecksumAddress("0x" + bytes(a).hex())
         return addr
     elif isinstance(a, str):
-        if a.endswith(".ens"):
+        if a.endswith(".eth"):
             # Address is ENS
             raise Exception("ENS not supported for this operation")
         elif a.startswith("0x"):
