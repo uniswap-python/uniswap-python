@@ -98,26 +98,26 @@ uniswap_wrapper.get_token_eth_output_price(bat, 1*10**18)
 uniswap_wrapper.get_token_eth_output_price(dai, 5*10**18)
 ```
 
-#### ERC20 Pool Methods
-*  [get_eth_balance](https://docs.uniswap.io/smart-contract-integration/vyper)
+#### ERC20 Pool Methods (v1 only)
+*  [get_ex_eth_balance](https://docs.uniswap.io/smart-contract-integration/vyper)
 ```python
 # Get the balance of ETH in an exchange contract.
-uniswap_wrapper.get_eth_balance(bat)
+uniswap_wrapper.get_ex_eth_balance(bat)
 ```
 
-*  [get_token_balance](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L469)
+*  [get_ex_token_balance](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L469)
 ```python
 # Get the balance of a token in an exchange contract.
-uniswap_wrapper.get_token_balance(bat)
+uniswap_wrapper.get_ex_token_balance(bat)
 ```
 
 *  [get_exchange_rate](https://github.com/Uniswap/uniswap-frontend/blob/master/src/pages/Pool/AddLiquidity.js#L351)
 ```python
-# Get the balance of a token in an exchange contract.
+# Get the exchange rate of token/ETH
 uniswap_wrapper.get_exchange_rate(bat)
 ```
 
-#### Liquidity Methods
+#### Liquidity Methods (v1 only)
 
 *  [add_liquidity](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L48)
 ```python
