@@ -118,7 +118,7 @@ def _validate_address(a: AddressLike) -> None:
     assert _addr_to_str(a)
 
 
-_netid_to_name = {1: "mainnet", 4: "rinkeby"}
+_chainid_to_name = {1: "mainnet", 4: "rinkeby"}
 
 
 class Uniswap:
@@ -149,11 +149,15 @@ class Uniswap:
                 Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60})
             )
 
-        netid = int(self.w3.net.version)
-        if netid in _netid_to_name:
-            self.network = _netid_to_name[netid]
+        chainid = int(self.w3.eth.chainId)
+        if chainid is None:
+            chainid = int(self.w3.net.version)
+        if chainid == 0:
+            raise Exception(f"Chainid == 0: node may be syncing")
+        if chainid in _chainid_to_name:
+            self.network = _chainid_to_name[chainid]
         else:
-            raise Exception(f"Unknown netid: {netid}")
+            raise Exception(f"Unknown chainid: {chainid}")
         logger.info(f"Using {self.w3} ('{self.network}')")
 
         self.last_nonce: Nonce = self.w3.eth.getTransactionCount(self.address)
@@ -864,8 +868,8 @@ class Uniswap:
         Returns a dict with addresses for tokens for the current net.
         Used in testing.
         """
-        netid = int(self.w3.net.version)
-        netname = _netid_to_name[netid]
+        chainid = int(self.w3.net.version)
+        netname = _chainid_to_name[chainid]
         if netname == "mainnet":
             return {
                 "eth": "0x0000000000000000000000000000000000000000",
