@@ -296,15 +296,8 @@ class Uniswap:
     @functools.lru_cache()
     @supports([2])
     def get_weth_address(self) -> ChecksumAddress:
-        address: ChecksumAddress
-        if self.network == "xdai":
-            # return the xdai address
-            address = Web3.toChecksumAddress(
-                "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d"
-            )
-        else:
-            # Contract calls should always return checksummed addresses
-            address = self.router.functions.WETH().call()
+        # Contract calls should always return checksummed addresses
+        address: ChecksumAddress = self.router.functions.WETH().call()
         return address
 
     def _load_contract(self, abi_name: str, address: AddressLike) -> Contract:
