@@ -95,7 +95,7 @@ def _str_to_addr(s: str) -> AddressLike:
     elif s.endswith(".eth"):
         return ENS(s)
     else:
-        raise Exception("Could't convert string {s} to AddressLike")
+        raise Exception(f"Couldn't convert string '{s}' to AddressLike")
 
 
 def _addr_to_str(a: AddressLike) -> str:
@@ -110,8 +110,8 @@ def _addr_to_str(a: AddressLike) -> str:
         elif a.startswith("0x"):
             addr = Web3.toChecksumAddress(a)
             return addr
-        else:
-            raise InvalidToken(a)
+
+    raise InvalidToken(a)
 
 
 def _validate_address(a: AddressLike) -> None:
@@ -193,12 +193,12 @@ class Uniswap:
             self.router_address: AddressLike = _str_to_addr(
                 "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
             )
-            """Documented here: https://uniswap.org/docs/v2/smart-contracts/router02/"""
+            # Documented here: https://uniswap.org/docs/v2/smart-contracts/router02/
             self.router = self._load_contract(
                 abi_name="uniswap-v2/router02", address=self.router_address,
             )
         else:
-            raise Exception("Invalid version, only 1 or 2 supported")
+            raise Exception(f"Invalid version '{self.version}', only 1 or 2 supported")
 
         logger.info(f"Using factory contract: {self.factory_contract}")
 
@@ -236,7 +236,8 @@ class Uniswap:
         ex_addr: AddressLike = self.factory_contract.functions.getExchange(
             token_addr
         ).call()
-        # TODO: What happens if the token doesn't have an exchange/doesn't exist? Should probably raise an Exception (and test it)
+        # TODO: What happens if the token doesn't have an exchange/doesn't exist?
+        #       Should probably raise an Exception (and test it)
         return ex_addr
 
     @supports([1])
@@ -294,7 +295,7 @@ class Uniswap:
         if self.version == 1:
             ex = self.exchange_contract(token)
             price: Wei = ex.functions.getEthToTokenInputPrice(qty).call()
-        elif self.version == 2:
+        else:
             price = self.router.functions.getAmountsOut(
                 qty, [self.get_weth_address(), token]
             ).call()[-1]
@@ -470,14 +471,13 @@ class Uniswap:
             if balance < need:
                 raise InsufficientBalance(balance, need)
             return self._eth_to_token_swap_output(output_token, qty, recipient)
+        elif output_token == ETH_ADDRESS:
+            qty = Wei(qty)
+            return self._token_to_eth_swap_output(input_token, qty, recipient)
         else:
-            if output_token == ETH_ADDRESS:
-                qty = Wei(qty)
-                return self._token_to_eth_swap_output(input_token, qty, recipient)
-            else:
-                return self._token_to_token_swap_output(
-                    input_token, qty, output_token, recipient
-                )
+            return self._token_to_token_swap_output(
+                input_token, qty, output_token, recipient
+            )
 
     def _eth_to_token_swap_input(
         self, output_token: AddressLike, qty: Wei, recipient: Optional[AddressLike]
