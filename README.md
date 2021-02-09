@@ -188,6 +188,9 @@ make test
 
 ## Changelog
 
+_0.4.6_
+* Bug fix: Update bleach package from 3.1.4 to 3.3.0
+
 _0.4.5_
 * Bug fix: Use .eth instead of .ens
 
