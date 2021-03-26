@@ -76,7 +76,7 @@ Decimals for common tokens:
  - WBTC uses 8 decimals
  - USDC and USDT uses 6 decimals
 
-You can look up the number of tokens used by looking up the contract on Etherscan, for example here is WBTC: https://etherscan.io/token/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599
+You can look up the number of decimals used by a particular token by looking up the contract on Etherscan. As an example, here is the one for WBTC: https://etherscan.io/token/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599
 
 *  [get_eth_token_input_price](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L416)
 ```python
