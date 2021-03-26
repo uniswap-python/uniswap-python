@@ -46,8 +46,13 @@ The program expects an environment variables to be set in order to run the progr
 PROVIDER  # HTTP Provider for web3
 ```
 
-### Public Client
-Only some endpoints in the API are available to everyone. The public endpoints can be reached using PublicClient
+### Gas pricing
+
+To modify the gas pricing strategy you need to pass a custom `Web3` instance to the `Uniswap` contructor. You can find details for how to configure Web3 gas strategies in their [documentation](https://web3py.readthedocs.io/en/stable/gas_price.html).
+
+### Examples and API
+
+The `Uniswap` class takes several optional parameters, read the code to see which ones are available.
 
 ```python
 from uniswap import Uniswap
@@ -59,16 +64,19 @@ bat = "0x0D8775F648430679A709E98d2b0Cb6250d2887EF"
 dai = "0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359"
 ```
 
-#### Market Methods
-*  [get_fee_maker](https://docs.uniswap.io/)
-```python
-uniswap_wrapper.get_fee_maker()
-```
+#### Price Methods
 
-*  [get_fee_taker](https://docs.uniswap.io/)
-```python
-uniswap_wrapper.get_fee_taker()
-```
+> **Note:** These methods assume a certain route for the swap to take, which may not be the optimal route. See https://github.com/shanefontaine/uniswap-python/issues/69 for details.
+
+These methods return the price as an integer in the smallest unit of the token. You need to ensure that you know how many decimals the token you're trying to trade uses to get prices in the common decimal format. See https://github.com/shanefontaine/uniswap-python/issues/12 for details.
+
+Decimals for common tokens:
+
+ - ETH, DAI, and BAT uses 18 decimals (as you can see in code below)
+ - WBTC uses 8 decimals
+ - USDC and USDT uses 6 decimals
+
+You can look up the number of tokens used by looking up the contract on Etherscan, for example here is WBTC: https://etherscan.io/token/0x2260fac5e5542a773aa44fbcfedf7c193bc2c599
 
 *  [get_eth_token_input_price](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L416)
 ```python
@@ -97,6 +105,59 @@ uniswap_wrapper.get_eth_token_output_price(dai, 5*10**18)
 uniswap_wrapper.get_token_eth_output_price(bat, 1*10**18)
 uniswap_wrapper.get_token_eth_output_price(dai, 5*10**18)
 ```
+
+#### Trading
+
+> **Note:** The same route assumptions and need for handling decimals apply here as those mentioned in the previous section.
+
+* make_trade
+  * eth_to_token_input
+    * [ethToTokenSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L127)
+    * [ethToTokenTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L162)
+  * token_to_eth_input
+    * [tokenToEthSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L202)
+    * [tokenToEthTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L232)
+  * token_to_token_input
+    * [tokenToTokenSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L271)
+    * [tokenToTokenTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L307)
+
+```python
+# Make a trade based on the input parameters
+uniswap_wrapper.make_trade(eth, bat, 1*10**18) # calls _eth_to_token_input
+uniswap_wrapper.make_trade(bat, eth, 1*10**18) # calls _token_to_eth_input
+uniswap_wrapper.make_trade(bat, dai, 1*10**18) # calls _token_to_token_input
+uniswap_wrapper.make_trade(eth, bat, 1*10**18, "0x123...") # calls _eth_to_token_input
+```
+
+* make_trade_output
+  * eth_to_token_swap_output
+    * [ethToTokenSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L167)
+    * [ethToTokenTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L197)
+  * token_to_eth_swap_output
+    * [tokenToEthSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L237)
+    * [tokenToEthTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L266)
+  * token_to_token_swap_output
+    * [tokenToTokenSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L312)
+    * [tokenToTokenTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L349))
+
+```python
+# Make a trade where the output qty is known based on the input parameters
+uniswap_wrapper.make_trade_output(eth, bat, 1*10**18) # calls _eth_to_token_swap_output
+uniswap_wrapper.make_trade_output(bat, eth, 1*10**18) # calls _token_to_eth_swap_output
+uniswap_wrapper.make_trade_output(bat, dai, 1*10**18, "0x123...") # calls _token_to_token_swap_output
+```
+
+#### Fee Methods
+*  [get_fee_maker](https://docs.uniswap.io/)
+```python
+uniswap_wrapper.get_fee_maker()
+```
+
+*  [get_fee_taker](https://docs.uniswap.io/)
+```python
+uniswap_wrapper.get_fee_taker()
+```
+
 
 #### ERC20 Pool Methods (v1 only)
 *  [get_ex_eth_balance](https://docs.uniswap.io/smart-contract-integration/vyper)
@@ -129,42 +190,6 @@ uniswap_wrapper.add_liquidity(bat, 1*10**18)
 ```python
 # Remove liquidity from the pool.
 uniswap_wrapper.remove_liquidity(bat, 1*10**18)
-```
-
-#### Trading
-* make_trade
-  * eth_to_token_input
-    * [ethToTokenSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L127)
-    * [ethToTokenTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L162)
-  * token_to_eth_input
-    * [tokenToEthSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L202)
-    * [tokenToEthTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L232)
-  * token_to_token_input
-    * [tokenToTokenSwapInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L271)
-    * [tokenToTokenTransferInput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L307)
-```python
-# Make a trade based on the input parameters
-uniswap_wrapper.make_trade(eth, bat, 1*10**18) # calls _eth_to_token_input
-uniswap_wrapper.make_trade(bat, eth, 1*10**18) # calls _token_to_eth_input
-uniswap_wrapper.make_trade(bat, dai, 1*10**18) # calls _token_to_token_input
-uniswap_wrapper.make_trade(eth, bat, 1*10**18, "0x123...") # calls _eth_to_token_input
-```
-
-* make_trade_output
-  * eth_to_token_swap_output
-    * [ethToTokenSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L167)
-    * [ethToTokenTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L197)
-  * token_to_eth_swap_output
-    * [tokenToEthSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L237)
-    * [tokenToEthTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L266)
-  * token_to_token_swap_output
-    * [tokenToTokenSwapOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L312)
-    * [tokenToTokenTransferOutput](https://github.com/Uniswap/contracts-vyper/blob/master/contracts/uniswap_exchange.vy#L349))
-```python
-# Make a trade where the output qty is known based on the input parameters
-uniswap_wrapper.make_trade_output(eth, bat, 1*10**18) # calls _eth_to_token_swap_output
-uniswap_wrapper.make_trade_output(bat, eth, 1*10**18) # calls _token_to_eth_swap_output
-uniswap_wrapper.make_trade_output(bat, dai, 1*10**18, "0x123...") # calls _token_to_token_swap_output
 ```
 
 ## Testing
