@@ -611,7 +611,7 @@ class Uniswap:
         else:
             if recipient is None:
                 recipient = self.address
-            eth_qty = self.get_eth_token_output_price(output_token, qty)
+            eth_qty = int((1 + self.max_slippage)*self.get_eth_token_output_price(output_token, qty))
             return self._build_and_send_tx(
                 self.router.functions.swapETHForExactTokens(
                     qty,
