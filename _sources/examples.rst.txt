@@ -1,10 +1,13 @@
 Examples
 ========
 
+This examples page is a work-in-progress. See the README for the old examples.
+
 Initializing the Uniswap class
 ------------------------------
 
 .. code:: python
+
     from uniswap import Uniswap
     address = "YOUR ADDRESS"          # or "0x0000000000000000000000000000000000000000", if you're not making transactions
     private_key = "YOUR PRIVATE KEY"  # or None, if you're not going to make transactions
