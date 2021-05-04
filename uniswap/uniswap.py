@@ -125,6 +125,33 @@ def _validate_address(a: AddressLike) -> None:
 # see: https://chainid.network/chains/
 _netid_to_name = {1: "mainnet", 3: "ropsten", 4: "rinkeby", 56: "binance", 100: "xdai"}
 
+_factory_contract_addresses_v1 = {
+    "mainnet": "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95",
+    "ropsten": "0x9c83dCE8CA20E9aAF9D3efc003b2ea62aBC08351",
+    "rinkeby": "0xf5D915570BC477f9B8D6C0E980aA81757A3AaC36",
+    "kovan": "0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30",
+    "görli": "0x6Ce570d02D73d4c384b46135E87f8C592A8c86dA",
+}
+
+
+# For v2 the address is the same on mainnet, Ropsten, Rinkeby, Görli, and Kovan
+# https://uniswap.org/docs/v2/smart-contracts/factory
+_factory_contract_addresses_v2 = {
+    "mainnet": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "ropsten": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "rinkeby": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "görli": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "xdai": "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7",
+}
+
+_router_contract_addresses_v2 = {
+    "mainnet": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+    "ropsten": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+    "rinkeby": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+    "görli": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+    "xdai": "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77",
+}
+
 
 class Uniswap:
     """
@@ -139,6 +166,8 @@ class Uniswap:
         web3: Web3 = None,
         version: int = 1,
         max_slippage: float = 0.1,
+        factory_contract_addr: str = None,
+        router_contract_addr: str = None,
     ) -> None:
         """
         :param address: The public address of the ETH wallet to use.
@@ -147,6 +176,8 @@ class Uniswap:
         :param web3: Can be optionally set to a custom Web3 instance.
         :param version: Which version of the Uniswap contracts to use.
         :param max_slippage: Max allowed slippage for a trade.
+        :param factory_contract_addr: Can be optionally set to override the address of the factory contract.
+        :param router_contract_addr: Can be optionally set to override the address of the router contract (v2 only).
         """
         self.address: AddressLike = _str_to_addr(address) if isinstance(
             address, str
@@ -186,38 +217,23 @@ class Uniswap:
         self.max_approval_check_int = int(self.max_approval_check_hex, 16)
 
         if self.version == 1:
-            factory_contract_addresses = {
-                "mainnet": "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95",
-                "ropsten": "0x9c83dCE8CA20E9aAF9D3efc003b2ea62aBC08351",
-                "rinkeby": "0xf5D915570BC477f9B8D6C0E980aA81757A3AaC36",
-                "kovan": "0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30",
-                "görli": "0x6Ce570d02D73d4c384b46135E87f8C592A8c86dA",
-            }
+            if factory_contract_addr is None:
+                factory_contract_addr = _factory_contract_addresses_v1[self.network]
 
             self.factory_contract = self._load_contract(
                 abi_name="uniswap-v1/factory",
-                address=_str_to_addr(factory_contract_addresses[self.network]),
+                address=_str_to_addr(factory_contract_addr),
             )
         elif self.version == 2:
-            # For v2 the address is the same on mainnet, Ropsten, Rinkeby, Görli, and Kovan
-            # https://uniswap.org/docs/v2/smart-contracts/factory
-            if self.network == "xdai":
-                factory_contract_address_v2 = _str_to_addr(
-                    "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7"
-                )
-                router_address = _str_to_addr(
-                    "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77"
-                )
-            else:
-                factory_contract_address_v2 = _str_to_addr(
-                    "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
-                )
-                router_address = _str_to_addr(
-                    "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
-                )
-            self.router_address: AddressLike = router_address
+            if router_contract_addr is None:
+                router_contract_addr = _router_contract_addresses_v2[self.network]
+            self.router_address: AddressLike = _str_to_addr(router_contract_addr)
+
+            if factory_contract_addr is None:
+                factory_contract_addr = _factory_contract_addresses_v2[self.network]
             self.factory_contract = self._load_contract(
-                abi_name="uniswap-v2/factory", address=factory_contract_address_v2,
+                abi_name="uniswap-v2/factory",
+                address=_str_to_addr(factory_contract_addr),
             )
             # Documented here: https://uniswap.org/docs/v2/smart-contracts/router02/
             self.router = self._load_contract(
