@@ -243,7 +243,7 @@ class TestUniswap(object):
             # ETH -> Token
             (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> Token
-            (dai, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (bat, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> ETH
             (bat, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
             # (eth, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
