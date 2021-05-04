@@ -30,11 +30,15 @@ AddressLike = Union[Address, ChecksumAddress, ENS]
 
 
 class InvalidToken(Exception):
+    """Raised when an invalid token address is used."""
+
     def __init__(self, address: Any) -> None:
         Exception.__init__(self, f"Invalid token address: {address}")
 
 
 class InsufficientBalance(Exception):
+    """Raised when the account has insufficient balance for a transaction."""
+
     def __init__(self, had: int, needed: int) -> None:
         Exception.__init__(self, f"Insufficient balance. Had {had}, needed {needed}")
 
@@ -623,7 +627,10 @@ class Uniswap:
         else:
             if recipient is None:
                 recipient = self.address
-            eth_qty = int((1 + self.max_slippage)*self.get_eth_token_output_price(output_token, qty))
+            eth_qty = int(
+                (1 + self.max_slippage)
+                * self.get_eth_token_output_price(output_token, qty)
+            )
             return self._build_and_send_tx(
                 self.router.functions.swapETHForExactTokens(
                     qty,
