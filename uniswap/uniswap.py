@@ -122,6 +122,10 @@ _netid_to_name = {1: "mainnet", 4: "rinkeby"}
 
 
 class Uniswap:
+    """
+    Wrapper around Uniswap v1 and v2 contracts.
+    """
+
     def __init__(
         self,
         address: Union[str, AddressLike],
@@ -131,6 +135,14 @@ class Uniswap:
         version: int = 1,
         max_slippage: float = 0.1,
     ) -> None:
+        """
+        :param address: The public address of the ETH wallet to use.
+        :param private_key: The private key of the ETH wallet to use.
+        :param provider: Can be optionally set to a Web3 provider URI. If none set, will fall back to the PROVIDER environment variable, or web3 if set.
+        :param web3: Can be optionally set to a custom Web3 instance.
+        :param version: Which version of the Uniswap contracts to use.
+        :param max_slippage: Max allowed slippage for a trade.
+        """
         self.address: AddressLike = _str_to_addr(address) if isinstance(
             address, str
         ) else address

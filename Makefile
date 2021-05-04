@@ -1,4 +1,4 @@
-.PHONY: test typecheck lint precommit
+.PHONY: test typecheck lint precommit docs
 
 test:
 	poetry run pytest -v --cov=uniswap --cov-report html
@@ -13,3 +13,6 @@ precommit:
 	make typecheck
 	make lint
 	make test
+
+docs:
+	cd docs/ && make html

@@ -48,9 +48,11 @@ PROVIDER  # HTTP Provider for web3
 
 ### Gas pricing
 
-To modify the gas pricing strategy you need to pass a custom `Web3` instance to the `Uniswap` contructor. You can find details for how to configure Web3 gas strategies in their [documentation](https://web3py.readthedocs.io/en/stable/gas_price.html).
+To modify the gas pricing strategy you need to pass a custom `Web3` instance to the `Uniswap` constructor. You can find details for how to configure Web3 gas strategies in their [documentation](https://web3py.readthedocs.io/en/stable/gas_price.html).
 
 ### Examples and API
+
+**Note:** These examples are in the process of being moved to the [docs](https://shanefontaine.github.io/uniswap-python/).
 
 The `Uniswap` class takes several optional parameters, read the code to see which ones are available.
 
