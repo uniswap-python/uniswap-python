@@ -27,10 +27,10 @@ jobs:
       uses: actions/upload-artifact@v2-preview
       with:
         name: build
-        path: docs/_build
+        path: docs/_build/html
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       if: github.ref == 'refs/heads/master'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: docs/_build
+        publish_dir: docs/_build/html
