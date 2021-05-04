@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "uniswap-python"
-copyright = "2021, Shane Fontaine, Erik Bjäreholt"
-author = "Shane Fontaine, Erik Bjäreholt"
+author = "Shane Fontaine, Erik Bjäreholt, and contributors"
+copyright = "2021, " + author
 
 
 # -- General configuration ---------------------------------------------------
@@ -50,6 +50,10 @@ html_theme = "sphinx_book_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+html_title = "uniswap-python"
+html_logo = "_static/logo.png"
+html_favicon = "_static/favicon.png"
 
 html_theme_options = {
     "repository_url": "https://github.com/shanefontaine/uniswap-python",
