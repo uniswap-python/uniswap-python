@@ -12,20 +12,23 @@
 
 The unofficial Python client for [Uniswap](https://uniswap.io/).
 
+Documentation is available at https://uniswap-python.com/
+
 _The authors are in no way affiliated with or funded by Uniswap, uniswap.io, or any subsidiaries or affiliates of any of the previously mentioned entities._
 
 ### This package supports Uniswap V2 as of version 0.4.0.
 
 ## Functionality
+
 *  A simple to use Python wrapper for all available contract functions and variables
+*  A basic CLI to get prices and token metadata
 *  Simple parsing of data returned from the Uniswap contract
 
-## Under Development
-*  Better error handling
-
 ## Getting Started
+
 This README is documentation on the syntax of the python client presented in this repository. See function docstrings for full syntax details.
-This API attempts to present a clean interface to Uniswap, but in order to use it to its full potential, you must familiarize yourself with the official Uniswap documentation.
+
+This library attempts to present a clean interface to Uniswap, but in order to use it to its full potential, you must familiarize yourself with the official Uniswap documentation.
 
 *  https://docs.uniswap.io/
 
