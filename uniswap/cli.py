@@ -39,24 +39,24 @@ def main(verbose: bool) -> None:
 @click.option(
     "--raw",
     is_flag=True,
-    help="Don't normalize the quoted price to the input tokens's decimals",
+    help="Don't normalize the quoted price to the output token's decimals",
 )
 @click.option(
     "--quantity",
-    help="Quantity of output tokens to get price of. Falls back to one full unit of the output by default (10**18 for WETH, for example).",
+    help="Quantity of output tokens to get price of. Falls back to one full unit of the input token by default (10**18 for WETH, for example).",
 )
 def price(
     token_in: AddressLike, token_out: AddressLike, raw: bool, quantity: int = None
 ) -> None:
-    """Returns the price of ``quantity`` tokens of ``token_out`` quoted in ``token_in``."""
+    """Returns the price of ``quantity`` tokens of ``token_in`` quoted in ``token_out``."""
     uni = Uniswap(None, None, version=2)
     if quantity is None:
-        quantity = 10 ** uni.get_token(token_out)["decimals"]
-    price = uni.get_token_token_output_price(token_in, token_out, qty=quantity)
+        quantity = 10 ** uni.get_token(token_in)["decimals"]
+    price = uni.get_token_token_input_price(token_in, token_out, qty=quantity)
     if raw:
         print(price)
     else:
-        decimals = uni.get_token(token_in)["decimals"]
+        decimals = uni.get_token(token_out)["decimals"]
         print(price / 10 ** decimals)
 
 
