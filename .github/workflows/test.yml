@@ -33,6 +33,7 @@ jobs:
         make typecheck
     - name: Test
       env:
+        PROVIDER: ${{ secrets.MAINNET_PROVIDER }}
         MAINNET_PROVIDER: ${{ secrets.MAINNET_PROVIDER }}
       run: |
         make test
