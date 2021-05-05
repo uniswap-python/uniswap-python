@@ -62,6 +62,8 @@ html_theme_options = {
     "use_edit_page_button": True,
 }
 
+show_navbar_depth = 2
+
 
 # Autodoc config
 
