@@ -28,6 +28,9 @@ jobs:
       with:
         name: build
         path: docs/_build/html
+    - name: add CNAME file
+      run: |
+        echo 'uniswap-python.com' > docs/_build/html/CNAME
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       if: github.ref == 'refs/heads/master'
