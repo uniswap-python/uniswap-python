@@ -7,13 +7,13 @@ from uniswap.cli import main
 
 def test_get_price():
     runner = CliRunner()
-    result = runner.invoke(main, ["price", "dai", "weth"])
+    result = runner.invoke(main, ["price", "weth", "dai"])
     assert result.exit_code == 0
 
     # Will break when ETH breaks 10k
     assert 1000 < float(result.output) < 10_000
 
-    result = runner.invoke(main, ["price", "dai", "wbtc"])
+    result = runner.invoke(main, ["price", "wbtc", "dai"])
     assert result.exit_code == 0
 
     # Will break when BTC breaks 100k
