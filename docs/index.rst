@@ -16,6 +16,7 @@ Welcome to uniswap-python's documentation!
    :caption: Contents:
 
    api
+   cli 
    examples
    forks
 

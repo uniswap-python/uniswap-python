@@ -80,6 +80,14 @@ def check_approval(method: Callable) -> Callable:
 
 def supports(versions: List[int]) -> Callable:
     def g(f: Callable) -> Callable:
+        if f.__doc__ is None:
+            f.__doc__ = ""
+        f.__doc__ += """\n\n
+        Supports Uniswap
+        """ + ", ".join(
+            "v" + str(ver) for ver in versions
+        )
+
         @functools.wraps(f)
         def check_version(self: "Uniswap", *args: List, **kwargs: Dict) -> Any:
             if self.version not in versions:
@@ -160,8 +168,8 @@ class Uniswap:
 
     def __init__(
         self,
-        address: Union[str, AddressLike],
-        private_key: str,
+        address: Union[str, AddressLike, None],
+        private_key: Optional[str],
         provider: str = None,
         web3: Web3 = None,
         version: int = 1,
@@ -179,10 +187,21 @@ class Uniswap:
         :param factory_contract_addr: Can be optionally set to override the address of the factory contract.
         :param router_contract_addr: Can be optionally set to override the address of the router contract (v2 only).
         """
-        self.address: AddressLike = _str_to_addr(address) if isinstance(
-            address, str
-        ) else address
-        self.private_key = private_key
+        if address is None:
+            self.address: AddressLike = _str_to_addr(
+                "0x0000000000000000000000000000000000000000"
+            )
+        else:
+            self.address = (
+                _str_to_addr(address) if isinstance(address, str) else address
+            )
+        if private_key is None:
+            self.private_key = (
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            )
+        else:
+            self.private_key = private_key
+
         self.version = version
 
         # TODO: Write tests for slippage
@@ -246,7 +265,12 @@ class Uniswap:
 
     @supports([1])
     def get_all_tokens(self) -> List[dict]:
-        # FIXME: This is a very expensive operation, would benefit greatly from caching
+        """
+        Retrieves all token pairs.
+
+        Note: This is a *very* expensive operation and might therefore not work properly.
+        """
+        # FIXME: This is a very expensive operation, would benefit greatly from caching.
         tokenCount = self.factory_contract.functions.tokenCount().call()
         tokens = []
         for i in range(tokenCount):
@@ -258,20 +282,23 @@ class Uniswap:
             tokens.append(token)
         return tokens
 
-    @supports([1])
     def get_token(self, address: AddressLike) -> dict:
+        """
+        Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
+        """
         # FIXME: This function should always return the same output for the same input
         #        and would therefore benefit from caching
         token_contract = self._load_contract(abi_name="erc20", address=address)
         try:
-            symbol = token_contract.functions.symbol().call()
             name = token_contract.functions.name().call()
+            symbol = token_contract.functions.symbol().call()
+            decimals = token_contract.functions.decimals().call()
         except Exception as e:
             logger.warning(
                 f"Exception occurred while trying to get token {_addr_to_str(address)}: {e}"
             )
             raise InvalidToken(address)
-        return {"name": name, "symbol": symbol}
+        return {"name": name, "symbol": symbol, "decimals": decimals}
 
     @supports([1])
     def exchange_address_from_token(self, token_addr: AddressLike) -> AddressLike:
