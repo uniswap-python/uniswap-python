@@ -1,7 +1,7 @@
-Using uniswap-python for Uniswap forks
-======================================
+Using with forks/other chains
+=============================
 
-While not officially supported, you can use this library to trade across several Uniswap forks, like:
+While not officially supported nor tested, you can use this library to trade across several Uniswap forks, like:
 
 - Sushiswap (mainnet)
 - Honeyswap (xDai)
