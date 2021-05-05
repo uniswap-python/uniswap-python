@@ -28,9 +28,15 @@ def _coerce_to_checksum(addr: str) -> str:
 
 @click.group()
 @click.option("-v", "--verbose", is_flag=True)
-def main(verbose: bool) -> None:
+@click.option("--version", type=click.Choice(["1", "2"]), default="2")
+@click.pass_context
+def main(ctx: click.Context, verbose: bool, version: str) -> None:
     logging.basicConfig(level=logging.INFO if verbose else logging.WARNING)
     load_dotenv()
+
+    ctx.ensure_object(dict)
+    ctx.obj["VERBOSE"] = verbose
+    ctx.obj["UNISWAP"] = Uniswap(None, None, version=int(version))
 
 
 @main.command()
@@ -45,11 +51,16 @@ def main(verbose: bool) -> None:
     "--quantity",
     help="Quantity of output tokens to get price of. Falls back to one full unit of the input token by default (10**18 for WETH, for example).",
 )
+@click.pass_context
 def price(
-    token_in: AddressLike, token_out: AddressLike, raw: bool, quantity: int = None
+    ctx: click.Context,
+    token_in: AddressLike,
+    token_out: AddressLike,
+    raw: bool,
+    quantity: int = None,
 ) -> None:
     """Returns the price of ``quantity`` tokens of ``token_in`` quoted in ``token_out``."""
-    uni = Uniswap(None, None, version=2)
+    uni = ctx.obj["UNISWAP"]
     if quantity is None:
         quantity = 10 ** uni.get_token(token_in)["decimals"]
     price = uni.get_token_token_input_price(token_in, token_out, qty=quantity)
@@ -62,17 +73,20 @@ def price(
 
 @main.command()
 @click.argument("token", type=_coerce_to_checksum)
-def token(token: AddressLike) -> None:
-    uni = Uniswap(None, None, version=2)
+@click.pass_context
+def token(ctx: click.Context, token: AddressLike) -> None:
+    """Show metadata for token"""
+    uni = ctx.obj["UNISWAP"]
     t1 = uni.get_token(token)
     print(t1)
 
 
 @main.command()
 @click.option("--metadata", is_flag=True, help="Also get metadata for tokens")
-def tokendb(metadata: bool) -> None:
+@click.pass_context
+def tokendb(ctx: click.Context, metadata: bool) -> None:
     """List known token addresses"""
-    uni = Uniswap(None, None, version=2)
+    uni = ctx.obj["UNISWAP"]
     for symbol, addr in tokens.items():
         if metadata:
             data = uni.get_token(_str_to_addr(addr))
