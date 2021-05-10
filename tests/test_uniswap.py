@@ -19,7 +19,7 @@ class GanacheInstance:
     eth_privkey: str
 
 
-@pytest.fixture(scope="module", params=[1, 2])
+@pytest.fixture(scope="module", params=[3])
 def client(request, web3: Web3, ganache: GanacheInstance):
     uniswap = Uniswap(
         ganache.eth_address, ganache.eth_privkey, web3=web3, version=request.param

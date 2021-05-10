@@ -92,7 +92,7 @@ def supports(versions: List[int]) -> Callable:
         def check_version(self: "Uniswap", *args: List, **kwargs: Dict) -> Any:
             if self.version not in versions:
                 raise Exception(
-                    "Function does not support version of Uniswap passed to constructor"
+                    f"Function {f.__name__} does not support version {self.version} of Uniswap passed to constructor"
                 )
             return f(self, *args, **kwargs)
 
@@ -265,10 +265,21 @@ class Uniswap:
             self.router = self._load_contract(
                 abi_name="uniswap-v2/router02", address=self.router_address,
             )
+        elif self.version == 3:
+            # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
+            quoter_addr = _str_to_addr("0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6")
+            router_addr = _str_to_addr("0xE592427A0AEce92De3Edee1F18E0157C05861564")
+            self.quoter = self._load_contract(
+                abi_name="uniswap-v3/quoter", address=quoter_addr
+            )
+            self.router = self._load_contract(
+                abi_name="uniswap-v3/router", address=router_addr
+            )
         else:
             raise Exception(f"Invalid version '{self.version}', only 1 or 2 supported")
 
-        logger.info(f"Using factory contract: {self.factory_contract}")
+        if hasattr(self, "factory_contract"):
+            logger.info(f"Using factory contract: {self.factory_contract}")
 
     @supports([1])
     def get_all_tokens(self) -> List[dict]:
@@ -344,10 +355,13 @@ class Uniswap:
         return self._load_contract(abi_name="erc20", address=token_addr)
 
     @functools.lru_cache()
-    @supports([2])
+    @supports([2, 3])
     def get_weth_address(self) -> ChecksumAddress:
-        # Contract calls should always return checksummed addresses
-        address: ChecksumAddress = self.router.functions.WETH().call()
+        if self.version == 2:
+            # Contract calls should always return checksummed addresses
+            address: ChecksumAddress = self.router.functions.WETH().call()
+        elif self.version == 3:
+            address = self.router.functions.WETH9().call()
         return address
 
     def _load_contract(self, abi_name: str, address: AddressLike) -> Contract:
@@ -365,94 +379,154 @@ class Uniswap:
         return 0.003
 
     # ------ Market --------------------------------------------------------------------
-    @supports([1, 2])
+    @supports([1, 2, 3])
     def get_eth_token_input_price(self, token: AddressLike, qty: Wei) -> Wei:
         """Public price for ETH to Token trades with an exact input."""
         if self.version == 1:
             ex = self.exchange_contract(token)
             price: Wei = ex.functions.getEthToTokenInputPrice(qty).call()
-        else:
+        elif self.version == 2:
             price = self.router.functions.getAmountsOut(
                 qty, [self.get_weth_address(), token]
             ).call()[-1]
+        elif self.version == 3:
+            price = self.get_token_token_input_price(
+                self.get_weth_address(), token, qty
+            )
         return price
 
-    @supports([1, 2])
+    @supports([1, 2, 3])
     def get_token_eth_input_price(self, token: AddressLike, qty: int) -> int:
         """Public price for token to ETH trades with an exact input."""
         if self.version == 1:
             ex = self.exchange_contract(token)
             price: int = ex.functions.getTokenToEthInputPrice(qty).call()
-        else:
+        elif self.version == 2:
             price = self.router.functions.getAmountsOut(
                 qty, [token, self.get_weth_address()]
             ).call()[-1]
+        elif self.version == 3:
+            price = self.get_token_token_input_price(
+                token, self.get_weth_address(), qty
+            )
         return price
 
-    @supports([2])
+    @supports([2, 3])
     def get_token_token_input_price(
         self,
         token0: AnyAddress,
         token1: AnyAddress,
         qty: int,
         route: Optional[List[AnyAddress]] = None,
+        fee: int = 3000,
     ) -> int:
-        """Public price for token to token trades with an exact input."""
-        # If one of the tokens are WETH, delegate to appropriate call.
-        # See: https://github.com/shanefontaine/uniswap-python/issues/22
-        if not route:
-            if is_same_address(token0, self.get_weth_address()):
-                return int(self.get_eth_token_input_price(token1, qty))
-            elif is_same_address(token1, self.get_weth_address()):
-                return int(self.get_token_eth_input_price(token0, qty))
+        """
+        Public price for token to token trades with an exact input.
 
-        route = route or [token0, self.get_weth_address(), token1]
-        price: int = self.router.functions.getAmountsOut(qty, route).call()[-1]
+        :param fee: (v3 only) The pool's fee in hundredths of a bip, i.e. 1e-6 (3000 is 0.3%)
+        """
+        if route is None:
+            if self.version == 2:
+                # If one of the tokens are WETH, delegate to appropriate call.
+                # See: https://github.com/shanefontaine/uniswap-python/issues/22
+                if is_same_address(token0, self.get_weth_address()):
+                    return int(self.get_eth_token_input_price(token1, qty))
+                elif is_same_address(token1, self.get_weth_address()):
+                    return int(self.get_token_eth_input_price(token0, qty))
+
+            route = [token0, self.get_weth_address(), token1]
+            logger.warning(f"No route specified, assuming route: {route}")
+
+        if self.version == 2:
+            price: int = self.router.functions.getAmountsOut(qty, route).call()[-1]
+        elif self.version == 3:
+            if route:
+                # NOTE: to support custom routes we need to support the Path data encoding: https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/Path.sol
+                # result: tuple = self.quoter.functions.quoteExactInput(route, qty).call()
+                raise Exception("custom route not yet supported for v3")
+
+            logger.warning("Assuming 0.3% fee")
+            # FIXME: How to calculate this properly? See https://docs.uniswap.org/reference/libraries/SqrtPriceMath
+            sqrtPriceLimitX96 = 1
+            result: tuple = self.quoter.functions.quoteExactInputSingle(
+                token0, token1, fee, qty, sqrtPriceLimitX96
+            ).call()
+            print(result)
+            price = result[0]
         return price
 
-    @supports([1, 2])
+    @supports([1, 2, 3])
     def get_eth_token_output_price(self, token: AddressLike, qty: int) -> Wei:
         """Public price for ETH to Token trades with an exact output."""
         if self.version == 1:
             ex = self.exchange_contract(token)
             price: Wei = ex.functions.getEthToTokenOutputPrice(qty).call()
-        else:
+        elif self.version == 2:
             route = [self.get_weth_address(), token]
             price = self.router.functions.getAmountsIn(qty, route).call()[0]
+        elif self.version == 3:
+            price = self.get_token_token_output_price(
+                self.get_weth_address(), token, qty
+            )
         return price
 
-    @supports([1, 2])
+    @supports([1, 2, 3])
     def get_token_eth_output_price(self, token: AddressLike, qty: Wei) -> int:
         """Public price for token to ETH trades with an exact output."""
         if self.version == 1:
             ex = self.exchange_contract(token)
             price: int = ex.functions.getTokenToEthOutputPrice(qty).call()
-        else:
+        elif self.version == 2:
             price = self.router.functions.getAmountsIn(
                 qty, [token, self.get_weth_address()]
             ).call()[0]
+        elif self.version == 3:
+            price = self.get_token_token_output_price(
+                token, self.get_weth_address(), qty
+            )
         return price
 
-    @supports([2])
+    @supports([2, 3])
     def get_token_token_output_price(
         self,
         token0: AnyAddress,
         token1: AnyAddress,
         qty: int,
         route: Optional[List[AnyAddress]] = None,
+        fee: int = 3000,
     ) -> int:
-        """Public price for token to token trades with an exact output."""
-        # If one of the tokens are WETH, delegate to appropriate call.
-        # See: https://github.com/shanefontaine/uniswap-python/issues/22
-        # TODO: Will these equality checks always work? (Address vs ChecksumAddress vs str)
-        if not route:
-            if is_same_address(token0, self.get_weth_address()):
-                return int(self.get_eth_token_output_price(token1, qty))
-            elif is_same_address(token1, self.get_weth_address()):
-                return int(self.get_token_eth_output_price(token0, qty))
+        """
+        Public price for token to token trades with an exact output.
 
-        route = route or [token0, self.get_weth_address(), token1]
-        price: int = self.router.functions.getAmountsIn(qty, route).call()[0]
+        :param fee: (v3 only) The pool's fee in hundredths of a bip, i.e. 1e-6 (3000 is 0.3%)
+        """
+        if not route:
+            if self.version == 2:
+                # If one of the tokens are WETH, delegate to appropriate call.
+                # See: https://github.com/shanefontaine/uniswap-python/issues/22
+                # TODO: Will these equality checks always work? (Address vs ChecksumAddress vs str)
+                if is_same_address(token0, self.get_weth_address()):
+                    return int(self.get_eth_token_output_price(token1, qty))
+                elif is_same_address(token1, self.get_weth_address()):
+                    return int(self.get_token_eth_output_price(token0, qty))
+
+        if self.version == 2:
+            route = route or [token0, self.get_weth_address(), token1]
+            price: int = self.router.functions.getAmountsIn(qty, route).call()[0]
+        elif self.version == 3:
+            if route:
+                # NOTE: to support custom routes we need to support the Path data encoding: https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/Path.sol
+                # result: tuple = self.quoter.functions.quoteExactOutput(route, qty).call()
+                raise Exception("custom route not yet supported for v3")
+
+            logger.warning("Assuming 0.3% fee")
+            # FIXME: How to calculate this properly? See https://docs.uniswap.org/reference/libraries/SqrtPriceMath
+            sqrtPriceLimitX96 = 1
+            result: tuple = self.quoter.functions.quoteExactOutputSingle(
+                token0, token1, fee, qty, sqrtPriceLimitX96
+            ).call()
+            print(result)
+            price = result[0]
         return price
 
     # ------ Wallet balance ------------------------------------------------------------
