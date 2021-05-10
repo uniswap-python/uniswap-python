@@ -2,6 +2,7 @@ import pytest
 import os
 import subprocess
 import shutil
+import logging
 from typing import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -10,6 +11,10 @@ from time import sleep
 from web3 import Web3
 
 from uniswap import Uniswap, InvalidToken, InsufficientBalance
+from uniswap.uniswap import _str_to_addr
+from uniswap.tokens import tokens
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -24,7 +29,7 @@ def client(request, web3: Web3, ganache: GanacheInstance):
     uniswap = Uniswap(
         ganache.eth_address, ganache.eth_privkey, web3=web3, version=request.param
     )
-    uniswap._buy_test_assets()
+    _buy_test_assets(uniswap)
     return uniswap
 
 
@@ -64,6 +69,21 @@ def does_not_raise():
     yield
 
 
+def _buy_test_assets(uni: Uniswap) -> None:
+    """Buys 1000 BAT and DAI"""
+    ONE_ETH = 1_000 * 10 ** 18
+    TEST_AMT = int(ONE_ETH)
+    tokens = uni._get_token_addresses()
+
+    for token_name in ["BAT", "DAI"]:
+        token_addr = tokens[token_name]
+        price = uni.get_eth_token_output_price(_str_to_addr(token_addr), TEST_AMT)
+        logger.info(f"Cost of {TEST_AMT} {token_name}: {price}")
+        logger.info("Buying...")
+        tx = uni.make_trade_output(tokens["ETH"], tokens[token_name], TEST_AMT)
+        uni.w3.eth.waitForTransactionReceipt(tx)
+
+
 # TODO: Change pytest.param(..., mark=pytest.mark.xfail) to the expectation/raises method
 @pytest.mark.usefixtures("client", "web3")
 class TestUniswap(object):
@@ -75,9 +95,10 @@ class TestUniswap(object):
     # TODO: Detect mainnet vs rinkeby and set accordingly, like _get_token_addresses in the Uniswap class
     # For Mainnet testing (with `ganache-cli --fork` as per the ganache fixture)
     eth = "0x0000000000000000000000000000000000000000"
-    weth = Web3.toChecksumAddress("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2")
-    bat = Web3.toChecksumAddress("0x0D8775F648430679A709E98d2b0Cb6250d2887EF")
-    dai = Web3.toChecksumAddress("0x6b175474e89094c44da98b954eedeac495271d0f")
+    weth = tokens["WETH"]
+    bat = tokens["BAT"]
+    dai = tokens["DAI"]
+    usdc = tokens["USDC"]
 
     # For Rinkeby
     # eth = "0x0000000000000000000000000000000000000000"
@@ -241,11 +262,11 @@ class TestUniswap(object):
         "input_token, output_token, qty, recipient, expectation",
         [
             # ETH -> Token
-            (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (eth, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> Token
-            (bat, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (dai, usdc, ONE_ETH, None, does_not_raise),
             # Token -> ETH
-            (bat, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
+            (dai, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
             # (eth, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # (bat, eth, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # (dai, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
@@ -278,19 +299,20 @@ class TestUniswap(object):
         "input_token, output_token, qty, recipient, expectation",
         [
             # ETH -> Token
-            (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (eth, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> Token
-            (bat, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (dai, usdc, ONE_ETH, None, does_not_raise),
             # Token -> ETH
             (dai, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
             # FIXME: These should probably be uncommented eventually
             # (eth, bat, int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # (bat, eth, int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # (dai, bat, int(0.000001 * ONE_ETH), ZERO_ADDRESS),
+            # Try to buy 1M ETH
             (
                 dai,
                 eth,
-                10 ** 18 * ONE_WEI,
+                1_000_000 * ONE_ETH,
                 None,
                 lambda: pytest.raises(InsufficientBalance),
             ),

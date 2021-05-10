@@ -4,4 +4,11 @@ tokens = {
     "BAT": "0x0D8775F648430679A709E98d2b0Cb6250d2887EF",
     "WBTC": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
     "UNI": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+    "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    # fails when trying to retrieve name and symbol, as fields are bytes32 instead of string
+    # "MKR": "0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2",
 }
+
+# For rinkeby:
+# bat = "0xDA5B056Cfb861282B4b59d29c9B395bcC238D29B"
+# dai = "0x2448eE2641d78CC42D7AD76498917359D961A783"
