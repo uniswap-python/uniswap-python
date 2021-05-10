@@ -131,7 +131,14 @@ def _validate_address(a: AddressLike) -> None:
 
 
 # see: https://chainid.network/chains/
-_netid_to_name = {1: "mainnet", 3: "ropsten", 4: "rinkeby", 56: "binance", 100: "xdai"}
+_netid_to_name = {
+    1: "mainnet",
+    3: "ropsten",
+    4: "rinkeby",
+    56: "binance",
+    97: "binance_testnet",
+    100: "xdai",
+}
 
 _factory_contract_addresses_v1 = {
     "mainnet": "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95",
