@@ -2,6 +2,7 @@ import pytest
 import os
 import subprocess
 import shutil
+import logging
 from typing import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -9,7 +10,10 @@ from time import sleep
 
 from web3 import Web3
 
-from uniswap import Uniswap, InvalidToken, InsufficientBalance
+from uniswap import Uniswap, InvalidToken, InsufficientBalance, _str_to_addr
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -24,8 +28,27 @@ def client(request, web3: Web3, ganache: GanacheInstance):
     uniswap = Uniswap(
         ganache.eth_address, ganache.eth_privkey, web3=web3, version=request.param
     )
-    uniswap._buy_test_assets()
     return uniswap
+
+
+@pytest.fixture(scope="module")
+def test_assets(client: Uniswap):
+    """
+    Buys some BAT and DAI to test with.
+    """
+    ONE_ETH = 1 * 10 ** 18
+    TEST_AMT = int(0.1 * ONE_ETH)
+    tokens = client._get_token_addresses()
+
+    for token_name in ["BAT", "DAI"]:
+        token_addr = tokens[token_name.lower()]
+        price = client.get_eth_token_output_price(_str_to_addr(token_addr), TEST_AMT)
+        logger.info(f"Cost of {TEST_AMT} {token_name}: {price}")
+        logger.info("Buying...")
+        tx = client.make_trade_output(
+            tokens["eth"], tokens[token_name.lower()], TEST_AMT
+        )
+        client.w3.eth.waitForTransactionReceipt(tx)
 
 
 @pytest.fixture(scope="module")
@@ -86,10 +109,14 @@ class TestUniswap(object):
 
     # ------ Exchange ------------------------------------------------------------------
     def test_get_fee_maker(self, client: Uniswap):
+        if client.version not in [1, 2]:
+            pytest.skip("Tested method not supported in this Uniswap version")
         r = client.get_fee_maker()
         assert r == 0
 
     def test_get_fee_taker(self, client: Uniswap):
+        if client.version not in [1, 2]:
+            pytest.skip("Tested method not supported in this Uniswap version")
         r = client.get_fee_taker()
         assert r == 0.003
 
@@ -131,8 +158,8 @@ class TestUniswap(object):
         ],
     )
     def test_get_token_token_input_price(self, client, token0, token1, qty):
-        if not client.version == 2:
-            pytest.skip("Tested method only supported on Uniswap v2")
+        if client.version not in [2, 3]:
+            pytest.skip("Tested method not supported in this Uniswap version")
         r = client.get_token_token_input_price(token0, token1, qty)
         assert r
 
@@ -173,8 +200,8 @@ class TestUniswap(object):
         ],
     )
     def test_get_token_token_output_price(self, client, token0, token1, qty):
-        if not client.version == 2:
-            pytest.skip("Tested method only supported on Uniswap v2")
+        if client.version not in [2, 3]:
+            pytest.skip("Tested method not supported in this Uniswap version")
         r = client.get_token_token_output_price(token0, token1, qty)
         assert r
 
@@ -256,6 +283,7 @@ class TestUniswap(object):
         self,
         client: Uniswap,
         web3: Web3,
+        test_assets,
         input_token,
         output_token,
         qty: int,
@@ -301,6 +329,7 @@ class TestUniswap(object):
         self,
         client: Uniswap,
         web3: Web3,
+        test_assets,
         input_token,
         output_token,
         qty: int,
