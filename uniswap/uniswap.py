@@ -70,16 +70,14 @@ def check_approval(method: Callable) -> Callable:
         # Approve both tokens, if needed
         if token:
             is_approved = self._is_approved(token)
-            logger.warning(f"Approved? {token}: {is_approved}")
+            # logger.warning(f"Approved? {token}: {is_approved}")
             if not is_approved:
                 self.approve(token)
-                logger.warning(f"Approved {token}")
         if token_two:
             is_approved = self._is_approved(token_two)
-            logger.warning(f"Approved {token_two}: {is_approved}")
+            # logger.warning(f"Approved? {token_two}: {is_approved}")
             if not is_approved:
                 self.approve(token_two)
-                logger.warning(f"Approved {token_two}")
         return method(self, *args, **kwargs)
 
     return approved
