@@ -88,7 +88,7 @@ def tokendb(ctx: click.Context, metadata: bool) -> None:
     """List known token addresses"""
     uni = ctx.obj["UNISWAP"]
     for symbol, addr in tokens.items():
-        if metadata:
+        if metadata and addr != "0x0000000000000000000000000000000000000000":
             data = uni.get_token(_str_to_addr(addr))
             data["address"] = addr
             assert data["symbol"].lower() == symbol.lower()
