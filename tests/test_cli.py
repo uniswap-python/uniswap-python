@@ -21,7 +21,11 @@ def test_get_price():
     # Will break when ETH breaks 10k
     assert 1000 < float(result.stdout) < 10_000
 
+
+def test_get_price_wbtc():
+    runner = CliRunner(mix_stderr=False)
     result = runner.invoke(main, ["price", "wbtc", "dai"])
+    print_result(result)
     assert result.exit_code == 0
 
     # Will break when BTC breaks 100k
