@@ -14,8 +14,6 @@ The unofficial Python client for [Uniswap](https://uniswap.io/).
 
 Documentation is available at https://uniswap-python.com/
 
-_The authors are in no way affiliated with or funded by Uniswap, uniswap.io, or any subsidiaries or affiliates of any of the previously mentioned entities._
-
 ## Functionality
 
 *  A simple to use Python wrapper for all available contract functions and variables
@@ -219,10 +217,6 @@ make test
 ## Authors
 * [Shane Fontaine](https://twitter.com/shanecoin)
 * [Erik Bjäreholt](https://twitter.com/ErikBjare)
-
-## Ownership Disclosure
-
-*  I own some BAT and DAI tokens that are seen in the examples above. These tokens are used only for example purposes and are not meant to be an endorsement. I am not affiliated with BAT, Brave, Basic Attention Token, Brave Browser, DAI, Maker, MakerDAO, or any subsidiaries.
 
 ## Changelog
 
