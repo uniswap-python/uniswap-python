@@ -16,13 +16,21 @@ Documentation is available at https://uniswap-python.com/
 
 _The authors are in no way affiliated with or funded by Uniswap, uniswap.io, or any subsidiaries or affiliates of any of the previously mentioned entities._
 
-### This package supports Uniswap V2 as of version 0.4.0.
-
 ## Functionality
 
 *  A simple to use Python wrapper for all available contract functions and variables
 *  A basic CLI to get prices and token metadata
 *  Simple parsing of data returned from the Uniswap contract
+
+### Supports
+
+ - Uniswap v1 (since initial commit)
+ - Uniswap v2 (as of v0.4.0)
+ - Uniswap v3 (experimental, in master)
+ - Various forks (untested, but should work)
+   - Honeyswap (xDai)
+   - Pancakeswap (BSC)
+   - Sushiswap (mainnet)
 
 ## Getting Started
 
