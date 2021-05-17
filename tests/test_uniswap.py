@@ -10,10 +10,16 @@ from time import sleep
 
 from web3 import Web3
 
-from uniswap import Uniswap, InvalidToken, InsufficientBalance, _str_to_addr
+from uniswap import Uniswap, InvalidToken, InsufficientBalance
 
 
 logger = logging.getLogger(__name__)
+
+ENV_UNISWAP_VERSION = os.getenv("UNISWAP_VERSION", None)
+if ENV_UNISWAP_VERSION:
+    UNISWAP_VERSIONS = [int(ENV_UNISWAP_VERSION)]
+else:
+    UNISWAP_VERSIONS = [1, 2, 3]
 
 
 @dataclass
@@ -23,7 +29,7 @@ class GanacheInstance:
     eth_privkey: str
 
 
-@pytest.fixture(scope="module", params=[3])
+@pytest.fixture(scope="module", params=UNISWAP_VERSIONS)
 def client(request, web3: Web3, ganache: GanacheInstance):
     return Uniswap(
         ganache.eth_address, ganache.eth_privkey, web3=web3, version=request.param

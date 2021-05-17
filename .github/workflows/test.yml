@@ -12,6 +12,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        uniswap-version: [1, 2, 3]
 
     steps:
     - uses: actions/checkout@v2
@@ -28,12 +32,27 @@ jobs:
         python -m pip install --upgrade pip poetry
         poetry install
         npm install -g ganache-cli
-    - name: Typecheck
-      run: |
-        make typecheck
     - name: Test
       env:
         PROVIDER: ${{ secrets.MAINNET_PROVIDER }}
         MAINNET_PROVIDER: ${{ secrets.MAINNET_PROVIDER }}
+        UNISWAP_VERSION: ${{ matrix.uniswap-version }}
       run: |
         make test
+
+  typecheck:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip poetry
+        poetry install
+    - name: Typecheck
+      run: |
+        make typecheck
