@@ -24,12 +24,12 @@ def test_get_price():
 
 def test_get_price_wbtc():
     runner = CliRunner(mix_stderr=False)
-    result = runner.invoke(main, ["price", "wbtc", "dai"])
+    result = runner.invoke(main, ["price", "dai", "usdc"])
     print_result(result)
     assert result.exit_code == 0
 
-    # Will break when BTC breaks 100k
-    assert 10_000 < float(result.stdout) < 100_000
+    # Will break if peg is lost
+    assert 0.9 < float(result.stdout) < 1.1
 
 
 def test_get_token():
