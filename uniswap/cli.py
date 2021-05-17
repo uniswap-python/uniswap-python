@@ -28,7 +28,7 @@ def _coerce_to_checksum(addr: str) -> str:
 
 @click.group()
 @click.option("-v", "--verbose", is_flag=True)
-@click.option("--version", type=click.Choice(["1", "2"]), default="2")
+@click.option("--version", type=click.Choice(["1", "2", "3"]), default="2")
 @click.pass_context
 def main(ctx: click.Context, verbose: bool, version: str) -> None:
     logging.basicConfig(level=logging.INFO if verbose else logging.WARNING)
