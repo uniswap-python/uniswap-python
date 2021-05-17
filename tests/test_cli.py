@@ -7,8 +7,9 @@ from uniswap.cli import main
 
 
 def print_result(result):
-    print(result.stdout)
-    print(result.stderr, file=sys.stderr)
+    print(result)
+    print(result.stdout.strip())
+    print(result.stderr.strip(), file=sys.stderr)
 
 
 def test_get_price():
