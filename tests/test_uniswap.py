@@ -25,29 +25,29 @@ class GanacheInstance:
 
 @pytest.fixture(scope="module", params=[3])
 def client(request, web3: Web3, ganache: GanacheInstance):
-    uniswap = Uniswap(
+    return Uniswap(
         ganache.eth_address, ganache.eth_privkey, web3=web3, version=request.param
     )
-    return uniswap
 
 
 @pytest.fixture(scope="module")
 def test_assets(client: Uniswap):
     """
-    Buys some BAT and DAI to test with.
+    Buy some DAI and USDC to test with.
     """
-    ONE_ETH = 1 * 10 ** 18
-    TEST_AMT = int(0.1 * ONE_ETH)
     tokens = client._get_token_addresses()
 
-    for token_name in ["BAT", "DAI"]:
-        token_addr = tokens[token_name.lower()]
-        price = client.get_eth_token_output_price(_str_to_addr(token_addr), TEST_AMT)
-        logger.info(f"Cost of {TEST_AMT} {token_name}: {price}")
+    for token_name, amount in [("DAI", 10 ** 18), ("USDC", 10 ** 6)]:
+        token_addr = tokens[token_name]
+        price = client.get_eth_token_output_price(_str_to_addr(token_addr), amount)
+        logger.info(f"Cost of {amount} {token_name}: {price}")
         logger.info("Buying...")
-        tx = client.make_trade_output(
-            tokens["eth"], tokens[token_name.lower()], TEST_AMT
-        )
+
+        client.approve(tokens["WETH"])
+        # client.approve(tokens[token_name])
+
+        # FIXME: Maybe trading ETH like this isn't supported on V3?
+        tx = client.make_trade_output(tokens["WETH"], tokens[token_name], amount)
         client.w3.eth.waitForTransactionReceipt(tx)
 
 
@@ -273,7 +273,7 @@ class TestUniswap(object):
             # ETH -> Token
             (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> Token
-            (bat, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            # (bat, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> ETH
             (bat, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
             # (eth, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
@@ -309,9 +309,10 @@ class TestUniswap(object):
         "input_token, output_token, qty, recipient, expectation",
         [
             # ETH -> Token
-            (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (eth, bat, 1_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> Token
-            (bat, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            # No liquidity in V3
+            # (bat, dai, 1_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> ETH
             (dai, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
             # FIXME: These should probably be uncommented eventually
