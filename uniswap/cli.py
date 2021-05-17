@@ -1,4 +1,5 @@
 import logging
+import os
 
 import click
 from dotenv import load_dotenv
@@ -28,7 +29,11 @@ def _coerce_to_checksum(addr: str) -> str:
 
 @click.group()
 @click.option("-v", "--verbose", is_flag=True)
-@click.option("--version", type=click.Choice(["1", "2"]), default="2")
+@click.option(
+    "--version",
+    type=click.Choice(["1", "2", "3"]),
+    default=os.getenv("UNISWAP_VERSION", "2"),
+)
 @click.pass_context
 def main(ctx: click.Context, verbose: bool, version: str) -> None:
     logging.basicConfig(level=logging.INFO if verbose else logging.WARNING)
@@ -88,7 +93,7 @@ def tokendb(ctx: click.Context, metadata: bool) -> None:
     """List known token addresses"""
     uni = ctx.obj["UNISWAP"]
     for symbol, addr in tokens.items():
-        if metadata:
+        if metadata and addr != "0x0000000000000000000000000000000000000000":
             data = uni.get_token(_str_to_addr(addr))
             data["address"] = addr
             assert data["symbol"].lower() == symbol.lower()

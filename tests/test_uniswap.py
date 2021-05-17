@@ -2,6 +2,7 @@ import pytest
 import os
 import subprocess
 import shutil
+import logging
 from typing import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -12,6 +13,15 @@ from web3 import Web3
 from uniswap import Uniswap, InvalidToken, InsufficientBalance
 
 
+logger = logging.getLogger(__name__)
+
+ENV_UNISWAP_VERSION = os.getenv("UNISWAP_VERSION", None)
+if ENV_UNISWAP_VERSION:
+    UNISWAP_VERSIONS = [int(ENV_UNISWAP_VERSION)]
+else:
+    UNISWAP_VERSIONS = [1, 2, 3]
+
+
 @dataclass
 class GanacheInstance:
     provider: str
@@ -19,13 +29,28 @@ class GanacheInstance:
     eth_privkey: str
 
 
-@pytest.fixture(scope="module", params=[1, 2])
+@pytest.fixture(scope="module", params=UNISWAP_VERSIONS)
 def client(request, web3: Web3, ganache: GanacheInstance):
-    uniswap = Uniswap(
+    return Uniswap(
         ganache.eth_address, ganache.eth_privkey, web3=web3, version=request.param
     )
-    uniswap._buy_test_assets()
-    return uniswap
+
+
+@pytest.fixture(scope="module")
+def test_assets(client: Uniswap):
+    """
+    Buy some DAI and USDC to test with.
+    """
+    tokens = client._get_token_addresses()
+
+    for token_name, amount in [("DAI", 100 * 10 ** 18), ("USDC", 100 * 10 ** 6)]:
+        token_addr = tokens[token_name]
+        price = client.get_eth_token_output_price(token_addr, amount)
+        logger.info(f"Cost of {amount} {token_name}: {price}")
+        logger.info("Buying...")
+
+        tx = client.make_trade_output(tokens["ETH"], token_addr, amount)
+        client.w3.eth.waitForTransactionReceipt(tx)
 
 
 @pytest.fixture(scope="module")
@@ -78,6 +103,7 @@ class TestUniswap(object):
     weth = Web3.toChecksumAddress("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2")
     bat = Web3.toChecksumAddress("0x0D8775F648430679A709E98d2b0Cb6250d2887EF")
     dai = Web3.toChecksumAddress("0x6b175474e89094c44da98b954eedeac495271d0f")
+    usdc = Web3.toChecksumAddress("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
 
     # For Rinkeby
     # eth = "0x0000000000000000000000000000000000000000"
@@ -86,10 +112,14 @@ class TestUniswap(object):
 
     # ------ Exchange ------------------------------------------------------------------
     def test_get_fee_maker(self, client: Uniswap):
+        if client.version not in [1, 2]:
+            pytest.skip("Tested method not supported in this Uniswap version")
         r = client.get_fee_maker()
         assert r == 0
 
     def test_get_fee_taker(self, client: Uniswap):
+        if client.version not in [1, 2]:
+            pytest.skip("Tested method not supported in this Uniswap version")
         r = client.get_fee_taker()
         assert r == 0.003
 
@@ -121,19 +151,21 @@ class TestUniswap(object):
         assert r
 
     @pytest.mark.parametrize(
-        "token0, token1, qty",
+        "token0, token1, qty, kwargs",
         [
-            (bat, dai, ONE_ETH),
-            (dai, bat, ONE_ETH),
-            (bat, dai, 2 * ONE_ETH),
-            (weth, dai, ONE_ETH),
-            (dai, weth, ONE_ETH),
+            # BAT/DAI has no liquidity in V3
+            # (bat, dai, ONE_ETH),
+            # (dai, bat, ONE_ETH),
+            # (bat, dai, 2 * ONE_ETH),
+            (dai, usdc, ONE_ETH, {"fee": 500}),
+            (weth, dai, ONE_ETH, {}),
+            (dai, weth, ONE_ETH, {}),
         ],
     )
-    def test_get_token_token_input_price(self, client, token0, token1, qty):
-        if not client.version == 2:
-            pytest.skip("Tested method only supported on Uniswap v2")
-        r = client.get_token_token_input_price(token0, token1, qty)
+    def test_get_token_token_input_price(self, client, token0, token1, qty, kwargs):
+        if client.version not in [2, 3]:
+            pytest.skip("Tested method not supported in this Uniswap version")
+        r = client.get_token_token_input_price(token0, token1, qty, **kwargs)
         assert r
 
     @pytest.mark.parametrize(
@@ -163,19 +195,19 @@ class TestUniswap(object):
         assert r
 
     @pytest.mark.parametrize(
-        "token0, token1, qty",
+        "token0, token1, qty, kwargs",
         [
-            (bat, dai, ONE_ETH),
-            (dai, bat, ONE_ETH),
-            (bat, dai, 2 * ONE_ETH),
-            (weth, dai, ONE_ETH),
-            (dai, weth, ONE_ETH),
+            # (bat, dai, ONE_ETH),
+            (dai, usdc, ONE_ETH, {"fee": 500}),
+            # (bat, dai, 2 * ONE_ETH),
+            (weth, dai, ONE_ETH, {}),
+            (dai, weth, ONE_ETH, {}),
         ],
     )
-    def test_get_token_token_output_price(self, client, token0, token1, qty):
-        if not client.version == 2:
-            pytest.skip("Tested method only supported on Uniswap v2")
-        r = client.get_token_token_output_price(token0, token1, qty)
+    def test_get_token_token_output_price(self, client, token0, token1, qty, kwargs):
+        if client.version not in [2, 3]:
+            pytest.skip("Tested method not supported in this Uniswap version")
+        r = client.get_token_token_output_price(token0, token1, qty, **kwargs)
         assert r
 
     # ------ ERC20 Pool ----------------------------------------------------------------
@@ -241,11 +273,11 @@ class TestUniswap(object):
         "input_token, output_token, qty, recipient, expectation",
         [
             # ETH -> Token
-            (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (eth, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> Token
-            (bat, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (dai, usdc, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> ETH
-            (bat, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
+            (usdc, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
             # (eth, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # (bat, eth, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # (dai, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
@@ -256,6 +288,7 @@ class TestUniswap(object):
         self,
         client: Uniswap,
         web3: Web3,
+        test_assets,
         input_token,
         output_token,
         qty: int,
@@ -278,9 +311,9 @@ class TestUniswap(object):
         "input_token, output_token, qty, recipient, expectation",
         [
             # ETH -> Token
-            (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (eth, dai, 1_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> Token
-            (bat, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (dai, usdc, 1_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> ETH
             (dai, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
             # FIXME: These should probably be uncommented eventually
@@ -301,6 +334,7 @@ class TestUniswap(object):
         self,
         client: Uniswap,
         web3: Web3,
+        test_assets,
         input_token,
         output_token,
         qty: int,
