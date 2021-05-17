@@ -59,15 +59,13 @@ def check_approval(method: Callable) -> Callable:
 
     @functools.wraps(method)
     def approved(self: Any, *args: Any, **kwargs: Any) -> Any:
-        eth_addr = ETH_ADDRESS if self.version < 3 else WETH9_ADDRESS
-
         # Check to see if the first token is actually ETH
-        token = args[0] if args[0] != eth_addr else None
+        token = args[0] if args[0] != ETH_ADDRESS else None
         token_two = None
 
         # Check second token, if needed
         if method.__name__ == "make_trade" or method.__name__ == "make_trade_output":
-            token_two = args[1] if args[1] in [eth_addr] else None
+            token_two = args[1] if args[1] != ETH_ADDRESS else None
 
         # Approve both tokens, if needed
         if token:
@@ -654,7 +652,8 @@ class Uniswap:
             )
         elif output_token == ETH_ADDRESS:
             qty = Wei(qty)
-            return self._token_to_eth_swap_output(input_token, qty, recipient)
+            # No idea why mypy complains here...
+            return self._token_to_eth_swap_output(input_token, qty, recipient)  # type: ignore
         else:
             return self._token_to_token_swap_output(
                 input_token, output_token, qty, recipient
@@ -678,7 +677,8 @@ class Uniswap:
                 func_params.append(recipient)
                 function = token_funcs.ethToTokenTransferInput(*func_params)
             return self._build_and_send_tx(function, tx_params)
-        else:
+
+        elif self.version == 2:
             if recipient is None:
                 recipient = self.address
             amount_out_min = int(
@@ -694,6 +694,12 @@ class Uniswap:
                 ),
                 self._get_tx_params(qty),
             )
+        elif self.version == 3:
+            return self._token_to_token_swap_input(
+                self.get_weth_address(), output_token, qty, recipient
+            )
+        else:
+            raise ValueError
 
     def _token_to_eth_swap_input(
         self, input_token: AddressLike, qty: int, recipient: Optional[AddressLike]
@@ -713,7 +719,7 @@ class Uniswap:
                 func_params.append(recipient)
                 function = token_funcs.tokenToEthTransferInput(*func_params)
             return self._build_and_send_tx(function)
-        else:
+        elif self.version == 2:
             if recipient is None:
                 recipient = self.address
             amount_out_min = int(
@@ -729,6 +735,12 @@ class Uniswap:
                     self._deadline(),
                 ),
             )
+        elif self.version == 3:
+            return self._token_to_token_swap_input(
+                input_token, self.get_weth_address(), qty, recipient
+            )
+        else:
+            raise ValueError
 
     def _token_to_token_swap_input(
         self,

@@ -37,17 +37,13 @@ def test_assets(client: Uniswap):
     """
     tokens = client._get_token_addresses()
 
-    for token_name, amount in [("DAI", 10 ** 18), ("USDC", 10 ** 6)]:
+    for token_name, amount in [("DAI", 100 * 10 ** 18), ("USDC", 100 * 10 ** 6)]:
         token_addr = tokens[token_name]
-        price = client.get_eth_token_output_price(_str_to_addr(token_addr), amount)
+        price = client.get_eth_token_output_price(token_addr, amount)
         logger.info(f"Cost of {amount} {token_name}: {price}")
         logger.info("Buying...")
 
-        client.approve(tokens["WETH"])
-        # client.approve(tokens[token_name])
-
-        # FIXME: Maybe trading ETH like this isn't supported on V3?
-        tx = client.make_trade_output(tokens["WETH"], tokens[token_name], amount)
+        tx = client.make_trade_output(tokens["ETH"], token_addr, amount)
         client.w3.eth.waitForTransactionReceipt(tx)
 
 
@@ -271,11 +267,11 @@ class TestUniswap(object):
         "input_token, output_token, qty, recipient, expectation",
         [
             # ETH -> Token
-            (eth, bat, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (eth, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> Token
-            # (bat, dai, 1_000_000_000 * ONE_WEI, None, does_not_raise),
+            (dai, usdc, 1_000_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> ETH
-            (bat, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
+            (usdc, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
             # (eth, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # (bat, eth, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # (dai, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
@@ -309,10 +305,9 @@ class TestUniswap(object):
         "input_token, output_token, qty, recipient, expectation",
         [
             # ETH -> Token
-            (eth, bat, 1_000_000 * ONE_WEI, None, does_not_raise),
+            (eth, dai, 1_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> Token
-            # No liquidity in V3
-            # (bat, dai, 1_000_000 * ONE_WEI, None, does_not_raise),
+            (dai, usdc, 1_000_000 * ONE_WEI, None, does_not_raise),
             # Token -> ETH
             (dai, eth, 1_000_000 * ONE_WEI, None, does_not_raise),
             # FIXME: These should probably be uncommented eventually
