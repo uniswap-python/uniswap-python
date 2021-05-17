@@ -108,13 +108,17 @@ def supports(versions: List[int]) -> Callable:
     return g
 
 
-def _str_to_addr(s: str) -> AddressLike:
-    if s.startswith("0x"):
-        return Address(bytes.fromhex(s[2:]))
-    elif s.endswith(".eth"):
-        return ENS(s)
+def _str_to_addr(s: Union[str, Address]) -> AddressLike:
+    """Idempotent"""
+    if isinstance(s, str):
+        if s.startswith("0x"):
+            return Address(bytes.fromhex(s[2:]))
+        elif s.endswith(".eth"):
+            return ENS(s)
+        else:
+            raise Exception(f"Couldn't convert string '{s}' to AddressLike")
     else:
-        raise Exception(f"Couldn't convert string '{s}' to AddressLike")
+        return s
 
 
 def _addr_to_str(a: AddressLike) -> str:
@@ -201,20 +205,13 @@ class Uniswap:
         :param factory_contract_addr: Can be optionally set to override the address of the factory contract.
         :param router_contract_addr: Can be optionally set to override the address of the router contract (v2 only).
         """
-        if address is None:
-            self.address: AddressLike = _str_to_addr(
-                "0x0000000000000000000000000000000000000000"
-            )
-        else:
-            self.address = (
-                _str_to_addr(address) if isinstance(address, str) else address
-            )
-        if private_key is None:
-            self.private_key = (
-                "0x0000000000000000000000000000000000000000000000000000000000000000"
-            )
-        else:
-            self.private_key = private_key
+        self.address: AddressLike = _str_to_addr(
+            address or "0x0000000000000000000000000000000000000000"
+        )
+        self.private_key = (
+            private_key
+            or "0x0000000000000000000000000000000000000000000000000000000000000000"
+        )
 
         self.version = version
 
