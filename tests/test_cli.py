@@ -8,6 +8,7 @@ from uniswap.cli import main
 def test_get_price():
     runner = CliRunner()
     result = runner.invoke(main, ["price", "weth", "dai"])
+    print(result.output)
     assert result.exit_code == 0
 
     # Will break when ETH breaks 10k
@@ -23,7 +24,9 @@ def test_get_price():
 def test_get_token():
     runner = CliRunner()
     result = runner.invoke(main, ["token", "weth"])
+    print(result.output)
     assert result.exit_code == 0
+
     out = json.loads(result.output.replace("'", '"'))
     assert out["symbol"] == "WETH"
     assert out["decimals"] == 18
@@ -32,4 +35,5 @@ def test_get_token():
 def test_get_tokendb():
     runner = CliRunner()
     result = runner.invoke(main, ["tokendb", "--metadata"])
+    print(result.output)
     assert result.exit_code == 0
