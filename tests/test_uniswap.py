@@ -101,6 +101,7 @@ class TestUniswap(object):
     weth = Web3.toChecksumAddress("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2")
     bat = Web3.toChecksumAddress("0x0D8775F648430679A709E98d2b0Cb6250d2887EF")
     dai = Web3.toChecksumAddress("0x6b175474e89094c44da98b954eedeac495271d0f")
+    usdc = Web3.toChecksumAddress("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
 
     # For Rinkeby
     # eth = "0x0000000000000000000000000000000000000000"
@@ -148,19 +149,21 @@ class TestUniswap(object):
         assert r
 
     @pytest.mark.parametrize(
-        "token0, token1, qty",
+        "token0, token1, qty, kwargs",
         [
-            (bat, dai, ONE_ETH),
-            (dai, bat, ONE_ETH),
-            (bat, dai, 2 * ONE_ETH),
-            (weth, dai, ONE_ETH),
-            (dai, weth, ONE_ETH),
+            # BAT/DAI has no liquidity in V3
+            # (bat, dai, ONE_ETH),
+            # (dai, bat, ONE_ETH),
+            # (bat, dai, 2 * ONE_ETH),
+            (dai, usdc, ONE_ETH, {"fee": 500}),
+            (weth, dai, ONE_ETH, {}),
+            (dai, weth, ONE_ETH, {}),
         ],
     )
-    def test_get_token_token_input_price(self, client, token0, token1, qty):
+    def test_get_token_token_input_price(self, client, token0, token1, qty, kwargs):
         if client.version not in [2, 3]:
             pytest.skip("Tested method not supported in this Uniswap version")
-        r = client.get_token_token_input_price(token0, token1, qty)
+        r = client.get_token_token_input_price(token0, token1, qty, **kwargs)
         assert r
 
     @pytest.mark.parametrize(
@@ -190,19 +193,19 @@ class TestUniswap(object):
         assert r
 
     @pytest.mark.parametrize(
-        "token0, token1, qty",
+        "token0, token1, qty, kwargs",
         [
-            (bat, dai, ONE_ETH),
-            (dai, bat, ONE_ETH),
-            (bat, dai, 2 * ONE_ETH),
-            (weth, dai, ONE_ETH),
-            (dai, weth, ONE_ETH),
+            # (bat, dai, ONE_ETH),
+            (dai, usdc, ONE_ETH, {"fee": 500}),
+            # (bat, dai, 2 * ONE_ETH),
+            (weth, dai, ONE_ETH, {}),
+            (dai, weth, ONE_ETH, {}),
         ],
     )
-    def test_get_token_token_output_price(self, client, token0, token1, qty):
+    def test_get_token_token_output_price(self, client, token0, token1, qty, kwargs):
         if client.version not in [2, 3]:
             pytest.skip("Tested method not supported in this Uniswap version")
-        r = client.get_token_token_output_price(token0, token1, qty)
+        r = client.get_token_token_output_price(token0, token1, qty, **kwargs)
         assert r
 
     # ------ ERC20 Pool ----------------------------------------------------------------
