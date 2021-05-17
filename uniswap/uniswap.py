@@ -646,14 +646,10 @@ class Uniswap:
             need = self.get_eth_token_output_price(output_token, qty)
             if balance < need:
                 raise InsufficientBalance(balance, need)
-            # NOTE: Not sure why but mypy complains here...
-            return self._eth_to_token_swap_output(  # type: ignore
-                output_token, qty, recipient
-            )
+            return self._eth_to_token_swap_output(output_token, qty, recipient)
         elif output_token == ETH_ADDRESS:
             qty = Wei(qty)
-            # No idea why mypy complains here...
-            return self._token_to_eth_swap_output(input_token, qty, recipient)  # type: ignore
+            return self._token_to_eth_swap_output(input_token, qty, recipient)
         else:
             return self._token_to_token_swap_output(
                 input_token, output_token, qty, recipient
@@ -814,7 +810,6 @@ class Uniswap:
         else:
             raise ValueError
 
-    @supports([1, 2, 3])
     def _eth_to_token_swap_output(
         self, output_token: AddressLike, qty: int, recipient: Optional[AddressLike]
     ) -> HexBytes:
@@ -853,7 +848,6 @@ class Uniswap:
         else:
             raise ValueError
 
-    @supports([1, 2, 3])
     def _token_to_eth_swap_output(
         self, input_token: AddressLike, qty: Wei, recipient: Optional[AddressLike]
     ) -> HexBytes:
