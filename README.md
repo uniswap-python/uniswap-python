@@ -22,9 +22,9 @@ Documentation is available at https://uniswap-python.com/
 
 ### Supports
 
- - Uniswap v1 (since initial commit)
- - Uniswap v2 (as of v0.4.0)
  - Uniswap v3 (experimental, in master)
+ - Uniswap v2 (as of v0.4.0)
+ - Uniswap v1 (deprecated)
  - Various forks (untested, but should work)
    - Honeyswap (xDai)
    - Pancakeswap (BSC)
