@@ -22,7 +22,8 @@ def test_get_price():
     assert 1000 < float(result.stdout) < 10_000
 
 
-def test_get_price_wbtc():
+def test_get_price_stables():
+    """Tests that decimals are handled correctly."""
     runner = CliRunner(mix_stderr=False)
     result = runner.invoke(main, ["price", "dai", "usdc"])
     print_result(result)
