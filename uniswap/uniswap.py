@@ -20,161 +20,27 @@ from web3.types import (
 from eth_utils import is_same_address
 from eth_typing import AnyAddress
 
+from .types import AddressLike
+from .token import Token
 from .tokens import tokens, tokens_rinkeby
-
-ETH_ADDRESS = "0x0000000000000000000000000000000000000000"
-WETH9_ADDRESS = Web3.toChecksumAddress("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2")
+from .exceptions import InvalidToken, InsufficientBalance
+from .util import (
+    _str_to_addr,
+    _addr_to_str,
+    _validate_address,
+    _load_contract,
+    _load_contract_erc20,
+)
+from .decorators import supports, check_approval
+from .constants import (
+    _netid_to_name,
+    _factory_contract_addresses_v1,
+    _factory_contract_addresses_v2,
+    _router_contract_addresses_v2,
+    ETH_ADDRESS,
+)
 
 logger = logging.getLogger(__name__)
-
-
-# TODO: Consider dropping support for ENS altogether and instead use AnyAddress
-AddressLike = Union[Address, ChecksumAddress, ENS]
-
-
-class InvalidToken(Exception):
-    """Raised when an invalid token address is used."""
-
-    def __init__(self, address: Any) -> None:
-        Exception.__init__(self, f"Invalid token address: {address}")
-
-
-class InsufficientBalance(Exception):
-    """Raised when the account has insufficient balance for a transaction."""
-
-    def __init__(self, had: int, needed: int) -> None:
-        Exception.__init__(self, f"Insufficient balance. Had {had}, needed {needed}")
-
-
-def _load_abi(name: str) -> str:
-    path = f"{os.path.dirname(os.path.abspath(__file__))}/assets/"
-    with open(os.path.abspath(path + f"{name}.abi")) as f:
-        abi: str = json.load(f)
-    return abi
-
-
-def check_approval(method: Callable) -> Callable:
-    """Decorator to check if user is approved for a token. It approves them if they
-        need to be approved."""
-
-    @functools.wraps(method)
-    def approved(self: Any, *args: Any, **kwargs: Any) -> Any:
-        # Check to see if the first token is actually ETH
-        token = args[0] if args[0] != ETH_ADDRESS else None
-        token_two = None
-
-        # Check second token, if needed
-        if method.__name__ == "make_trade" or method.__name__ == "make_trade_output":
-            token_two = args[1] if args[1] != ETH_ADDRESS else None
-
-        # Approve both tokens, if needed
-        if token:
-            is_approved = self._is_approved(token)
-            # logger.warning(f"Approved? {token}: {is_approved}")
-            if not is_approved:
-                self.approve(token)
-        if token_two:
-            is_approved = self._is_approved(token_two)
-            # logger.warning(f"Approved? {token_two}: {is_approved}")
-            if not is_approved:
-                self.approve(token_two)
-        return method(self, *args, **kwargs)
-
-    return approved
-
-
-def supports(versions: List[int]) -> Callable:
-    def g(f: Callable) -> Callable:
-        if f.__doc__ is None:
-            f.__doc__ = ""
-        f.__doc__ += """\n\n
-        Supports Uniswap
-        """ + ", ".join(
-            "v" + str(ver) for ver in versions
-        )
-
-        @functools.wraps(f)
-        def check_version(self: "Uniswap", *args: List, **kwargs: Dict) -> Any:
-            if self.version not in versions:
-                raise Exception(
-                    f"Function {f.__name__} does not support version {self.version} of Uniswap passed to constructor"
-                )
-            return f(self, *args, **kwargs)
-
-        return check_version
-
-    return g
-
-
-def _str_to_addr(s: Union[str, Address]) -> AddressLike:
-    """Idempotent"""
-    if isinstance(s, str):
-        if s.startswith("0x"):
-            return Address(bytes.fromhex(s[2:]))
-        elif s.endswith(".eth"):
-            return ENS(s)
-        else:
-            raise Exception(f"Couldn't convert string '{s}' to AddressLike")
-    else:
-        return s
-
-
-def _addr_to_str(a: AddressLike) -> str:
-    if isinstance(a, bytes):
-        # Address or ChecksumAddress
-        addr: str = Web3.toChecksumAddress("0x" + bytes(a).hex())
-        return addr
-    elif isinstance(a, str):
-        if a.endswith(".eth"):
-            # Address is ENS
-            raise Exception("ENS not supported for this operation")
-        elif a.startswith("0x"):
-            addr = Web3.toChecksumAddress(a)
-            return addr
-
-    raise InvalidToken(a)
-
-
-def _validate_address(a: AddressLike) -> None:
-    assert _addr_to_str(a)
-
-
-# see: https://chainid.network/chains/
-_netid_to_name = {
-    1: "mainnet",
-    3: "ropsten",
-    4: "rinkeby",
-    56: "binance",
-    97: "binance_testnet",
-    100: "xdai",
-}
-
-_factory_contract_addresses_v1 = {
-    "mainnet": "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95",
-    "ropsten": "0x9c83dCE8CA20E9aAF9D3efc003b2ea62aBC08351",
-    "rinkeby": "0xf5D915570BC477f9B8D6C0E980aA81757A3AaC36",
-    "kovan": "0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30",
-    "görli": "0x6Ce570d02D73d4c384b46135E87f8C592A8c86dA",
-}
-
-
-# For v2 the address is the same on mainnet, Ropsten, Rinkeby, Görli, and Kovan
-# https://uniswap.org/docs/v2/smart-contracts/factory
-_factory_contract_addresses_v2 = {
-    "mainnet": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
-    "ropsten": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
-    "rinkeby": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
-    "görli": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
-    "xdai": "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7",
-}
-
-_router_contract_addresses_v2 = {
-    "mainnet": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
-    "ropsten": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
-    "rinkeby": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
-    "görli": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
-    "xdai": "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77",
-}
 
 
 class Uniswap:
@@ -248,7 +114,8 @@ class Uniswap:
             if factory_contract_addr is None:
                 factory_contract_addr = _factory_contract_addresses_v1[self.network]
 
-            self.factory_contract = self._load_contract(
+            self.factory_contract = _load_contract(
+                self.w3,
                 abi_name="uniswap-v1/factory",
                 address=_str_to_addr(factory_contract_addr),
             )
@@ -259,13 +126,14 @@ class Uniswap:
 
             if factory_contract_addr is None:
                 factory_contract_addr = _factory_contract_addresses_v2[self.network]
-            self.factory_contract = self._load_contract(
+            self.factory_contract = _load_contract(
+                self.w3,
                 abi_name="uniswap-v2/factory",
                 address=_str_to_addr(factory_contract_addr),
             )
             # Documented here: https://uniswap.org/docs/v2/smart-contracts/router02/
-            self.router = self._load_contract(
-                abi_name="uniswap-v2/router02", address=self.router_address,
+            self.router = _load_contract(
+                self.w3, abi_name="uniswap-v2/router02", address=self.router_address,
             )
         elif self.version == 3:
             # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
@@ -273,11 +141,11 @@ class Uniswap:
             self.router_address = _str_to_addr(
                 "0xE592427A0AEce92De3Edee1F18E0157C05861564"
             )
-            self.quoter = self._load_contract(
-                abi_name="uniswap-v3/quoter", address=quoter_addr
+            self.quoter = _load_contract(
+                self.w3, abi_name="uniswap-v3/quoter", address=quoter_addr
             )
-            self.router = self._load_contract(
-                abi_name="uniswap-v3/router", address=self.router_address
+            self.router = _load_contract(
+                self.w3, abi_name="uniswap-v3/router", address=self.router_address
             )
         else:
             raise Exception(f"Invalid version '{self.version}', only 1 or 2 supported")
@@ -285,8 +153,26 @@ class Uniswap:
         if hasattr(self, "factory_contract"):
             logger.info(f"Using factory contract: {self.factory_contract}")
 
+    def get_token(self, address: AddressLike) -> Token:
+        """
+        Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
+        """
+        # FIXME: This function should always return the same output for the same input
+        #        and would therefore benefit from caching
+        token_contract = _load_contract(self.w3, abi_name="erc20", address=address)
+        try:
+            name = token_contract.functions.name().call()
+            symbol = token_contract.functions.symbol().call()
+            decimals = token_contract.functions.decimals().call()
+        except Exception as e:
+            logger.warning(
+                f"Exception occurred while trying to get token {_addr_to_str(address)}: {e}"
+            )
+            raise InvalidToken(address)
+        return Token(symbol, address, name, decimals)
+
     @supports([1])
-    def get_all_tokens(self) -> List[dict]:
+    def get_all_tokens(self) -> List[Token]:
         """
         Retrieves all token pairs.
 
@@ -303,24 +189,6 @@ class Uniswap:
             token = self.get_token(address)
             tokens.append(token)
         return tokens
-
-    def get_token(self, address: AddressLike) -> dict:
-        """
-        Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
-        """
-        # FIXME: This function should always return the same output for the same input
-        #        and would therefore benefit from caching
-        token_contract = self._load_contract(abi_name="erc20", address=address)
-        try:
-            name = token_contract.functions.name().call()
-            symbol = token_contract.functions.symbol().call()
-            decimals = token_contract.functions.decimals().call()
-        except Exception as e:
-            logger.warning(
-                f"Exception occurred while trying to get token {_addr_to_str(address)}: {e}"
-            )
-            raise InvalidToken(address)
-        return {"name": name, "symbol": symbol, "decimals": decimals}
 
     @supports([1])
     def exchange_address_from_token(self, token_addr: AddressLike) -> AddressLike:
@@ -350,13 +218,9 @@ class Uniswap:
         if ex_addr is None:
             raise InvalidToken(token_addr)
         abi_name = "uniswap-v1/exchange"
-        contract = self._load_contract(abi_name=abi_name, address=ex_addr)
+        contract = _load_contract(self.w3, abi_name=abi_name, address=ex_addr)
         logger.info(f"Loaded exchange contract {contract} at {contract.address}")
         return contract
-
-    @functools.lru_cache()
-    def erc20_contract(self, token_addr: AddressLike) -> Contract:
-        return self._load_contract(abi_name="erc20", address=token_addr)
 
     @functools.lru_cache()
     @supports([2, 3])
@@ -367,9 +231,6 @@ class Uniswap:
         elif self.version == 3:
             address = self.router.functions.WETH9().call()
         return address
-
-    def _load_contract(self, abi_name: str, address: AddressLike) -> Contract:
-        return self.w3.eth.contract(address=address, abi=_load_abi(abi_name))
 
     # ------ Exchange ------------------------------------------------------------------
     @supports([1, 2])
@@ -553,7 +414,7 @@ class Uniswap:
         _validate_address(token)
         if _addr_to_str(token) == ETH_ADDRESS:
             return self.get_eth_balance()
-        erc20 = self.erc20_contract(token)
+        erc20 = _load_contract_erc20(self.w3, token)
         balance: int = erc20.functions.balanceOf(self.address).call()
         return balance
 
@@ -567,7 +428,7 @@ class Uniswap:
     @supports([1])
     def get_ex_token_balance(self, token: AddressLike) -> int:
         """Get the balance of a token in an exchange contract."""
-        erc20 = self.erc20_contract(token)
+        erc20 = _load_contract_erc20(self.w3, token)
         balance: int = erc20.functions.balanceOf(
             self.exchange_address_from_token(token)
         ).call()
@@ -980,7 +841,7 @@ class Uniswap:
             if self.version == 1
             else self.router_address
         )
-        function = self.erc20_contract(token).functions.approve(
+        function = _load_contract_erc20(self.w3, token).functions.approve(
             contract_addr, max_approval
         )
         logger.warning(f"Approving {_addr_to_str(token)}...")
@@ -998,7 +859,7 @@ class Uniswap:
         elif self.version in [2, 3]:
             contract_addr = self.router_address
         amount = (
-            self.erc20_contract(token)
+            _load_contract_erc20(self.w3, token)
             .functions.allowance(self.address, contract_addr)
             .call()
         )

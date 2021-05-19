@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from web3 import Web3
 
 from .uniswap import Uniswap, AddressLike, _str_to_addr
+from .token import BaseToken, Token
 from .tokens import tokens
 
 
@@ -65,14 +66,14 @@ def price(
     quantity: int = None,
 ) -> None:
     """Returns the price of ``quantity`` tokens of ``token_in`` quoted in ``token_out``."""
-    uni = ctx.obj["UNISWAP"]
+    uni: Uniswap = ctx.obj["UNISWAP"]
     if quantity is None:
-        quantity = 10 ** uni.get_token(token_in)["decimals"]
+        quantity = 10 ** uni.get_token(token_in).decimals
     price = uni.get_token_token_input_price(token_in, token_out, qty=quantity)
     if raw:
         print(price)
     else:
-        decimals = uni.get_token(token_out)["decimals"]
+        decimals = uni.get_token(token_out).decimals
         print(price / 10 ** decimals)
 
 
@@ -81,7 +82,7 @@ def price(
 @click.pass_context
 def token(ctx: click.Context, token: AddressLike) -> None:
     """Show metadata for token"""
-    uni = ctx.obj["UNISWAP"]
+    uni: Uniswap = ctx.obj["UNISWAP"]
     t1 = uni.get_token(token)
     print(t1)
 
@@ -91,12 +92,11 @@ def token(ctx: click.Context, token: AddressLike) -> None:
 @click.pass_context
 def tokendb(ctx: click.Context, metadata: bool) -> None:
     """List known token addresses"""
-    uni = ctx.obj["UNISWAP"]
+    uni: Uniswap = ctx.obj["UNISWAP"]
     for symbol, addr in tokens.items():
         if metadata and addr != "0x0000000000000000000000000000000000000000":
             data = uni.get_token(_str_to_addr(addr))
-            data["address"] = addr
-            assert data["symbol"].lower() == symbol.lower()
+            assert data.symbol.lower() == symbol.lower()
             print(data)
         else:
-            print({"symbol": symbol, "address": addr})
+            print(BaseToken(symbol, addr))

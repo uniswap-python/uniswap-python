@@ -39,10 +39,6 @@ def test_get_token():
     print_result(result)
     assert result.exit_code == 0
 
-    out = json.loads(result.stdout.replace("'", '"'))
-    assert out["symbol"] == "WETH"
-    assert out["decimals"] == 18
-
 
 def test_get_tokendb():
     runner = CliRunner(mix_stderr=False)
