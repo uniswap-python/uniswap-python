@@ -1,9 +1,8 @@
 import os
-import json
 import time
 import logging
 import functools
-from typing import List, Any, Optional, Callable, Union, Tuple, Dict
+from typing import List, Any, Optional, Union, Tuple, Dict
 
 from web3 import Web3
 from web3.eth import Contract
@@ -13,7 +12,6 @@ from web3.types import (
     Wei,
     Address,
     ChecksumAddress,
-    ENS,
     Nonce,
     HexBytes,
 )
@@ -21,7 +19,7 @@ from eth_utils import is_same_address
 from eth_typing import AnyAddress
 
 from .types import AddressLike
-from .token import Token
+from .token import ERC20Token
 from .tokens import tokens, tokens_rinkeby
 from .exceptions import InvalidToken, InsufficientBalance
 from .util import (
@@ -153,7 +151,7 @@ class Uniswap:
         if hasattr(self, "factory_contract"):
             logger.info(f"Using factory contract: {self.factory_contract}")
 
-    def get_token(self, address: AddressLike) -> Token:
+    def get_token(self, address: AddressLike) -> ERC20Token:
         """
         Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
         """
@@ -169,10 +167,10 @@ class Uniswap:
                 f"Exception occurred while trying to get token {_addr_to_str(address)}: {e}"
             )
             raise InvalidToken(address)
-        return Token(symbol, address, name, decimals)
+        return ERC20Token(symbol, address, name, decimals)
 
     @supports([1])
-    def get_all_tokens(self) -> List[Token]:
+    def get_all_tokens(self) -> List[ERC20Token]:
         """
         Retrieves all token pairs.
 

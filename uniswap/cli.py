@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from web3 import Web3
 
 from .uniswap import Uniswap, AddressLike, _str_to_addr
-from .token import BaseToken, Token
+from .token import BaseToken
 from .tokens import tokens
 
 
