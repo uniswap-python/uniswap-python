@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 class Uniswap:
     """
-    Wrapper around Uniswap v1 and v2 contracts.
+    Wrapper around Uniswap contracts.
     """
 
     def __init__(
