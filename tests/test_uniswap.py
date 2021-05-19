@@ -10,7 +10,8 @@ from time import sleep
 
 from web3 import Web3
 
-from uniswap import Uniswap, InvalidToken, InsufficientBalance
+from uniswap import Uniswap
+from uniswap.exceptions import InvalidToken, InsufficientBalance
 
 
 logger = logging.getLogger(__name__)
