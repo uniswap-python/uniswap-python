@@ -71,6 +71,11 @@
 </p>
 <ul class="nav bd-sidenav">
  <li class="toctree-l1">
+  <a class="reference internal" href="getting-started.html">
+   Getting started
+  </a>
+ </li>
+ <li class="toctree-l1">
   <a class="reference internal" href="api.html">
    API Reference
   </a>
@@ -96,7 +101,10 @@
 </nav> <!-- To handle the deprecated key -->
 
 <div class="navbar_extra_footer">
-  Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+  
+    <p>
+        Back to <a href="https://github.com/shanefontaine/uniswap-python">GitHub</a>
+    </p>
 </div>
 
 </div>
@@ -166,11 +174,15 @@
 <div class="genindex-jumpbox">
  <a href="#Symbols"><strong>Symbols</strong></a>
  | <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
  | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  
@@ -230,6 +242,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#uniswap.Uniswap.add_liquidity">add_liquidity() (uniswap.Uniswap method)</a>
 </li>
+      <li><a href="api.html#uniswap.token.BaseToken.address">address (uniswap.token.BaseToken attribute)</a>
+
+      <ul>
+        <li><a href="api.html#uniswap.token.ERC20Token.address">(uniswap.token.ERC20Token attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#uniswap.Uniswap.approve">approve() (uniswap.Uniswap method)</a>
@@ -237,13 +255,31 @@
   </ul></td>
 </tr></table>
 
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#uniswap.token.BaseToken">BaseToken (class in uniswap.token)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#uniswap.token.ERC20Token.decimals">decimals (uniswap.token.ERC20Token attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#uniswap.Uniswap.exchange_address_from_token">exchange_address_from_token() (uniswap.Uniswap method)</a>
+      <li><a href="api.html#uniswap.token.ERC20Token">ERC20Token (class in uniswap.token)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#uniswap.Uniswap.exchange_address_from_token">exchange_address_from_token() (uniswap.Uniswap method)</a>
+</li>
       <li><a href="api.html#uniswap.Uniswap.exchange_contract">exchange_contract() (uniswap.Uniswap method)</a>
 </li>
   </ul></td>
@@ -255,10 +291,6 @@
       <li><a href="api.html#uniswap.Uniswap.get_all_tokens">get_all_tokens() (uniswap.Uniswap method)</a>
 </li>
       <li><a href="api.html#uniswap.Uniswap.get_eth_balance">get_eth_balance() (uniswap.Uniswap method)</a>
-</li>
-      <li><a href="api.html#uniswap.Uniswap.get_eth_token_input_price">get_eth_token_input_price() (uniswap.Uniswap method)</a>
-</li>
-      <li><a href="api.html#uniswap.Uniswap.get_eth_token_output_price">get_eth_token_output_price() (uniswap.Uniswap method)</a>
 </li>
       <li><a href="api.html#uniswap.Uniswap.get_ex_eth_balance">get_ex_eth_balance() (uniswap.Uniswap method)</a>
 </li>
@@ -272,17 +304,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#uniswap.Uniswap.get_fee_taker">get_fee_taker() (uniswap.Uniswap method)</a>
 </li>
+      <li><a href="api.html#uniswap.Uniswap.get_price_input">get_price_input() (uniswap.Uniswap method)</a>
+</li>
+      <li><a href="api.html#uniswap.Uniswap.get_price_output">get_price_output() (uniswap.Uniswap method)</a>
+</li>
       <li><a href="api.html#uniswap.Uniswap.get_token">get_token() (uniswap.Uniswap method)</a>
 </li>
       <li><a href="api.html#uniswap.Uniswap.get_token_balance">get_token_balance() (uniswap.Uniswap method)</a>
-</li>
-      <li><a href="api.html#uniswap.Uniswap.get_token_eth_input_price">get_token_eth_input_price() (uniswap.Uniswap method)</a>
-</li>
-      <li><a href="api.html#uniswap.Uniswap.get_token_eth_output_price">get_token_eth_output_price() (uniswap.Uniswap method)</a>
-</li>
-      <li><a href="api.html#uniswap.Uniswap.get_token_token_input_price">get_token_token_input_price() (uniswap.Uniswap method)</a>
-</li>
-      <li><a href="api.html#uniswap.Uniswap.get_token_token_output_price">get_token_token_output_price() (uniswap.Uniswap method)</a>
 </li>
       <li><a href="api.html#uniswap.Uniswap.get_weth_address">get_weth_address() (uniswap.Uniswap method)</a>
 </li>
@@ -292,11 +320,11 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#uniswap.InsufficientBalance">InsufficientBalance</a>
+      <li><a href="api.html#uniswap.exceptions.InsufficientBalance">InsufficientBalance</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#uniswap.InvalidToken">InvalidToken</a>
+      <li><a href="api.html#uniswap.exceptions.InvalidToken">InvalidToken</a>
 </li>
   </ul></td>
 </tr></table>
@@ -308,15 +336,25 @@
 </li>
       <li><a href="api.html#uniswap.Uniswap.make_trade_output">make_trade_output() (uniswap.Uniswap method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     module
 
       <ul>
         <li><a href="api.html#module-uniswap">uniswap</a>
 </li>
+        <li><a href="api.html#module-uniswap.exceptions">uniswap.exceptions</a>
+</li>
+        <li><a href="api.html#module-uniswap.token">uniswap.token</a>
+</li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#uniswap.token.ERC20Token.name">name (uniswap.token.ERC20Token attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -325,6 +363,18 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#uniswap.Uniswap.remove_liquidity">remove_liquidity() (uniswap.Uniswap method)</a>
 </li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#uniswap.token.BaseToken.symbol">symbol (uniswap.token.BaseToken attribute)</a>
+
+      <ul>
+        <li><a href="api.html#uniswap.token.ERC20Token.symbol">(uniswap.token.ERC20Token attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -386,8 +436,6 @@
         <li><a href="cli.html#cmdoption-unipy-price-arg-TOKEN_OUT">TOKEN_OUT</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     unipy-token command line option
 
@@ -395,6 +443,8 @@
         <li><a href="cli.html#cmdoption-unipy-token-arg-TOKEN">TOKEN</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     unipy-tokendb command line option
 
@@ -411,6 +461,20 @@
       </ul></li>
       <li><a href="api.html#uniswap.Uniswap">Uniswap (class in uniswap)</a>
 </li>
+      <li>
+    uniswap.exceptions
+
+      <ul>
+        <li><a href="api.html#module-uniswap.exceptions">module</a>
+</li>
+      </ul></li>
+      <li>
+    uniswap.token
+
+      <ul>
+        <li><a href="api.html#module-uniswap.token">module</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 

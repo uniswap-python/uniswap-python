@@ -1,0 +1,476 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Getting started &#8212; uniswap-python</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinx-book-theme.acff12b8f9c144ce68a297486a2fa670.css" type="text/css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api.html" />
+    <link rel="prev" title="Welcome to uniswap-python’s documentation!" href="index.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="index.html">
+      
+      <img src="_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">uniswap-python</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <p class="caption">
+ <span class="caption-text">
+  Contents:
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   Getting started
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="api.html">
+   API Reference
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="cli.html">
+   Command line interface
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="examples.html">
+   Examples
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="forks.html">
+   Using with forks/other chains
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  
+    <p>
+        Back to <a href="https://github.com/shanefontaine/uniswap-python">GitHub</a>
+    </p>
+</div>
+
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="_sources/getting-started.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/shanefontaine/uniswap-python"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        
+        <a class="edit-button" href="https://github.com/shanefontaine/uniswap-python/edit/master/docs/getting-started.rst"><button
+                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
+                title="Edit this page"><i class="fas fa-pencil-alt"></i>suggest edit</button></a>
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#installation">
+   Installation
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#initializing-the-uniswap-class">
+   Initializing the Uniswap class
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#environment-variables">
+     Environment Variables
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#gas-pricing">
+     Gas pricing
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#quoting-prices">
+   Quoting prices
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#get-price-input">
+     <code class="xref py py-func docutils literal notranslate">
+      <span class="pre">
+       get_price_input()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#get-price-output">
+     <code class="xref py py-func docutils literal notranslate">
+      <span class="pre">
+       get_price_output()
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#making-trades">
+   Making trades
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#make-trade">
+     <code class="xref py py-func docutils literal notranslate">
+      <span class="pre">
+       make_trade()
+      </span>
+     </code>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#make-trade-output">
+     <code class="xref py py-func docutils literal notranslate">
+      <span class="pre">
+       make_trade_output()
+      </span>
+     </code>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#pool-methods-v1-only">
+   Pool Methods (v1 only)
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#liquidity-methods-v1-only">
+   Liquidity Methods (v1 only)
+  </a>
+ </li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="getting-started">
+<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<p>This library attempts to present a clean interface to Uniswap, but in order to use it to its full potential, you must familiarize yourself with the official Uniswap documentation:</p>
+<ul class="simple">
+<li><p>V1: <a class="reference external" href="https://uniswap.org/docs/v1/">https://uniswap.org/docs/v1/</a></p></li>
+<li><p>V2: <a class="reference external" href="https://uniswap.org/docs/v2/">https://uniswap.org/docs/v2/</a></p></li>
+<li><p>V3: <a class="reference external" href="https://docs.uniswap.org/">https://docs.uniswap.org/</a></p></li>
+</ul>
+<div class="contents local topic" id="table-of-contents">
+<p class="topic-title">Table of contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#installation" id="id1">Installation</a></p></li>
+<li><p><a class="reference internal" href="#initializing-the-uniswap-class" id="id2">Initializing the Uniswap class</a></p>
+<ul>
+<li><p><a class="reference internal" href="#environment-variables" id="id3">Environment Variables</a></p></li>
+<li><p><a class="reference internal" href="#gas-pricing" id="id4">Gas pricing</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#quoting-prices" id="id5">Quoting prices</a></p>
+<ul>
+<li><p><a class="reference internal" href="#get-price-input" id="id6"><a class="reference internal" href="api.html#uniswap.Uniswap.get_price_input" title="uniswap.Uniswap.get_price_input"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_input()</span></code></a></a></p></li>
+<li><p><a class="reference internal" href="#get-price-output" id="id7"><a class="reference internal" href="api.html#uniswap.Uniswap.get_price_output" title="uniswap.Uniswap.get_price_output"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_output()</span></code></a></a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#making-trades" id="id8">Making trades</a></p>
+<ul>
+<li><p><a class="reference internal" href="#make-trade" id="id9"><a class="reference internal" href="api.html#uniswap.Uniswap.make_trade" title="uniswap.Uniswap.make_trade"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade()</span></code></a></a></p></li>
+<li><p><a class="reference internal" href="#make-trade-output" id="id10"><a class="reference internal" href="api.html#uniswap.Uniswap.make_trade_output" title="uniswap.Uniswap.make_trade_output"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade_output()</span></code></a></a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#pool-methods-v1-only" id="id11">Pool Methods (v1 only)</a></p></li>
+<li><p><a class="reference internal" href="#liquidity-methods-v1-only" id="id12">Liquidity Methods (v1 only)</a></p></li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h2><a class="toc-backref" href="#id1">Installation</a><a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>You can install the latest release from PyPI, or install the latest commit directly from git:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip install uniswap-python
+
+<span class="c1"># or</span>
+
+pip install git+git://github.com/shanefontaine/uniswap-python.git
+</pre></div>
+</div>
+</div>
+<div class="section" id="initializing-the-uniswap-class">
+<h2><a class="toc-backref" href="#id2">Initializing the Uniswap class</a><a class="headerlink" href="#initializing-the-uniswap-class" title="Permalink to this headline">¶</a></h2>
+<p>If you want to trade you need to provide your address and private key. If not, you can set them to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>In addition, the <a class="reference internal" href="api.html#uniswap.Uniswap" title="uniswap.Uniswap"><code class="xref py py-class docutils literal notranslate"><span class="pre">Uniswap</span></code></a> class takes several optional parameters, as documented in the <cite>API Reference</cite>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniswap</span> <span class="kn">import</span> <span class="n">Uniswap</span>
+
+<span class="n">address</span> <span class="o">=</span> <span class="s2">&quot;YOUR ADDRESS&quot;</span>          <span class="c1"># or None if you&#39;re not going to make transactions</span>
+<span class="n">private_key</span> <span class="o">=</span> <span class="s2">&quot;YOUR PRIVATE KEY&quot;</span>  <span class="c1"># or None if you&#39;re not going to make transactions</span>
+<span class="n">version</span> <span class="o">=</span> <span class="mi">2</span>                       <span class="c1"># specify which version of Uniswap to use</span>
+<span class="n">provider</span> <span class="o">=</span> <span class="s2">&quot;WEB3 PROVIDER URL&quot;</span>    <span class="c1"># can also be set through the environment variable `PROVIDER`</span>
+<span class="n">uniswap</span> <span class="o">=</span> <span class="n">Uniswap</span><span class="p">(</span><span class="n">address</span><span class="o">=</span><span class="n">address</span><span class="p">,</span> <span class="n">private_key</span><span class="o">=</span><span class="n">private_key</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">)</span>
+
+<span class="c1"># Some token addresses we&#39;ll be using later in this guide</span>
+<span class="n">eth</span> <span class="o">=</span> <span class="s2">&quot;0x0000000000000000000000000000000000000000&quot;</span>
+<span class="n">bat</span> <span class="o">=</span> <span class="s2">&quot;0x0D8775F648430679A709E98d2b0Cb6250d2887EF&quot;</span>
+<span class="n">dai</span> <span class="o">=</span> <span class="s2">&quot;0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359&quot;</span>
+</pre></div>
+</div>
+<div class="section" id="environment-variables">
+<h3><a class="toc-backref" href="#id3">Environment Variables</a><a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h3>
+<p>The program expects an environment variables to be set in order to run the program. You can use an Infura node, since the transactions are being signed locally and broadcast as a raw transaction. The environment variable is:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>PROVIDER  <span class="c1"># HTTP Provider for web3</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="gas-pricing">
+<h3><a class="toc-backref" href="#id4">Gas pricing</a><a class="headerlink" href="#gas-pricing" title="Permalink to this headline">¶</a></h3>
+<p>To modify the gas pricing strategy you need to pass a custom <cite>Web3</cite> instance to the <a class="reference internal" href="api.html#uniswap.Uniswap" title="uniswap.Uniswap"><code class="xref py py-class docutils literal notranslate"><span class="pre">Uniswap</span></code></a> constructor. You can find details for how to configure Web3 gas strategies in their <a class="reference external" href="https://web3py.readthedocs.io/en/stable/gas_price.html">documentation</a>.</p>
+</div>
+</div>
+<div class="section" id="quoting-prices">
+<h2><a class="toc-backref" href="#id5">Quoting prices</a><a class="headerlink" href="#quoting-prices" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These methods assume a certain route for the swap to take, which may not be the optimal route. See <a class="reference external" href="https://github.com/shanefontaine/uniswap-python/issues/69">issue #69</a> for details.</p>
+</div>
+<p>There are two functions to retrieve the price for a given pair, one for specifying how much you get given a certain amount of the input token, and another for specifying how much you need to pay to receive a certain amount of the output token.</p>
+<div class="section" id="get-price-input">
+<h3><a class="toc-backref" href="#id6"><a class="reference internal" href="api.html#uniswap.Uniswap.get_price_input" title="uniswap.Uniswap.get_price_input"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_input()</span></code></a></a><a class="headerlink" href="#get-price-input" title="Permalink to this headline">¶</a></h3>
+<p>Returns the cost of the given number of input tokens, priced in the output token.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Returns the amount of DAI you get for 1 ETH (10^18 wei)</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">get_price_input</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">dai</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-price-output">
+<h3><a class="toc-backref" href="#id7"><a class="reference internal" href="api.html#uniswap.Uniswap.get_price_output" title="uniswap.Uniswap.get_price_output"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_output()</span></code></a></a><a class="headerlink" href="#get-price-output" title="Permalink to this headline">¶</a></h3>
+<p>Returns the amount of input token you need for the given amount of output tokens.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Returns the amount of ETH you need to pay (in wei) to get 1000 DAI</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">get_price_output</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">dai</span><span class="p">,</span> <span class="mi">1_000</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These methods return the price as an integer in the smallest unit of the token. You need to ensure that you know how many decimals the token you’re trying to trade uses to get prices in the common decimal format. See <a class="reference external" href="https://github.com/shanefontaine/uniswap-python/issues/12">issue #12</a> for details.</p>
+<p>Decimals for common tokens:</p>
+<ul class="simple">
+<li><p>ETH, DAI, and BAT uses 18 decimals (as you can see in code below)</p></li>
+<li><p>WBTC uses 8 decimals</p></li>
+<li><p>USDC and USDT uses 6 decimals</p></li>
+</ul>
+<p>You can look up the number of decimals used by a particular token by looking up the contract on Etherscan.</p>
+</div>
+</div>
+</div>
+<div class="section" id="making-trades">
+<h2><a class="toc-backref" href="#id8">Making trades</a><a class="headerlink" href="#making-trades" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The same route assumptions and need for handling decimals apply here as those mentioned in the previous section.</p>
+</div>
+<div class="section" id="make-trade">
+<h3><a class="toc-backref" href="#id9"><a class="reference internal" href="api.html#uniswap.Uniswap.make_trade" title="uniswap.Uniswap.make_trade"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade()</span></code></a></a><a class="headerlink" href="#make-trade" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a trade based on the input parameters</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">eth</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">dai</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">,</span> <span class="s2">&quot;0x123...&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="make-trade-output">
+<h3><a class="toc-backref" href="#id10"><a class="reference internal" href="api.html#uniswap.Uniswap.make_trade_output" title="uniswap.Uniswap.make_trade_output"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade_output()</span></code></a></a><a class="headerlink" href="#make-trade-output" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a trade where the output qty isearch)Lknown based on the input parameters</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade_output</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span> <span class="c1"># calls _eth_to_token_swap_output</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade_output</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">eth</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span> <span class="c1"># calls _token_to_eth_swap_output</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade_output</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">dai</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">,</span> <span class="s2">&quot;0x123...&quot;</span><span class="p">)</span> <span class="c1"># calls _token_to_token_swap_output</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="pool-methods-v1-only">
+<h2><a class="toc-backref" href="#id11">Pool Methods (v1 only)</a><a class="headerlink" href="#pool-methods-v1-only" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the balance of ETH in an exchange contract.</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">get_ex_eth_balance</span><span class="p">(</span><span class="n">bat</span><span class="p">)</span>
+
+<span class="c1"># Get the balance of a token in an exchange contract.</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">get_ex_token_balance</span><span class="p">(</span><span class="n">bat</span><span class="p">)</span>
+
+<span class="c1"># Get the exchange rate of token/ETH</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">get_exchange_rate</span><span class="p">(</span><span class="n">bat</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="liquidity-methods-v1-only">
+<h2><a class="toc-backref" href="#id12">Liquidity Methods (v1 only)</a><a class="headerlink" href="#liquidity-methods-v1-only" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add liquidity to the pool.</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">add_liquidity</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
+
+<span class="c1"># Remove liquidity from the pool.</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">remove_liquidity</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="index.html" title="previous page">Welcome to uniswap-python’s documentation!</a>
+    <a class='right-next' id="next-link" href="api.html" title="next page">API Reference</a>
+
+        </div>
+        
+        </div>
+    </div>
+    <footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+          By Shane Fontaine, Erik Bjäreholt, and contributors<br/>
+        
+            &copy; Copyright 2021, Shane Fontaine, Erik Bjäreholt, and contributors.<br/>
+      </p>
+    </div>
+  </footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>
