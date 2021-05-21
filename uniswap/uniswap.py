@@ -150,45 +150,6 @@ class Uniswap:
         if hasattr(self, "factory_contract"):
             logger.info(f"Using factory contract: {self.factory_contract}")
 
-    def get_token(self, address: AddressLike) -> ERC20Token:
-        """
-        Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
-        """
-        # FIXME: This function should always return the same output for the same input
-        #        and would therefore benefit from caching
-        token_contract = _load_contract(self.w3, abi_name="erc20", address=address)
-        try:
-            name = token_contract.functions.name().call()
-            symbol = token_contract.functions.symbol().call()
-            decimals = token_contract.functions.decimals().call()
-        except Exception as e:
-            logger.warning(
-                f"Exception occurred while trying to get token {_addr_to_str(address)}: {e}"
-            )
-            raise InvalidToken(address)
-        return ERC20Token(symbol, address, name, decimals)
-
-    @functools.lru_cache()
-    @supports([2, 3])
-    def get_weth_address(self) -> ChecksumAddress:
-        if self.version == 2:
-            # Contract calls should always return checksummed addresses
-            address: ChecksumAddress = self.router.functions.WETH().call()
-        elif self.version == 3:
-            address = self.router.functions.WETH9().call()
-        return address
-
-    # ------ Exchange ------------------------------------------------------------------
-    @supports([1, 2])
-    def get_fee_maker(self) -> float:
-        """Get the maker fee."""
-        return 0
-
-    @supports([1, 2])
-    def get_fee_taker(self) -> float:
-        """Get the taker fee."""
-        return 0.003
-
     # ------ Market --------------------------------------------------------------------
 
     @supports([1, 2, 3])
@@ -200,6 +161,7 @@ class Uniswap:
         fee: int = None,
         route: Optional[List[AddressLike]] = None,
     ) -> int:
+        """Returns the amount of the input token you get for `qty` of the output token"""
         if fee is None:
             fee = 3000
             if self.version == 3:
@@ -221,6 +183,7 @@ class Uniswap:
         fee: int = None,
         route: Optional[List[AddressLike]] = None,
     ) -> int:
+        """Returns the amount of input token you need to get `qty` of the output token"""
         if fee is None:
             fee = 3000
             if self.version == 3:
@@ -392,67 +355,6 @@ class Uniswap:
         else:
             raise ValueError("function not supported for this version of Uniswap")
         return price
-
-    # ------ Wallet balance ------------------------------------------------------------
-    def get_eth_balance(self) -> Wei:
-        """Get the balance of ETH in a wallet."""
-        return self.w3.eth.getBalance(self.address)
-
-    def get_token_balance(self, token: AddressLike) -> int:
-        """Get the balance of a token in a wallet."""
-        _validate_address(token)
-        if _addr_to_str(token) == ETH_ADDRESS:
-            return self.get_eth_balance()
-        erc20 = _load_contract_erc20(self.w3, token)
-        balance: int = erc20.functions.balanceOf(self.address).call()
-        return balance
-
-    # ------ ERC20 Pool ----------------------------------------------------------------
-    @supports([1])
-    def get_ex_eth_balance(self, token: AddressLike) -> int:
-        """Get the balance of ETH in an exchange contract."""
-        ex_addr: AddressLike = self.exchange_address_from_token(token)
-        return self.w3.eth.getBalance(ex_addr)
-
-    @supports([1])
-    def get_ex_token_balance(self, token: AddressLike) -> int:
-        """Get the balance of a token in an exchange contract."""
-        erc20 = _load_contract_erc20(self.w3, token)
-        balance: int = erc20.functions.balanceOf(
-            self.exchange_address_from_token(token)
-        ).call()
-        return balance
-
-    # TODO: ADD TOTAL SUPPLY
-    @supports([1])
-    def get_exchange_rate(self, token: AddressLike) -> float:
-        """Get the current ETH/token exchange rate of the token."""
-        eth_reserve = self.get_ex_eth_balance(token)
-        token_reserve = self.get_ex_token_balance(token)
-        return float(token_reserve / eth_reserve)
-
-    # ------ Liquidity -----------------------------------------------------------------
-    @supports([1])
-    @check_approval
-    def add_liquidity(
-        self, token: AddressLike, max_eth: Wei, min_liquidity: int = 1
-    ) -> HexBytes:
-        """Add liquidity to the pool."""
-        tx_params = self._get_tx_params(max_eth)
-        # Add 1 to avoid rounding errors, per
-        # https://hackmd.io/hthz9hXKQmSyXfMbPsut1g#Add-Liquidity-Calculations
-        max_token = int(max_eth * self.get_exchange_rate(token)) + 10
-        func_params = [min_liquidity, max_token, self._deadline()]
-        function = self.exchange_contract(token).functions.addLiquidity(*func_params)
-        return self._build_and_send_tx(function, tx_params)
-
-    @supports([1])
-    @check_approval
-    def remove_liquidity(self, token: str, max_token: int) -> HexBytes:
-        """Remove liquidity from the pool."""
-        func_params = [int(max_token), 1, 1, self._deadline()]
-        function = self.exchange_contract(token).functions.removeLiquidity(*func_params)
-        return self._build_and_send_tx(function)
 
     # ------ Make Trade ----------------------------------------------------------------
     @check_approval
@@ -872,6 +774,67 @@ class Uniswap:
         else:
             raise ValueError
 
+    # ------ Wallet balance ------------------------------------------------------------
+    def get_eth_balance(self) -> Wei:
+        """Get the balance of ETH for your address."""
+        return self.w3.eth.getBalance(self.address)
+
+    def get_token_balance(self, token: AddressLike) -> int:
+        """Get the balance of a token for your address."""
+        _validate_address(token)
+        if _addr_to_str(token) == ETH_ADDRESS:
+            return self.get_eth_balance()
+        erc20 = _load_contract_erc20(self.w3, token)
+        balance: int = erc20.functions.balanceOf(self.address).call()
+        return balance
+
+    # ------ ERC20 Pool ----------------------------------------------------------------
+    @supports([1])
+    def get_ex_eth_balance(self, token: AddressLike) -> int:
+        """Get the balance of ETH in an exchange contract."""
+        ex_addr: AddressLike = self.exchange_address_from_token(token)
+        return self.w3.eth.getBalance(ex_addr)
+
+    @supports([1])
+    def get_ex_token_balance(self, token: AddressLike) -> int:
+        """Get the balance of a token in an exchange contract."""
+        erc20 = _load_contract_erc20(self.w3, token)
+        balance: int = erc20.functions.balanceOf(
+            self.exchange_address_from_token(token)
+        ).call()
+        return balance
+
+    # TODO: ADD TOTAL SUPPLY
+    @supports([1])
+    def get_exchange_rate(self, token: AddressLike) -> float:
+        """Get the current ETH/token exchange rate of the token."""
+        eth_reserve = self.get_ex_eth_balance(token)
+        token_reserve = self.get_ex_token_balance(token)
+        return float(token_reserve / eth_reserve)
+
+    # ------ Liquidity -----------------------------------------------------------------
+    @supports([1])
+    @check_approval
+    def add_liquidity(
+        self, token: AddressLike, max_eth: Wei, min_liquidity: int = 1
+    ) -> HexBytes:
+        """Add liquidity to the pool."""
+        tx_params = self._get_tx_params(max_eth)
+        # Add 1 to avoid rounding errors, per
+        # https://hackmd.io/hthz9hXKQmSyXfMbPsut1g#Add-Liquidity-Calculations
+        max_token = int(max_eth * self.get_exchange_rate(token)) + 10
+        func_params = [min_liquidity, max_token, self._deadline()]
+        function = self.exchange_contract(token).functions.addLiquidity(*func_params)
+        return self._build_and_send_tx(function, tx_params)
+
+    @supports([1])
+    @check_approval
+    def remove_liquidity(self, token: str, max_token: int) -> HexBytes:
+        """Remove liquidity from the pool."""
+        func_params = [int(max_token), 1, 1, self._deadline()]
+        function = self.exchange_contract(token).functions.removeLiquidity(*func_params)
+        return self._build_and_send_tx(function)
+
     # ------ Approval Utils ------------------------------------------------------------
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
         """Give an exchange/router max approval of a token."""
@@ -1003,6 +966,48 @@ class Uniswap:
         outputAmountB = numeratorB / denominatorB
 
         return int(outputAmountB), int(1.2 * outputAmountA)
+
+    # ------ Helpers ------------------------------------------------------------
+
+    def get_token(self, address: AddressLike) -> ERC20Token:
+        """
+        Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
+        """
+        # FIXME: This function should always return the same output for the same input
+        #        and would therefore benefit from caching
+        token_contract = _load_contract(self.w3, abi_name="erc20", address=address)
+        try:
+            name = token_contract.functions.name().call()
+            symbol = token_contract.functions.symbol().call()
+            decimals = token_contract.functions.decimals().call()
+        except Exception as e:
+            logger.warning(
+                f"Exception occurred while trying to get token {_addr_to_str(address)}: {e}"
+            )
+            raise InvalidToken(address)
+        return ERC20Token(symbol, address, name, decimals)
+
+    @functools.lru_cache()
+    @supports([2, 3])
+    def get_weth_address(self) -> ChecksumAddress:
+        """Retrieves the WETH address from the contracts (which may vary between chains)."""
+        if self.version == 2:
+            # Contract calls should always return checksummed addresses
+            address: ChecksumAddress = self.router.functions.WETH().call()
+        elif self.version == 3:
+            address = self.router.functions.WETH9().call()
+        return address
+
+    # ------ Exchange ------------------------------------------------------------------
+    @supports([1, 2])
+    def get_fee_maker(self) -> float:
+        """Get the maker fee."""
+        return 0
+
+    @supports([1, 2])
+    def get_fee_taker(self) -> float:
+        """Get the taker fee."""
+        return 0.003
 
     # ------ Test utilities ------------------------------------------------------------
 
