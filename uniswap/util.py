@@ -54,4 +54,9 @@ def _load_contract_erc20(w3: Web3, address: AddressLike) -> Contract:
 
 
 def _encode_path(token_in: AddressLike, route: List[Tuple[int, AddressLike]]) -> bytes:
+    """
+    Needed for multi-hop swaps in V3.
+
+    https://github.com/Uniswap/uniswap-v3-sdk/blob/1a74d5f0a31040fec4aeb1f83bba01d7c03f4870/src/utils/encodeRouteToPath.ts
+    """
     raise NotImplementedError
