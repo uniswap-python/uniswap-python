@@ -69,7 +69,7 @@ def price(
     uni: Uniswap = ctx.obj["UNISWAP"]
     if quantity is None:
         quantity = 10 ** uni.get_token(token_in).decimals
-    price = uni.get_token_token_input_price(token_in, token_out, qty=quantity)
+    price = uni.get_price_input(token_in, token_out, qty=quantity)
     if raw:
         print(price)
     else:

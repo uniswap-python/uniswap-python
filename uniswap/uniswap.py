@@ -16,7 +16,6 @@ from web3.types import (
     HexBytes,
 )
 from eth_utils import is_same_address
-from eth_typing import AnyAddress
 
 from .types import AddressLike
 from .token import ERC20Token
@@ -48,7 +47,7 @@ class Uniswap:
 
     def __init__(
         self,
-        address: Union[str, AddressLike, None],
+        address: Union[AddressLike, str, None],
         private_key: Optional[str],
         provider: str = None,
         web3: Web3 = None,
@@ -169,57 +168,6 @@ class Uniswap:
             raise InvalidToken(address)
         return ERC20Token(symbol, address, name, decimals)
 
-    @supports([1])
-    def get_all_tokens(self) -> List[ERC20Token]:
-        """
-        Retrieves all token pairs.
-
-        Note: This is a *very* expensive operation and might therefore not work properly.
-        """
-        # FIXME: This is a very expensive operation, would benefit greatly from caching.
-        tokenCount = self.factory_contract.functions.tokenCount().call()
-        tokens = []
-        for i in range(tokenCount):
-            address = self.factory_contract.functions.getTokenWithId(i).call()
-            if address == "0x0000000000000000000000000000000000000000":
-                # Token is ETH
-                continue
-            token = self.get_token(address)
-            tokens.append(token)
-        return tokens
-
-    @supports([1])
-    def exchange_address_from_token(self, token_addr: AddressLike) -> AddressLike:
-        ex_addr: AddressLike = self.factory_contract.functions.getExchange(
-            token_addr
-        ).call()
-        # TODO: What happens if the token doesn't have an exchange/doesn't exist?
-        #       Should probably raise an Exception (and test it)
-        return ex_addr
-
-    @supports([1])
-    def token_address_from_exchange(self, exchange_addr: AddressLike) -> Address:
-        token_addr: Address = (
-            self.exchange_contract(ex_addr=exchange_addr)
-            .functions.tokenAddress(exchange_addr)
-            .call()
-        )
-        return token_addr
-
-    @functools.lru_cache()
-    @supports([1])
-    def exchange_contract(
-        self, token_addr: AddressLike = None, ex_addr: AddressLike = None
-    ) -> Contract:
-        if not ex_addr and token_addr:
-            ex_addr = self.exchange_address_from_token(token_addr)
-        if ex_addr is None:
-            raise InvalidToken(token_addr)
-        abi_name = "uniswap-v1/exchange"
-        contract = _load_contract(self.w3, abi_name=abi_name, address=ex_addr)
-        logger.info(f"Loaded exchange contract {contract} at {contract.address}")
-        return contract
-
     @functools.lru_cache()
     @supports([2, 3])
     def get_weth_address(self) -> ChecksumAddress:
@@ -242,10 +190,50 @@ class Uniswap:
         return 0.003
 
     # ------ Market --------------------------------------------------------------------
+
     @supports([1, 2, 3])
-    def get_eth_token_input_price(
-        self, token: AddressLike, qty: Wei, fee: int = None
-    ) -> Wei:
+    def get_price_input(
+        self,
+        token0: AddressLike,
+        token1: AddressLike,
+        qty: int,
+        fee: int = None,
+        route: Optional[List[AddressLike]] = None,
+    ) -> int:
+        if fee is None:
+            fee = 3000
+            if self.version == 3:
+                logger.warning("No fee set, assuming 0.3%")
+
+        if token0 == ETH_ADDRESS:
+            return self._get_eth_token_input_price(token1, Wei(qty), fee)
+        elif token1 == ETH_ADDRESS:
+            return self._get_token_eth_input_price(token0, qty, fee)
+        else:
+            return self._get_token_token_input_price(token0, token1, qty, fee, route)
+
+    @supports([1, 2, 3])
+    def get_price_output(
+        self,
+        token0: AddressLike,
+        token1: AddressLike,
+        qty: int,
+        fee: int = None,
+        route: Optional[List[AddressLike]] = None,
+    ) -> int:
+        if fee is None:
+            fee = 3000
+            if self.version == 3:
+                logger.warning("No fee set, assuming 0.3%")
+
+        if token0 == ETH_ADDRESS:
+            return self._get_eth_token_output_price(token1, qty, fee)
+        elif token1 == ETH_ADDRESS:
+            return self._get_token_eth_output_price(token0, Wei(qty), fee)
+        else:
+            return self._get_token_token_output_price(token0, token1, qty, fee, route)
+
+    def _get_eth_token_input_price(self, token: AddressLike, qty: Wei, fee: int) -> Wei:
         """Public price for ETH to Token trades with an exact input."""
         if self.version == 1:
             ex = self.exchange_contract(token)
@@ -255,18 +243,12 @@ class Uniswap:
                 qty, [self.get_weth_address(), token]
             ).call()[-1]
         elif self.version == 3:
-            if not fee:
-                logger.warning("No fee set, assuming 0.3%")
-                fee = 3000
-            price = self.get_token_token_input_price(
+            price = self._get_token_token_input_price(
                 self.get_weth_address(), token, qty, fee=fee
-            )
+            )  # type: ignore
         return price
 
-    @supports([1, 2, 3])
-    def get_token_eth_input_price(
-        self, token: AddressLike, qty: int, fee: int = None
-    ) -> int:
+    def _get_token_eth_input_price(self, token: AddressLike, qty: int, fee: int) -> int:
         """Public price for token to ETH trades with an exact input."""
         if self.version == 1:
             ex = self.exchange_contract(token)
@@ -276,22 +258,18 @@ class Uniswap:
                 qty, [token, self.get_weth_address()]
             ).call()[-1]
         elif self.version == 3:
-            if not fee:
-                logger.warning("No fee set, assuming 0.3%")
-                fee = 3000
-            price = self.get_token_token_input_price(
+            price = self._get_token_token_input_price(
                 token, self.get_weth_address(), qty, fee=fee
             )
         return price
 
-    @supports([2, 3])
-    def get_token_token_input_price(
+    def _get_token_token_input_price(
         self,
-        token0: AnyAddress,
-        token1: AnyAddress,
+        token0: AddressLike,
+        token1: AddressLike,
         qty: int,
-        route: Optional[List[AnyAddress]] = None,
-        fee: int = None,
+        fee: int,
+        route: Optional[List[AddressLike]] = None,
     ) -> int:
         """
         Public price for token to token trades with an exact input.
@@ -302,10 +280,10 @@ class Uniswap:
             if self.version == 2:
                 # If one of the tokens are WETH, delegate to appropriate call.
                 # See: https://github.com/shanefontaine/uniswap-python/issues/22
-                if is_same_address(token0, self.get_weth_address()):
-                    return int(self.get_eth_token_input_price(token1, qty))
-                elif is_same_address(token1, self.get_weth_address()):
-                    return int(self.get_token_eth_input_price(token0, qty))
+                if is_same_address(token0, self.get_weth_address()):  # type: ignore
+                    return int(self._get_eth_token_input_price(token1, Wei(qty), fee))
+                elif is_same_address(token1, self.get_weth_address()):  # type: ignore
+                    return int(self._get_token_eth_input_price(token0, qty, fee))
 
                 route = [token0, self.get_weth_address(), token1]
                 logger.warning(f"No route specified, assuming route: {route}")
@@ -313,9 +291,6 @@ class Uniswap:
         if self.version == 2:
             price: int = self.router.functions.getAmountsOut(qty, route).call()[-1]
         elif self.version == 3:
-            if not fee:
-                logger.warning("No fee set, assuming 0.3%")
-                fee = 3000
             if route:
                 # NOTE: to support custom routes we need to support the Path data encoding: https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/Path.sol
                 # result: tuple = self.quoter.functions.quoteExactInput(route, qty).call()
@@ -326,10 +301,11 @@ class Uniswap:
             price = self.quoter.functions.quoteExactInputSingle(
                 token0, token1, fee, qty, sqrtPriceLimitX96
             ).call()
+        else:
+            raise ValueError("function not supported for this version of Uniswap")
         return price
 
-    @supports([1, 2, 3])
-    def get_eth_token_output_price(
+    def _get_eth_token_output_price(
         self, token: AddressLike, qty: int, fee: int = None
     ) -> Wei:
         """Public price for ETH to Token trades with an exact output."""
@@ -343,13 +319,14 @@ class Uniswap:
             if not fee:
                 logger.warning("No fee set, assuming 0.3%")
                 fee = 3000
-            price = self.get_token_token_output_price(
-                self.get_weth_address(), token, qty, fee=fee
+            price = Wei(
+                self._get_token_token_output_price(
+                    self.get_weth_address(), token, qty, fee=fee
+                )
             )
         return price
 
-    @supports([1, 2, 3])
-    def get_token_eth_output_price(
+    def _get_token_eth_output_price(
         self, token: AddressLike, qty: Wei, fee: int = None
     ) -> int:
         """Public price for token to ETH trades with an exact output."""
@@ -363,19 +340,18 @@ class Uniswap:
             if not fee:
                 logger.warning("No fee set, assuming 0.3%")
                 fee = 3000
-            price = self.get_token_token_output_price(
+            price = self._get_token_token_output_price(
                 token, self.get_weth_address(), qty, fee=fee
             )
         return price
 
-    @supports([2, 3])
-    def get_token_token_output_price(
+    def _get_token_token_output_price(
         self,
-        token0: AnyAddress,
-        token1: AnyAddress,
+        token0: AddressLike,
+        token1: AddressLike,
         qty: int,
-        route: Optional[List[AnyAddress]] = None,
         fee: int = None,
+        route: Optional[List[AddressLike]] = None,
     ) -> int:
         """
         Public price for token to token trades with an exact output.
@@ -387,10 +363,10 @@ class Uniswap:
                 # If one of the tokens are WETH, delegate to appropriate call.
                 # See: https://github.com/shanefontaine/uniswap-python/issues/22
                 # TODO: Will these equality checks always work? (Address vs ChecksumAddress vs str)
-                if is_same_address(token0, self.get_weth_address()):
-                    return int(self.get_eth_token_output_price(token1, qty))
-                elif is_same_address(token1, self.get_weth_address()):
-                    return int(self.get_token_eth_output_price(token0, qty))
+                if is_same_address(token0, self.get_weth_address()):  # type: ignore
+                    return int(self._get_eth_token_output_price(token1, qty, fee))
+                elif is_same_address(token1, self.get_weth_address()):  # type: ignore
+                    return int(self._get_token_eth_output_price(token0, Wei(qty), fee))
 
                 route = [token0, self.get_weth_address(), token1]
                 logger.warning(f"No route specified, assuming route: {route}")
@@ -413,6 +389,8 @@ class Uniswap:
             price = self.quoter.functions.quoteExactOutputSingle(
                 token0, token1, fee, qty, sqrtPriceLimitX96
             ).call()
+        else:
+            raise ValueError("function not supported for this version of Uniswap")
         return price
 
     # ------ Wallet balance ------------------------------------------------------------
@@ -534,7 +512,7 @@ class Uniswap:
 
         if input_token == ETH_ADDRESS:
             balance = self.get_eth_balance()
-            need = self.get_eth_token_output_price(output_token, qty)
+            need = self._get_eth_token_output_price(output_token, qty)
             if balance < need:
                 raise InsufficientBalance(balance, need)
             return self._eth_to_token_swap_output(
@@ -578,7 +556,7 @@ class Uniswap:
             if recipient is None:
                 recipient = self.address
             amount_out_min = int(
-                (1 - slippage) * self.get_eth_token_input_price(output_token, qty)
+                (1 - slippage) * self._get_eth_token_input_price(output_token, qty, fee)
             )
             return self._build_and_send_tx(
                 self.router.functions.swapExactETHForTokens(
@@ -623,7 +601,7 @@ class Uniswap:
             if recipient is None:
                 recipient = self.address
             amount_out_min = int(
-                (1 - slippage) * self.get_token_eth_input_price(input_token, qty)
+                (1 - slippage) * self._get_token_eth_input_price(input_token, qty, fee)
             )
             return self._build_and_send_tx(
                 self.router.functions.swapExactTokensForETH(
@@ -656,7 +634,7 @@ class Uniswap:
         if self.version == 1:
             token_funcs = self.exchange_contract(input_token).functions
             # TODO: This might not be correct
-            min_tokens_bought, min_eth_bought = self._calculate_max_input_token(
+            min_tokens_bought, min_eth_bought = self._calculate_max_output_token(
                 input_token, qty, output_token
             )
             func_params = [
@@ -675,7 +653,7 @@ class Uniswap:
         elif self.version == 2:
             min_tokens_bought = int(
                 (1 - slippage)
-                * self.get_token_token_input_price(
+                * self._get_token_token_input_price(
                     input_token, output_token, qty, fee=fee
                 )
             )
@@ -691,7 +669,7 @@ class Uniswap:
         elif self.version == 3:
             min_tokens_bought = int(
                 (1 - slippage)
-                * self.get_token_token_input_price(
+                * self._get_token_token_input_price(
                     input_token, output_token, qty, fee=fee
                 )
             )
@@ -727,7 +705,7 @@ class Uniswap:
         """Convert ETH to tokens given an output amount."""
         if self.version == 1:
             token_funcs = self.exchange_contract(output_token).functions
-            eth_qty = self.get_eth_token_output_price(output_token, qty)
+            eth_qty = self._get_eth_token_output_price(output_token, qty)
             tx_params = self._get_tx_params(eth_qty)
             func_params: List[Any] = [qty, self._deadline()]
             if not recipient:
@@ -740,8 +718,9 @@ class Uniswap:
             if recipient is None:
                 recipient = self.address
             eth_qty = int(
-                (1 + slippage) * self.get_eth_token_output_price(output_token, qty)
-            )
+                (1 + slippage)
+                * self._get_eth_token_output_price(output_token, qty, fee)
+            )  # type: ignore
             return self._build_and_send_tx(
                 self.router.functions.swapETHForExactTokens(
                     qty,
@@ -769,13 +748,11 @@ class Uniswap:
         """Convert tokens to ETH given an output amount."""
         # Balance check
         input_balance = self.get_token_balance(input_token)
-        cost = self.get_token_eth_output_price(input_token, qty, fee)
+        cost = self._get_token_eth_output_price(input_token, qty, fee)
         if cost > input_balance:
             raise InsufficientBalance(input_balance, cost)
 
         if self.version == 1:
-            token_funcs = self.exchange_contract(input_token).functions
-
             # From https://uniswap.org/docs/v1/frontend-integration/trade-tokens/
             # Is all this really necessary? Can't we just use `cost` for max_tokens?
             outputAmount = qty
@@ -788,12 +765,13 @@ class Uniswap:
 
             max_tokens = int((1 + slippage) * inputAmount)
 
+            ex = self.exchange_contract(input_token)
             func_params: List[Any] = [qty, max_tokens, self._deadline()]
             if not recipient:
-                function = token_funcs.tokenToEthSwapOutput(*func_params)
+                function = ex.functions.tokenToEthSwapOutput(*func_params)
             else:
                 func_params.append(recipient)
-                function = token_funcs.tokenToEthTransferOutput(*func_params)
+                function = ex.functions.tokenToEthTransferOutput(*func_params)
             return self._build_and_send_tx(function)
         elif self.version == 2:
             max_tokens = int((1 + slippage) * cost)
@@ -849,7 +827,7 @@ class Uniswap:
         elif self.version == 2:
             if recipient is None:
                 recipient = self.address
-            cost = self.get_token_token_output_price(
+            cost = self._get_token_token_output_price(
                 input_token, output_token, qty, fee=fee
             )
             amount_in_max = int((1 + slippage) * cost)
@@ -866,7 +844,7 @@ class Uniswap:
             if recipient is None:
                 recipient = self.address
 
-            cost = self.get_token_token_output_price(
+            cost = self._get_token_token_output_price(
                 input_token, output_token, qty, fee=fee
             )
             amount_in_max = int((1 + slippage) * cost)
@@ -1041,3 +1019,56 @@ class Uniswap:
             return tokens_rinkeby
         else:
             raise Exception(f"Unknown net '{netname}'")
+
+    # ---- Old v1 utils ----
+
+    @supports([1])
+    def exchange_address_from_token(self, token_addr: AddressLike) -> AddressLike:
+        ex_addr: AddressLike = self.factory_contract.functions.getExchange(
+            token_addr
+        ).call()
+        # TODO: What happens if the token doesn't have an exchange/doesn't exist?
+        #       Should probably raise an Exception (and test it)
+        return ex_addr
+
+    @supports([1])
+    def token_address_from_exchange(self, exchange_addr: AddressLike) -> Address:
+        token_addr: Address = (
+            self.exchange_contract(ex_addr=exchange_addr)
+            .functions.tokenAddress(exchange_addr)
+            .call()
+        )
+        return token_addr
+
+    @functools.lru_cache()
+    @supports([1])
+    def exchange_contract(
+        self, token_addr: AddressLike = None, ex_addr: AddressLike = None
+    ) -> Contract:
+        if not ex_addr and token_addr:
+            ex_addr = self.exchange_address_from_token(token_addr)
+        if ex_addr is None:
+            raise InvalidToken(token_addr)
+        abi_name = "uniswap-v1/exchange"
+        contract = _load_contract(self.w3, abi_name=abi_name, address=ex_addr)
+        logger.info(f"Loaded exchange contract {contract} at {contract.address}")
+        return contract
+
+    @supports([1])
+    def get_all_tokens(self) -> List[ERC20Token]:
+        """
+        Retrieves all token pairs.
+
+        Note: This is a *very* expensive operation and might therefore not work properly.
+        """
+        # FIXME: This is a very expensive operation, would benefit greatly from caching.
+        tokenCount = self.factory_contract.functions.tokenCount().call()
+        tokens = []
+        for i in range(tokenCount):
+            address = self.factory_contract.functions.getTokenWithId(i).call()
+            if address == "0x0000000000000000000000000000000000000000":
+                # Token is ETH
+                continue
+            token = self.get_token(address)
+            tokens.append(token)
+        return tokens
