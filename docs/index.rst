@@ -15,6 +15,7 @@ Welcome to uniswap-python's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   getting-started
    api
    cli 
    examples

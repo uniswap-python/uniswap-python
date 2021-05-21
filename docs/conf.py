@@ -28,7 +28,7 @@ copyright = "2021, " + author
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autodoc", "sphinx_click"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.extlinks", "sphinx_click"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -37,6 +37,10 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+extlinks = {
+    "issue": ("https://github.com/shanefontaine/uniswap-python/issues/%s", "issue #"),
+}
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -60,6 +64,10 @@ html_theme_options = {
     "path_to_docs": "docs",
     "use_repository_button": True,
     "use_edit_page_button": True,
+    "extra_navbar": """
+    <p>
+        Back to <a href="https://github.com/shanefontaine/uniswap-python">GitHub</a>
+    </p>""",
 }
 
 show_navbar_depth = 2
