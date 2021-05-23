@@ -3,8 +3,8 @@ Command line interface
 
 uniswap-python provides a basic command line interface named ``unipy``, to let you easier query the chain for things like the current price and token metadata.
 
-Examples
---------
+Example usage
+-------------
 
 **Note:** uniswap-python contains a small database of token contract addresses for convenience. You can always provide a contract address in place of a shorthand, and need to do so for all tokens not in the bundled database, or if you're not on mainnet.
 
