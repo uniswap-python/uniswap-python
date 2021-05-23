@@ -1,6 +1,7 @@
-import json
+import os
 import sys
 
+import pytest
 from click.testing import CliRunner
 
 from uniswap.cli import main
@@ -14,7 +15,7 @@ def print_result(result):
 
 def test_get_price():
     runner = CliRunner(mix_stderr=False)
-    result = runner.invoke(main, ["price", "weth", "dai"])
+    result = runner.invoke(main, ["price", "eth", "dai"])
     print_result(result)
     assert result.exit_code == 0
 
@@ -24,6 +25,9 @@ def test_get_price():
 
 def test_get_price_stables():
     """Tests that decimals are handled correctly."""
+    if os.getenv("UNISWAP_VERSION") == "1":
+        pytest.skip("Not supported in v1")
+
     runner = CliRunner(mix_stderr=False)
     result = runner.invoke(main, ["price", "dai", "usdc"])
     print_result(result)

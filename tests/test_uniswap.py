@@ -13,6 +13,7 @@ from web3 import Web3
 from uniswap import Uniswap
 from uniswap.constants import ETH_ADDRESS
 from uniswap.exceptions import InvalidToken, InsufficientBalance
+from uniswap.util import _str_to_addr
 
 
 logger = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ def test_assets(client: Uniswap):
 
     for token_name, amount in [("DAI", 100 * 10 ** 18), ("USDC", 100 * 10 ** 6)]:
         token_addr = tokens[token_name]
-        price = client.get_price_output(ETH_ADDRESS, token_addr, amount)
+        price = client.get_price_output(_str_to_addr(ETH_ADDRESS), token_addr, amount)
         logger.info(f"Cost of {amount} {token_name}: {price}")
         logger.info("Buying...")
 
@@ -287,7 +288,7 @@ class TestUniswap(object):
             (
                 dai,
                 eth,
-                1000 * 10 ** 18,
+                10 * 10 ** 18,
                 None,
                 lambda: pytest.raises(InsufficientBalance),
             ),
@@ -305,6 +306,10 @@ class TestUniswap(object):
         recipient,
         expectation,
     ):
+        if client.version == 1 and ETH_ADDRESS not in [input_token, output_token]:
+            pytest.skip(
+                "Not supported in this version of Uniswap, or at least no liquidity"
+            )
         with expectation():
             balance_before = client.get_token_balance(output_token)
 
