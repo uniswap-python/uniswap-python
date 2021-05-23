@@ -1,7 +1,7 @@
 .PHONY: test typecheck lint precommit docs
 
 test:
-	poetry run pytest -v --cov=uniswap --cov-report html --cov-report term
+	poetry run pytest -v --cov=uniswap --cov-report html --cov-report term --cov-report xml
 
 typecheck:
 	poetry run mypy --pretty
