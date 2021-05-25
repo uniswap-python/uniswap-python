@@ -88,12 +88,14 @@ def _load_contract_erc20(w3: Web3, address: AddressLike) -> Contract:
 
 
 def _encode_path(token_in: AddressLike, route: List[Tuple[int, AddressLike]]) -> bytes:
-    """
-    Needed for multi-hop swaps in V3.
-
-    https://github.com/Uniswap/uniswap-v3-sdk/blob/1a74d5f0a31040fec4aeb1f83bba01d7c03f4870/src/utils/encodeRouteToPath.ts
-    """
-    raise NotImplementedError
+    """Encode a Uniswap V3 route as tightly packed token and fee values."""
+    path = bytearray(_str_to_addr(token_in))
+    for fee, token in route:
+        if not 0 <= fee < 2**24:
+            raise ValueError(f"fee must fit in uint24: {fee}")
+        path.extend(fee.to_bytes(3, byteorder="big"))
+        path.extend(_str_to_addr(token))
+    return bytes(path)
 
 
 # Adapted from: https://github.com/Uniswap/v3-sdk/blob/main/src/utils/encodeSqrtRatioX96.ts
