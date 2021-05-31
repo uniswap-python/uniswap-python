@@ -58,7 +58,10 @@ def test_assets(client: Uniswap):
 
 @pytest.fixture(scope="module")
 def web3(ganache: GanacheInstance):
-    return Web3(Web3.HTTPProvider(ganache.provider, request_kwargs={"timeout": 60}))
+    w3 = Web3(Web3.HTTPProvider(ganache.provider, request_kwargs={"timeout": 60}))
+    if 1 != int(w3.net.version):
+        raise Exception("PROVIDER was not a mainnet provider, which the tests require")
+    return w3
 
 
 @pytest.fixture(scope="module")
@@ -68,14 +71,14 @@ def ganache() -> Generator[GanacheInstance, None, None]:
         raise Exception(
             "ganache-cli was not found in PATH, you can install it with `npm install -g ganache-cli`"
         )
-    if "MAINNET_PROVIDER" not in os.environ:
+    if "PROVIDER" not in os.environ:
         raise Exception(
-            "MAINNET_PROVIDER was not set, you need to set it to a mainnet provider (such as Infura) so that we can fork off our testnet"
+            "PROVIDER was not set, you need to set it to a mainnet provider (such as Infura) so that we can fork off our testnet"
         )
 
     port = 10999
     p = subprocess.Popen(
-        f"ganache-cli --port {port} -s test --networkId 1 --fork {os.environ['MAINNET_PROVIDER']}",
+        f"ganache-cli --port {port} -s test --networkId 1 --fork {os.environ['PROVIDER']}",
         shell=True,
     )
     # Address #1 when ganache is run with `-s test`, it starts with 100 ETH
