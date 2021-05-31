@@ -41,12 +41,11 @@ Unit tests are under development using the pytest framework. Contributions are w
 
 Test are run on a fork of the main net using ganache-cli. You need to install it with `npm install -g ganache-cli` before running tests.
 
-To run the full test suite, in the project directory set the `MAINNET_PROVIDER` and `PROVIDER` env variables and run:
+To run the full test suite, in the project directory set the `PROVIDER` env variable to a mainnet provider, and run:
 
 ```
 poetry install
-export MAINNET_PROVIDER= # URL of provider, e.g. https://mainnet.infura.io/v3/...
-export PROVIDER=$MAINNET_PROVIDER
+export PROVIDER= # URL of provider, e.g. https://mainnet.infura.io/v3/...
 make test
 ```
 
