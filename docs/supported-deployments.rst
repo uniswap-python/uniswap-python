@@ -1,5 +1,11 @@
+Supported deployments
+=====================
+
+uniswap-python supports the standard deployments of Uniswap v1, v2, and v3, to both mainnet and testnets (and in the future hopefully L2's like Optimism and Arbitrum).
+
+
 Using with forks/other chains
-=============================
+-----------------------------
 
 While not officially supported nor tested, you can use this library to trade across several Uniswap forks, like:
 

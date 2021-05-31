@@ -8,8 +8,12 @@
 [![codecov](https://codecov.io/gh/uniswap-python/uniswap-python/branch/master/graph/badge.svg?token=VHAZHHLFX8)](https://codecov.io/gh/uniswap-python/uniswap-python)
 [![Downloads](https://pepy.tech/badge/uniswap-python)](https://pepy.tech/project/uniswap-python)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/shanefontaine/uniswap-python/master/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/uniswap-python)](https://pypi.org/project/uniswap-python/)
 [![Typechecking: Mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+
+[![GitHub Repo stars](https://img.shields.io/github/stars/uniswap-python/uniswap-python?style=social)](https://github.com/uniswap-python/uniswap-python/stargazers)
+[![Twitter Follow](https://img.shields.io/twitter/follow/UniswapPython?label=Follow&style=social)](https://twitter.com/UniswapPython)
 
 The unofficial Python client for [Uniswap](https://uniswap.io/).
 
