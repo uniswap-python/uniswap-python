@@ -93,8 +93,8 @@
   </a>
  </li>
  <li class="toctree-l1">
-  <a class="reference internal" href="forks.html">
-   Using with forks/other chains
+  <a class="reference internal" href="supported-deployments.html">
+   Supported deployments
   </a>
  </li>
 </ul>
@@ -316,11 +316,19 @@
 <div class="section" id="installation">
 <h2><a class="toc-backref" href="#id1">Installation</a><a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>You can install the latest release from PyPI, or install the latest commit directly from git:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip install uniswap-python
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install the latest release from PyPI:</span>
 
-<span class="c1"># or</span>
+pip install uniswap-python
 
-pip install git+git://github.com/shanefontaine/uniswap-python.git
+<span class="c1"># or install from git:</span>
+
+pip install git+git://github.com/uniswap-python/uniswap-python.git
+
+<span class="c1"># or clone and install with poetry:</span>
+
+git clone https://github.com/uniswap-python/uniswap-python.git
+<span class="nb">cd</span> uniswap-python
+poetry install
 </pre></div>
 </div>
 </div>
@@ -397,20 +405,20 @@ pip install git+git://github.com/shanefontaine/uniswap-python.git
 </div>
 <div class="section" id="make-trade">
 <h3><a class="toc-backref" href="#id9"><a class="reference internal" href="api.html#uniswap.Uniswap.make_trade" title="uniswap.Uniswap.make_trade"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade()</span></code></a></a><a class="headerlink" href="#make-trade" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a trade based on the input parameters</span>
-<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
-<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">eth</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
-<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">dai</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
-<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">,</span> <span class="s2">&quot;0x123...&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a trade where the input qty being known parameters</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>  <span class="c1"># sell 1 ETH for however many BAT</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">eth</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>  <span class="c1"># sell 1 BAT for however many ETH</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">dai</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>  <span class="c1"># sell 1 BAT for however many DAI</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">,</span> <span class="s2">&quot;0x123...&quot;</span><span class="p">)</span>  <span class="c1"># sell 1 ETH for however many BAT, and send the BAT to the provided address</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="make-trade-output">
 <h3><a class="toc-backref" href="#id10"><a class="reference internal" href="api.html#uniswap.Uniswap.make_trade_output" title="uniswap.Uniswap.make_trade_output"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade_output()</span></code></a></a><a class="headerlink" href="#make-trade-output" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a trade where the output qty isearch)Lknown based on the input parameters</span>
-<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade_output</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span> <span class="c1"># calls _eth_to_token_swap_output</span>
-<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade_output</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">eth</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span> <span class="c1"># calls _token_to_eth_swap_output</span>
-<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade_output</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">dai</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">,</span> <span class="s2">&quot;0x123...&quot;</span><span class="p">)</span> <span class="c1"># calls _token_to_token_swap_output</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a trade where the output qty is known, based on the input parameters</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade_output</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>  <span class="c1"># buy however many ETH for 1 BAT</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade_output</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">eth</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>  <span class="c1"># buy however many BAT for 1 ETH</span>
+<span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade_output</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">dai</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">,</span> <span class="s2">&quot;0x123...&quot;</span><span class="p">)</span> <span class="c1"># buy however many BAT for 1 DAI, and send the BAT to the provided address</span>
 </pre></div>
 </div>
 </div>

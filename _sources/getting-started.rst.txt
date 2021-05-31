@@ -18,11 +18,19 @@ You can install the latest release from PyPI, or install the latest commit direc
 
 .. code:: sh
 
+    # Install the latest release from PyPI:
+
     pip install uniswap-python
 
-    # or
+    # or install from git:
     
-    pip install git+git://github.com/shanefontaine/uniswap-python.git
+    pip install git+git://github.com/uniswap-python/uniswap-python.git
+
+    # or clone and install with poetry:
+
+    git clone https://github.com/uniswap-python/uniswap-python.git
+    cd uniswap-python
+    poetry install
 
 
 Initializing the Uniswap class
@@ -117,21 +125,21 @@ Making trades
 
 .. code:: python
 
-    # Make a trade based on the input parameters
-    uniswap.make_trade(eth, bat, 1*10**18)
-    uniswap.make_trade(bat, eth, 1*10**18)
-    uniswap.make_trade(bat, dai, 1*10**18)
-    uniswap.make_trade(eth, bat, 1*10**18, "0x123...")
+    # Make a trade where the input qty being known parameters
+    uniswap.make_trade(eth, bat, 1*10**18)  # sell 1 ETH for however many BAT
+    uniswap.make_trade(bat, eth, 1*10**18)  # sell 1 BAT for however many ETH
+    uniswap.make_trade(bat, dai, 1*10**18)  # sell 1 BAT for however many DAI
+    uniswap.make_trade(eth, bat, 1*10**18, "0x123...")  # sell 1 ETH for however many BAT, and send the BAT to the provided address
 
 :func:`~uniswap.Uniswap.make_trade_output`
 ``````````````````````````````````````````
 
 .. code:: python
 
-    # Make a trade where the output qty isearch)Lknown based on the input parameters
-    uniswap.make_trade_output(eth, bat, 1*10**18) # calls _eth_to_token_swap_output
-    uniswap.make_trade_output(bat, eth, 1*10**18) # calls _token_to_eth_swap_output
-    uniswap.make_trade_output(bat, dai, 1*10**18, "0x123...") # calls _token_to_token_swap_output
+    # Make a trade where the output qty is known, based on the input parameters
+    uniswap.make_trade_output(eth, bat, 1*10**18)  # buy however many ETH for 1 BAT
+    uniswap.make_trade_output(bat, eth, 1*10**18)  # buy however many BAT for 1 ETH
+    uniswap.make_trade_output(bat, dai, 1*10**18, "0x123...") # buy however many BAT for 1 DAI, and send the BAT to the provided address
 
 
 Pool Methods (v1 only)
