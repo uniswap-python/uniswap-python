@@ -59,7 +59,16 @@ make test
 
 ## Changelog
 
+_0.5.0_
+
+* Basic support for Uniswap V3
+* Added new methods `get_price_input` and `get_price_output`
+* Made a lot of previously public methods private
+* Added documentation site
+* Removed ENS support (which was probably broken to begin with)
+
 _0.4.6_
+
 * Bug fix: Update bleach package from 3.1.4 to 3.3.0
 
 _0.4.5_
