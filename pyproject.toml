@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "uniswap-python"
-version = "0.5.0"
+version = "0.5.1"
 description = "An unofficial Python wrapper for the Uniswap exchange"
 repository = "https://github.com/shanefontaine/uniswap-python"
 readme = "README.md"

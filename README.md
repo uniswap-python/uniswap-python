@@ -59,6 +59,11 @@ make test
 
 ## Changelog
 
+_0.5.1_
+
+* Updated dependencies
+* Fixed minor typing issues
+
 _0.5.0_
 
 * Basic support for Uniswap V3
