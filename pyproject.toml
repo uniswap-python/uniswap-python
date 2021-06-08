@@ -23,21 +23,21 @@ classifiers = [
 unipy = "uniswap:main"
 
 [tool.poetry.dependencies]
-python = "^3.7"
-web3 = "^5.12.0"
+python = "^3.7.2"
+web3 = "^5.19.0"
 click = "^7.1.2"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
-black = "^19.10b0"
-pytest = "^5.4.3"
-pytest-cov = "^2.10.0"
-pytest-dotenv = "^0.5.2"
-python-dotenv = "^0.14.0"
-flake8 = "^3.8.3"
-Sphinx = "^3.5.4"
-sphinx-book-theme = "^0.1.0"
-sphinx-click = "^2.7.1"
+black = "*"
+pytest = "^6.0"
+pytest-cov = "*"
+pytest-dotenv = "*"
+python-dotenv = "*"
+flake8 = "*"
+Sphinx = "*"
+sphinx-book-theme = "*"
+sphinx-click = "*"
 
 [build-system]
 requires = ["poetry>=0.12"]
