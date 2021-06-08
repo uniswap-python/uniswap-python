@@ -130,7 +130,9 @@ class Uniswap:
             )
             # Documented here: https://uniswap.org/docs/v2/smart-contracts/router02/
             self.router = _load_contract(
-                self.w3, abi_name="uniswap-v2/router02", address=self.router_address,
+                self.w3,
+                abi_name="uniswap-v2/router02",
+                address=self.router_address,
             )
         elif self.version == 3:
             # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
@@ -774,7 +776,7 @@ class Uniswap:
     # ------ Wallet balance ------------------------------------------------------------
     def get_eth_balance(self) -> Wei:
         """Get the balance of ETH for your address."""
-        return self.w3.eth.getBalance(self.address)
+        return self.w3.eth.get_balance(self.address)
 
     def get_token_balance(self, token: AddressLike) -> int:
         """Get the balance of a token for your address."""
@@ -790,7 +792,7 @@ class Uniswap:
     def get_ex_eth_balance(self, token: AddressLike) -> int:
         """Get the balance of ETH in an exchange contract."""
         ex_addr: AddressLike = self._exchange_address_from_token(token)
-        return self.w3.eth.getBalance(ex_addr)
+        return self.w3.eth.get_balance(ex_addr)
 
     @supports([1])
     def get_ex_token_balance(self, token: AddressLike) -> int:
@@ -888,7 +890,7 @@ class Uniswap:
         # TODO: This needs to get more complicated if we want to support replacing a transaction
         # FIXME: This does not play nice if transactions are sent from other places using the same wallet.
         try:
-            return self.w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+            return self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
         finally:
             logger.debug(f"nonce: {tx_params['nonce']}")
             self.last_nonce = Nonce(tx_params["nonce"] + 1)

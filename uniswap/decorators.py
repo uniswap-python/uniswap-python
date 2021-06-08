@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 def check_approval(method: Callable) -> Callable:
     """Decorator to check if user is approved for a token. It approves them if they
-        need to be approved."""
+    need to be approved."""
 
     @functools.wraps(method)
     def approved(self: Any, *args: Any, **kwargs: Any) -> Any:

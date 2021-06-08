@@ -177,7 +177,9 @@ class TestUniswap(object):
     # ------ ERC20 Pool ----------------------------------------------------------------
     @pytest.mark.parametrize("token", [(bat), (dai)])
     def test_get_ex_eth_balance(
-        self, client: Uniswap, token,
+        self,
+        client: Uniswap,
+        token,
     ):
         if not client.version == 1:
             pytest.skip("Tested method only supported on Uniswap v1")
@@ -186,7 +188,9 @@ class TestUniswap(object):
 
     @pytest.mark.parametrize("token", [(bat), (dai)])
     def test_get_ex_token_balance(
-        self, client: Uniswap, token,
+        self,
+        client: Uniswap,
+        token,
     ):
         if not client.version == 1:
             pytest.skip("Tested method only supported on Uniswap v1")
@@ -195,7 +199,9 @@ class TestUniswap(object):
 
     @pytest.mark.parametrize("token", [(bat), (dai)])
     def get_exchange_rate(
-        self, client: Uniswap, token,
+        self,
+        client: Uniswap,
+        token,
     ):
         r = client.get_exchange_rate(token)
         assert r
@@ -213,7 +219,7 @@ class TestUniswap(object):
     def test_add_liquidity(self, client: Uniswap, web3: Web3, token, max_eth):
         r = client.add_liquidity(token, max_eth)
         tx = web3.eth.waitForTransactionReceipt(r, timeout=6000)
-        assert tx.status  # type: ignore
+        assert tx.status
 
     @pytest.mark.skip
     @pytest.mark.parametrize(
@@ -230,7 +236,7 @@ class TestUniswap(object):
         with expectation:
             r = client.remove_liquidity(token, max_token)
             tx = web3.eth.waitForTransactionReceipt(r)
-            assert tx.status  # type: ignore
+            assert tx.status
 
     # ------ Make Trade ----------------------------------------------------------------
     @pytest.mark.parametrize(
@@ -266,9 +272,9 @@ class TestUniswap(object):
         with expectation():
             bal_in_before = client.get_token_balance(input_token)
 
-            r = client.make_trade(input_token, output_token, qty, recipient)
-            tx = web3.eth.waitForTransactionReceipt(r)
-            assert tx.status  # type: ignore
+            txid = client.make_trade(input_token, output_token, qty, recipient)
+            tx = web3.eth.waitForTransactionReceipt(txid)
+            assert tx.status
 
             # TODO: Checks for ETH, taking gas into account
             bal_in_after = client.get_token_balance(input_token)
@@ -318,7 +324,7 @@ class TestUniswap(object):
 
             r = client.make_trade_output(input_token, output_token, qty, recipient)
             tx = web3.eth.waitForTransactionReceipt(r, timeout=30)
-            assert tx.status  # type: ignore
+            assert tx.status
 
             # TODO: Checks for ETH, taking gas into account
             balance_after = client.get_token_balance(output_token)
