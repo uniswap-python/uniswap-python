@@ -53,6 +53,10 @@ export PROVIDER= # URL of provider, e.g. https://mainnet.infura.io/v3/...
 make test
 ```
 
+## Support our continued work!
+
+You can support us on [Gitcoin Grants](https://gitcoin.co/grants/2631/uniswap-python).
+
 ## Authors
 * [Shane Fontaine](https://twitter.com/shanecoin)
 * [Erik Bjäreholt](https://twitter.com/ErikBjare)
