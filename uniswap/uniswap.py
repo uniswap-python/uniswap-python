@@ -581,7 +581,7 @@ class Uniswap:
                         "tokenIn": input_token,
                         "tokenOut": output_token,
                         "fee": fee,
-                        "recipient": "0x0000000000000000000000000000000000000000",
+                        "recipient": recipient,
                         "deadline": self._deadline(),
                         "amountIn": qty,
                         "amountOutMinimum": min_tokens_bought,
