@@ -330,7 +330,7 @@ class Uniswap:
                 elif is_same_address(token1, self.get_weth_address()):
                     return int(self._get_token_eth_output_price(token0, Wei(qty), fee))
 
-                route = [token0, self.get_weth_address(), token1]
+                route = self._get_v2_trade_route(token0, token1)
                 logger.warning(f"No route specified, assuming route: {route}")
 
         if self.version == 2:
@@ -558,11 +558,12 @@ class Uniswap:
                     input_token, output_token, qty, fee=fee
                 )
             )
+            route = self._get_v2_trade_route(input_token, output_token)
             return self._build_and_send_tx(
                 self.router.functions.swapExactTokensForTokens(
                     qty,
                     min_tokens_bought,
-                    [input_token, self.get_weth_address(), output_token],
+                    route,
                     recipient,
                     self._deadline(),
                 ),
@@ -594,6 +595,22 @@ class Uniswap:
             )
         else:
             raise ValueError
+
+    def _get_v2_trade_route(
+        self, input_token: AddressLike, output_token: AddressLike
+    ) -> List[AddressLike]:
+        """Gets trade route simply through WETH.
+
+        Deals with two special cases when trading directly with WETH.
+        """
+        weth = self.get_weth_address()
+        if {weth, ETH_ADDRESS} == {input_token, output_token}:
+            raise ValueError("Swapping between ETH and WETH not supported!")
+        if input_token == weth:
+            return [weth, output_token]
+        elif output_token == weth:
+            return [input_token, weth]
+        return [input_token, weth, output_token]
 
     def _eth_to_token_swap_output(
         self,
@@ -736,7 +753,7 @@ class Uniswap:
                 self.router.functions.swapTokensForExactTokens(
                     qty,
                     amount_in_max,
-                    [input_token, self.get_weth_address(), output_token],
+                    self._get_v2_trade_route(input_token, output_token),
                     recipient,
                     self._deadline(),
                 ),
