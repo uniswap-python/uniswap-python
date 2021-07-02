@@ -28,6 +28,7 @@ _factory_contract_addresses_v2 = {
     "rinkeby": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
     "görli": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
     "xdai": "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7",
+    "binance": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
 }
 
 _router_contract_addresses_v2 = {
@@ -36,4 +37,5 @@ _router_contract_addresses_v2 = {
     "rinkeby": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
     "görli": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
     "xdai": "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77",
+    "binance": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
 }
