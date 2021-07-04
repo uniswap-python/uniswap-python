@@ -365,6 +365,7 @@ class Uniswap:
         recipient: AddressLike = None,
         fee: int = None,
         slippage: float = None,
+        fee_on_transfer: bool = False,
     ) -> HexBytes:
         """Make a trade by defining the qty of the input token."""
         if fee is None:
@@ -377,7 +378,7 @@ class Uniswap:
 
         if input_token == ETH_ADDRESS:
             return self._eth_to_token_swap_input(
-                output_token, Wei(qty), recipient, fee, slippage
+                output_token, Wei(qty), recipient, fee, slippage, fee_on_transfer
             )
         else:
             balance = self.get_token_balance(input_token)
@@ -385,11 +386,11 @@ class Uniswap:
                 raise InsufficientBalance(balance, qty)
             if output_token == ETH_ADDRESS:
                 return self._token_to_eth_swap_input(
-                    input_token, qty, recipient, fee, slippage
+                    input_token, qty, recipient, fee, slippage, fee_on_transfer
                 )
             else:
                 return self._token_to_token_swap_input(
-                    input_token, output_token, qty, recipient, fee, slippage
+                    input_token, output_token, qty, recipient, fee, slippage,fee_on_transfer
                 )
 
     @check_approval
@@ -436,6 +437,7 @@ class Uniswap:
         recipient: Optional[AddressLike],
         fee: int,
         slippage: float,
+        fee_on_transfer: bool = False,
     ) -> HexBytes:
         """Convert ETH to tokens given an input amount."""
         eth_balance = self.get_eth_balance()
@@ -459,15 +461,26 @@ class Uniswap:
             amount_out_min = int(
                 (1 - slippage) * self._get_eth_token_input_price(output_token, qty, fee)
             )
-            return self._build_and_send_tx(
-                self.router.functions.swapExactETHForTokens(
-                    amount_out_min,
-                    [self.get_weth_address(), output_token],
-                    recipient,
-                    self._deadline(),
-                ),
-                self._get_tx_params(qty),
-            )
+            if fee_on_transfer:
+                return self._build_and_send_tx(
+                    self.router.functions.swapExactETHForTokensSupportingFeeOnTransferTokens(
+                        amount_out_min,
+                        [self.get_weth_address(), output_token],
+                        recipient,
+                        self._deadline(),
+                    ),
+                    self._get_tx_params(qty),
+                )                
+            else:
+                return self._build_and_send_tx(
+                    self.router.functions.swapExactETHForTokens(
+                        amount_out_min,
+                        [self.get_weth_address(), output_token],
+                        recipient,
+                        self._deadline(),
+                    ),
+                    self._get_tx_params(qty),
+                )
         elif self.version == 3:
             return self._token_to_token_swap_input(
                 self.get_weth_address(), output_token, qty, recipient, fee, slippage
@@ -482,6 +495,7 @@ class Uniswap:
         recipient: Optional[AddressLike],
         fee: int,
         slippage: float,
+        fee_on_transfer: bool = False,
     ) -> HexBytes:
         """Convert tokens to ETH given an input amount."""
         # Balance check
@@ -504,15 +518,26 @@ class Uniswap:
             amount_out_min = int(
                 (1 - slippage) * self._get_token_eth_input_price(input_token, qty, fee)
             )
-            return self._build_and_send_tx(
-                self.router.functions.swapExactTokensForETH(
-                    qty,
-                    amount_out_min,
-                    [input_token, self.get_weth_address()],
-                    recipient,
-                    self._deadline(),
-                ),
-            )
+            if fee_on_transfer:
+                return self._build_and_send_tx(
+                    self.router.functions.swapExactTokensForETHSupportingFeeOnTransferTokens(
+                        qty,
+                        amount_out_min,
+                        [input_token, self.get_weth_address()],
+                        recipient,
+                        self._deadline(),
+                    ),
+                )
+            else:
+                return self._build_and_send_tx(
+                    self.router.functions.swapExactTokensForETH(
+                        qty,
+                        amount_out_min,
+                        [input_token, self.get_weth_address()],
+                        recipient,
+                        self._deadline(),
+                    ),
+                )
         elif self.version == 3:
             return self._token_to_token_swap_input(
                 input_token, self.get_weth_address(), qty, recipient, fee, slippage
@@ -528,6 +553,7 @@ class Uniswap:
         recipient: Optional[AddressLike],
         fee: int,
         slippage: float,
+        fee_on_transfer: bool = False,
     ) -> HexBytes:
         """Convert tokens to tokens given an input amount."""
         if recipient is None:
@@ -558,15 +584,26 @@ class Uniswap:
                     input_token, output_token, qty, fee=fee
                 )
             )
-            return self._build_and_send_tx(
-                self.router.functions.swapExactTokensForTokens(
-                    qty,
-                    min_tokens_bought,
-                    [input_token, self.get_weth_address(), output_token],
-                    recipient,
-                    self._deadline(),
-                ),
-            )
+            if fee_on_transfer:
+                return self._build_and_send_tx(
+                        self.router.functions.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                        qty,
+                        min_tokens_bought,
+                        [input_token, self.get_weth_address(), output_token],
+                        recipient,
+                        self._deadline(),
+                    ),
+                )
+            else:
+                return self._build_and_send_tx(
+                        self.router.functions.swapExactTokensForTokens(
+                        qty,
+                        min_tokens_bought,
+                        [input_token, self.get_weth_address(), output_token],
+                        recipient,
+                        self._deadline(),
+                    ),
+                )
         elif self.version == 3:
             min_tokens_bought = int(
                 (1 - slippage)
