@@ -330,3 +330,30 @@ class TestUniswap(object):
             balance_after = client.get_token_balance(output_token)
             if output_token != self.eth:
                 assert balance_before + qty == balance_after
+
+    @pytest.mark.parametrize(
+        "input_token, output_token, route, expectation",
+        [
+            (dai, weth, [dai, weth], does_not_raise),
+            (weth, dai, [weth, dai], does_not_raise),
+            (usdc, dai, [usdc, weth, dai], does_not_raise),
+            (weth, eth, [], lambda: pytest.raises(ValueError)),
+            (eth, weth, [], lambda: pytest.raises(ValueError)),
+        ],
+    )
+    def test_get_v2_trade_route(
+        self,
+        input_token,
+        output_token,
+        route,
+        expectation,
+        client
+    ):
+        if client.version == 1:
+            pytest.skip(
+                "Not supported in this version of Uniswap, or at least no liquidity"
+            )
+        with expectation():
+            res = client._get_v2_trade_route(input_token, output_token)
+
+            assert res == route
