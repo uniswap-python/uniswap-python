@@ -466,7 +466,7 @@ class Uniswap:
             else:
                 func=self.router.functions.swapExactETHForTokens
             return self._build_and_send_tx(
-                    func(
+                func(
                     amount_out_min,
                     [self.get_weth_address(), output_token],
                     recipient,
@@ -518,7 +518,7 @@ class Uniswap:
             else:
                 func=self.router.functions.swapExactTokensForETH
             return self._build_and_send_tx(
-                    func(
+                func(
                     qty,
                     amount_out_min,
                     [input_token, self.get_weth_address()],
@@ -579,7 +579,7 @@ class Uniswap:
             else:
                 func=self.router.functions.swapExactTokensForTokens
             return self._build_and_send_tx(
-                    func(
+                func(
                     qty,
                     min_tokens_bought,
                     [input_token, self.get_weth_address(), output_token],
