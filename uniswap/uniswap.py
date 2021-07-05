@@ -477,6 +477,8 @@ class Uniswap:
         elif self.version == 3:
             if fee_on_transfer:
                 raise Exception('fee on transfer not supported by Uniswap v3')
+            if fee_on_transfer:
+                raise Exception('fee on transfer not supported by Uniswap v3')
             return self._token_to_token_swap_input(
                 self.get_weth_address(), output_token, qty, recipient, fee, slippage
             )
