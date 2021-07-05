@@ -594,6 +594,8 @@ class Uniswap:
         elif self.version == 3:
             if fee_on_transfer:
                 raise Exception('fee on transfer not supported by Uniswap v3')
+            if fee_on_transfer:
+                raise Exception('fee on transfer not supported by Uniswap v3')
             min_tokens_bought = int(
                 (1 - slippage)
                 * self._get_token_token_input_price(
