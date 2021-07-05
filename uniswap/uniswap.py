@@ -462,26 +462,21 @@ class Uniswap:
                 (1 - slippage) * self._get_eth_token_input_price(output_token, qty, fee)
             )
             if fee_on_transfer:
-                return self._build_and_send_tx(
-                    self.router.functions.swapExactETHForTokensSupportingFeeOnTransferTokens(
-                        amount_out_min,
-                        [self.get_weth_address(), output_token],
-                        recipient,
-                        self._deadline(),
-                    ),
-                    self._get_tx_params(qty),
-                )                
+                func=self.router.functions.swapExactETHForTokensSupportingFeeOnTransferTokens
             else:
-                return self._build_and_send_tx(
-                    self.router.functions.swapExactETHForTokens(
-                        amount_out_min,
-                        [self.get_weth_address(), output_token],
-                        recipient,
-                        self._deadline(),
-                    ),
-                    self._get_tx_params(qty),
-                )
+                func=self.router.functions.swapExactETHForTokens
+            return self._build_and_send_tx(
+                    func(
+                    amount_out_min,
+                    [self.get_weth_address(), output_token],
+                    recipient,
+                    self._deadline(),
+                ),
+                self._get_tx_params(qty),
+            )
         elif self.version == 3:
+            if fee_on_transfer:
+                raise Exception('fee on transfer not supported by Uniswap v3')
             return self._token_to_token_swap_input(
                 self.get_weth_address(), output_token, qty, recipient, fee, slippage
             )
@@ -519,26 +514,21 @@ class Uniswap:
                 (1 - slippage) * self._get_token_eth_input_price(input_token, qty, fee)
             )
             if fee_on_transfer:
-                return self._build_and_send_tx(
-                    self.router.functions.swapExactTokensForETHSupportingFeeOnTransferTokens(
-                        qty,
-                        amount_out_min,
-                        [input_token, self.get_weth_address()],
-                        recipient,
-                        self._deadline(),
-                    ),
-                )
+                func=self.router.functions.swapExactTokensForETHSupportingFeeOnTransferTokens
             else:
-                return self._build_and_send_tx(
-                    self.router.functions.swapExactTokensForETH(
-                        qty,
-                        amount_out_min,
-                        [input_token, self.get_weth_address()],
-                        recipient,
-                        self._deadline(),
-                    ),
-                )
+                func=self.router.functions.swapExactTokensForETH
+            return self._build_and_send_tx(
+                    func(
+                    qty,
+                    amount_out_min,
+                    [input_token, self.get_weth_address()],
+                    recipient,
+                    self._deadline(),
+                ),
+            )
         elif self.version == 3:
+            if fee_on_transfer:
+                raise Exception('fee on transfer not supported by Uniswap v3')
             return self._token_to_token_swap_input(
                 input_token, self.get_weth_address(), qty, recipient, fee, slippage
             )
@@ -585,26 +575,21 @@ class Uniswap:
                 )
             )
             if fee_on_transfer:
-                return self._build_and_send_tx(
-                        self.router.functions.swapExactTokensForTokensSupportingFeeOnTransferTokens(
-                        qty,
-                        min_tokens_bought,
-                        [input_token, self.get_weth_address(), output_token],
-                        recipient,
-                        self._deadline(),
-                    ),
-                )
+                func=self.router.functions.swapExactTokensForTokensSupportingFeeOnTransferTokens
             else:
-                return self._build_and_send_tx(
-                        self.router.functions.swapExactTokensForTokens(
-                        qty,
-                        min_tokens_bought,
-                        [input_token, self.get_weth_address(), output_token],
-                        recipient,
-                        self._deadline(),
-                    ),
-                )
+                func=self.router.functions.swapExactTokensForTokens
+            return self._build_and_send_tx(
+                    func(
+                    qty,
+                    min_tokens_bought,
+                    [input_token, self.get_weth_address(), output_token],
+                    recipient,
+                    self._deadline(),
+                ),
+            )
         elif self.version == 3:
+            if fee_on_transfer:
+                raise Exception('fee on transfer not supported by Uniswap v3')
             min_tokens_bought = int(
                 (1 - slippage)
                 * self._get_token_token_input_price(
