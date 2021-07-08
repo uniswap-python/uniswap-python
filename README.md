@@ -27,7 +27,7 @@ Documentation is available at https://uniswap-python.com/
 
 ### Supports
 
- - Uniswap v3 (experimental, in master)
+ - Uniswap v3 (as of v0.5.0)
  - Uniswap v2 (as of v0.4.0)
  - Uniswap v1 (deprecated)
  - Various forks (untested, but should work)
