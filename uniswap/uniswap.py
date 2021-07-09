@@ -871,7 +871,7 @@ class Uniswap:
         return self._build_and_send_tx(function)
 
     # ------ Approval Utils ------------------------------------------------------------
-    def _approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
+    def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
         """Give an exchange/router max approval of a token."""
         max_approval = self.max_approval_int if not max_approval else max_approval
         contract_addr = (
