@@ -53,7 +53,7 @@ In addition, the :class:`~uniswap.Uniswap` class takes several optional paramete
     # Some token addresses we'll be using later in this guide
     eth = "0x0000000000000000000000000000000000000000"
     bat = "0x0D8775F648430679A709E98d2b0Cb6250d2887EF"
-    dai = "0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359"
+    sai = "0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359"
     
 
 Environment Variables
@@ -87,8 +87,8 @@ Returns the cost of the given number of input tokens, priced in the output token
 
 .. code:: python
 
-    # Returns the amount of DAI you get for 1 ETH (10^18 wei)
-    uniswap.get_price_input(eth, dai, 10**18)
+    # Returns the amount of SAI you get for 1 ETH (10^18 wei)
+    uniswap.get_price_input(eth, sai, 10**18)
 
 :func:`~uniswap.Uniswap.get_price_output`
 `````````````````````````````````````````
@@ -97,8 +97,8 @@ Returns the amount of input token you need for the given amount of output tokens
 
 .. code:: python
 
-    # Returns the amount of ETH you need to pay (in wei) to get 1000 DAI
-    uniswap.get_price_output(eth, dai, 1_000 * 10**18)
+    # Returns the amount of ETH you need to pay (in wei) to get 1000 SAI
+    uniswap.get_price_output(eth, sai, 1_000 * 10**18)
 
 
 .. note:: 
@@ -107,7 +107,7 @@ Returns the amount of input token you need for the given amount of output tokens
 
     Decimals for common tokens:
 
-    - ETH, DAI, and BAT uses 18 decimals (as you can see in code below)
+    - ETH, SAI, and BAT uses 18 decimals (as you can see in code below)
     - WBTC uses 8 decimals
     - USDC and USDT uses 6 decimals
 
@@ -128,7 +128,7 @@ Making trades
     # Make a trade where the input qty being known parameters
     uniswap.make_trade(eth, bat, 1*10**18)  # sell 1 ETH for however many BAT
     uniswap.make_trade(bat, eth, 1*10**18)  # sell 1 BAT for however many ETH
-    uniswap.make_trade(bat, dai, 1*10**18)  # sell 1 BAT for however many DAI
+    uniswap.make_trade(bat, sai, 1*10**18)  # sell 1 BAT for however many SAI
     uniswap.make_trade(eth, bat, 1*10**18, "0x123...")  # sell 1 ETH for however many BAT, and send the BAT to the provided address
 
 :func:`~uniswap.Uniswap.make_trade_output`
@@ -139,7 +139,7 @@ Making trades
     # Make a trade where the output qty is known, based on the input parameters
     uniswap.make_trade_output(eth, bat, 1*10**18)  # buy however many ETH for 1 BAT
     uniswap.make_trade_output(bat, eth, 1*10**18)  # buy however many BAT for 1 ETH
-    uniswap.make_trade_output(bat, dai, 1*10**18, "0x123...") # buy however many BAT for 1 DAI, and send the BAT to the provided address
+    uniswap.make_trade_output(bat, sai, 1*10**18, "0x123...") # buy however many BAT for 1 SAI, and send the BAT to the provided address
 
 
 Pool Methods (v1 only)
