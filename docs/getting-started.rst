@@ -88,7 +88,7 @@ Returns the cost of the given number of input tokens, priced in the output token
 .. code:: python
 
     # Returns the amount of DAI you get for 1 ETH (10^18 wei)
-    uniswap.get_price_input(eth, sai, 10**18)
+    uniswap.get_price_input(eth, dai, 10**18)
 
 :func:`~uniswap.Uniswap.get_price_output`
 `````````````````````````````````````````
