@@ -53,7 +53,7 @@ In addition, the :class:`~uniswap.Uniswap` class takes several optional paramete
     # Some token addresses we'll be using later in this guide
     eth = "0x0000000000000000000000000000000000000000"
     bat = "0x0D8775F648430679A709E98d2b0Cb6250d2887EF"
-    dai = "0x89d24A6b4CcB1B6fAA2625fE562bDD9a23260359"
+    dai = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
     
 
 Environment Variables
