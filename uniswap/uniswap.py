@@ -162,7 +162,7 @@ class Uniswap:
         fee: int = None,
         route: Optional[List[AddressLike]] = None,
     ) -> int:
-        """Returns the amount of the input token you get for `qty` of the output token"""
+        """Given `qty` amount of `token0`, returns the maximum output amount of `token1`."""
         if fee is None:
             fee = 3000
             if self.version == 3:
@@ -183,7 +183,7 @@ class Uniswap:
         fee: int = None,
         route: Optional[List[AddressLike]] = None,
     ) -> int:
-        """Returns the amount of input token you need to get `qty` of the output token"""
+        """Returns the minimum amount of `token0` required to buy `qty` amount of `token1`."""
         if fee is None:
             fee = 3000
             if self.version == 3:
