@@ -147,7 +147,7 @@ class Uniswap:
                 self.w3, abi_name="uniswap-v3/router", address=self.router_address
             )
         else:
-            raise Exception(f"Invalid version '{self.version}', only 1 or 2 supported")
+            raise Exception(f"Invalid version '{self.version}', only 1, 2 or 3 supported")
 
         if hasattr(self, "factory_contract"):
             logger.info(f"Using factory contract: {self.factory_contract}")
