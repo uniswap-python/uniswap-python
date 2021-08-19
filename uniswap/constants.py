@@ -8,6 +8,7 @@ _netid_to_name = {
     4: "rinkeby",
     56: "binance",
     97: "binance_testnet",
+    137: "polygon",
     100: "xdai",
 }
 
