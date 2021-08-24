@@ -594,26 +594,31 @@ class Uniswap:
             min_tokens_bought = int((1 - slippage) * self._get_token_eth_input_price(input_token, qty, fee=fee))
             sqrtPriceLimitX96 = 0
 
-            # Prepare swap data
-            swap_arg_types = ["address", "address", "uint24", "address", "uint256", "uint256", "uint256", "uint160"]
-            swap_arg_types_str = f"({','.join(swap_arg_types)})"
+            swap_data = self.router.encodeABI(
+                fn_name="exactInputSingle",
+                args=[
+                    (input_token,
+                     output_token,
+                     fee,
+                     ETH_ADDRESS,
+                     self._deadline(),
+                     qty,
+                     min_tokens_bought,
+                     sqrtPriceLimitX96
+                     )
+                ]
+            )
 
-            swap_selector = function_signature_to_4byte_selector(f"exactInputSingle({swap_arg_types_str})")
-
-            swap_args = [input_token, output_token, fee, ETH_ADDRESS, self._deadline(), qty, min_tokens_bought, sqrtPriceLimitX96]
-            swap_args_encoded = encode_abi(swap_arg_types, swap_args)
-
-            # Prepare unwrap data
-            unwrap_arg_types = ["uint256", "address"]
-            unwrap_arg_types_str = f"{','.join(unwrap_arg_types)}"
-
-            unwrap_selector = function_signature_to_4byte_selector(f"unwrapWETH9({unwrap_arg_types_str})")
-
-            unwrap_args = [min_tokens_bought, recipient]
-            unwrap_args_encoded = encode_abi(unwrap_arg_types, unwrap_args)
+            unwrap_data = self.router.encodeABI(
+                fn_name="unwrapWETH9",
+                args=[
+                    min_tokens_bought,
+                    recipient
+                ]
+            )
 
             # Multicall
-            multicall_data = [swap_selector + swap_args_encoded, unwrap_selector + unwrap_args_encoded]
+            multicall_data = [swap_data, unwrap_data]
 
             return self._build_and_send_tx(
                 self.router.functions.multicall(
@@ -776,20 +781,28 @@ class Uniswap:
 
             sqrtPriceLimitX96 = 0
             
-            # Prepare swap data
-            swap_arg_types = ["address", "address", "uint24", "address", "uint256", "uint256", "uint256", "uint160"]
-            swap_arg_types_str = f"({','.join(swap_arg_types)})"
+            swap_data = self.router.encodeABI(
+                fn_name="exactOutputSingle",
+                args=[
+                    (self.get_weth_address(),
+                     output_token,
+                     fee,
+                     recipient,
+                     self._deadline(),
+                     qty,
+                     amount_in_max,
+                     sqrtPriceLimitX96
+                     )
+                ]
+            )
 
-            swap_selector = function_signature_to_4byte_selector(f"exactOutputSingle({swap_arg_types_str})")
-
-            swap_args = [self.get_weth_address(), output_token, fee, recipient, self._deadline(), qty, amount_in_max, sqrtPriceLimitX96]
-            swap_args_encoded = encode_abi(swap_arg_types, swap_args)
-
-            # Prepare refund data
-            refund_selector = function_signature_to_4byte_selector(f"refundETH()")
+            refund_data = self.router.encodeABI(
+                fn_name="refundETH",
+                args=None
+            )
 
             # Multicall
-            multicall_data = [swap_selector + swap_args_encoded, refund_selector]
+            multicall_data = [swap_data, refund_data]
 
             return self._build_and_send_tx(
                 self.router.functions.multicall(
@@ -862,26 +875,31 @@ class Uniswap:
 
             sqrtPriceLimitX96 = 0
 
-            # Prepare swap data
-            swap_arg_types = ["address", "address", "uint24", "address", "uint256", "uint256", "uint256", "uint160"]
-            swap_arg_types_str = f"({','.join(swap_arg_types)})"
+            swap_data = self.router.encodeABI(
+                fn_name="exactOutputSingle",
+                args=[
+                    (input_token,
+                     self.get_weth_address(),
+                     fee,
+                     ETH_ADDRESS,
+                     self._deadline(),
+                     qty,
+                     amount_in_max,
+                     sqrtPriceLimitX96
+                     )
+                ]
+            )
 
-            swap_selector = function_signature_to_4byte_selector(f"exactOutputSingle({swap_arg_types_str})")
-
-            swap_args = [input_token, self.get_weth_address(), fee, ETH_ADDRESS, self._deadline(), qty, amount_in_max, sqrtPriceLimitX96]
-            swap_args_encoded = encode_abi(swap_arg_types, swap_args)
-
-            # Prepare unwrap data
-            unwrap_arg_types = ["uint256", "address"]
-            unwrap_arg_types_str = f"{','.join(unwrap_arg_types)}"
-
-            unwrap_selector = function_signature_to_4byte_selector(f"unwrapWETH9({unwrap_arg_types_str})")
-
-            unwrap_args = [qty, recipient]
-            unwrap_args_encoded = encode_abi(unwrap_arg_types, unwrap_args)
+            unwrap_data = self.router.encodeABI(
+                fn_name="unwrapWETH9",
+                args=[
+                    qty,
+                    recipient
+                ]
+            )
 
             # Multicall
-            multicall_data = [swap_selector + swap_args_encoded, unwrap_selector + unwrap_args_encoded]
+            multicall_data = [swap_data, unwrap_data]
 
             return self._build_and_send_tx(
                 self.router.functions.multicall(
