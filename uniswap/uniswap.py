@@ -618,11 +618,9 @@ class Uniswap:
             )
 
             # Multicall
-            multicall_data = [swap_data, unwrap_data]
-
             return self._build_and_send_tx(
                 self.router.functions.multicall(
-                    multicall_data
+                    [swap_data, unwrap_data]
                 ),
                 self._get_tx_params(
                 ),
@@ -802,11 +800,9 @@ class Uniswap:
             )
 
             # Multicall
-            multicall_data = [swap_data, refund_data]
-
             return self._build_and_send_tx(
                 self.router.functions.multicall(
-                    multicall_data
+                    [swap_data, refund_data]
                 ),
                 self._get_tx_params(
                     value=amount_in_max
@@ -899,11 +895,9 @@ class Uniswap:
             )
 
             # Multicall
-            multicall_data = [swap_data, unwrap_data]
-
             return self._build_and_send_tx(
                 self.router.functions.multicall(
-                    multicall_data
+                    [swap_data, unwrap_data]
                 ),
                 self._get_tx_params(
                 ),
