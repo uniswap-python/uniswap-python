@@ -38,7 +38,6 @@ from .constants import (
 )
 
 from eth_abi import encode_abi
-from eth_utils import function_signature_to_4byte_selector
 
 logger = logging.getLogger(__name__)
 
