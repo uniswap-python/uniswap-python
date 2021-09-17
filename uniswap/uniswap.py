@@ -667,9 +667,6 @@ class Uniswap:
                 function = token_funcs.tokenToTokenTransferInput(*func_params)
             return self._build_and_send_tx(function)
         elif self.version == 2:
-            if recipient is None:
-                recipient = self.address
-
             min_tokens_bought = int(
                 (1 - slippage)
                 * self._get_token_token_input_price(
@@ -692,9 +689,6 @@ class Uniswap:
                 ),
             )
         elif self.version == 3:
-            if recipient is None:
-                recipient = self.address
-
             if fee_on_transfer:
                 raise Exception("fee on transfer not supported by Uniswap v3")
 
