@@ -95,7 +95,7 @@ class Uniswap:
             raise Exception(f"Unknown netid: {netid}")
         logger.info(f"Using {self.w3} ('{self.network}')")
 
-        self.last_nonce: Nonce = self.w3.eth.getTransactionCount(self.address)
+        self.last_nonce: Nonce = self.w3.eth.get_transaction_count(self.address)
 
         # This code automatically approves you for trading on the exchange.
         # max_approval is to allow the contract to exchange on your behalf.
@@ -1051,7 +1051,7 @@ class Uniswap:
         )
         logger.warning(f"Approving {_addr_to_str(token)}...")
         tx = self._build_and_send_tx(function)
-        self.w3.eth.waitForTransactionReceipt(tx, timeout=6000)
+        self.w3.eth.wait_for_transaction_receipt(tx, timeout=6000)
 
         # Add extra sleep to let tx propogate correctly
         time.sleep(1)
@@ -1103,7 +1103,7 @@ class Uniswap:
             "value": value,
             "gas": gas,
             "nonce": max(
-                self.last_nonce, self.w3.eth.getTransactionCount(self.address)
+                self.last_nonce, self.w3.eth.get_transaction_count(self.address)
             ),
         }
 
