@@ -25,7 +25,7 @@ unipy = "uniswap:main"
 [tool.poetry.dependencies]
 python = "^3.7.2"
 web3 = "^5.19.0"
-click = "^7.1.2"
+click = "^8.0.3"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
