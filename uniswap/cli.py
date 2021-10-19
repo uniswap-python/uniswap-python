@@ -25,8 +25,7 @@ def _coerce_to_checksum(addr: str) -> str:
     if Web3.isChecksumAddress(addr):
         return addr
     else:
-        # logger.warning("Address wasn't in checksum format, coercing")
-        return Web3.toChecksumAddress(addr)  # type: ignore
+        return Web3.toChecksumAddress(addr)
 
 
 @click.group()

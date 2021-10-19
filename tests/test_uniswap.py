@@ -220,7 +220,7 @@ class TestUniswap(object):
     def test_add_liquidity(self, client: Uniswap, web3: Web3, token, max_eth):
         r = client.add_liquidity(token, max_eth)
         tx = web3.eth.wait_for_transaction_receipt(r, timeout=6000)
-        assert tx.status
+        assert tx["status"]
 
     @pytest.mark.skip
     @pytest.mark.parametrize(
@@ -237,7 +237,7 @@ class TestUniswap(object):
         with expectation:
             r = client.remove_liquidity(token, max_token)
             tx = web3.eth.wait_for_transaction_receipt(r)
-            assert tx.status
+            assert tx["status"]
 
     # ------ Make Trade ----------------------------------------------------------------
     @pytest.mark.parametrize(
@@ -275,7 +275,7 @@ class TestUniswap(object):
 
             txid = client.make_trade(input_token, output_token, qty, recipient)
             tx = web3.eth.wait_for_transaction_receipt(txid)
-            assert tx.status
+            assert tx["status"]
 
             # TODO: Checks for ETH, taking gas into account
             bal_in_after = client.get_token_balance(input_token)
@@ -325,7 +325,7 @@ class TestUniswap(object):
 
             r = client.make_trade_output(input_token, output_token, qty, recipient)
             tx = web3.eth.wait_for_transaction_receipt(r, timeout=30)
-            assert tx.status
+            assert tx["status"]
 
             # TODO: Checks for ETH, taking gas into account
             balance_after = client.get_token_balance(output_token)
