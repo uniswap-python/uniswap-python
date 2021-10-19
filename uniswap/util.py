@@ -4,9 +4,9 @@ import functools
 from typing import Union, List, Tuple
 
 from web3 import Web3
+from web3.exceptions import NameNotFound
 
 from .types import AddressLike, Address, Contract
-from .exceptions import InvalidToken
 
 
 def _str_to_addr(s: Union[AddressLike, str]) -> Address:
@@ -15,7 +15,7 @@ def _str_to_addr(s: Union[AddressLike, str]) -> Address:
         if s.startswith("0x"):
             return Address(bytes.fromhex(s[2:]))
         else:
-            raise Exception(f"Couldn't convert string '{s}' to AddressLike")
+            raise NameNotFound(f"Couldn't convert string '{s}' to AddressLike")
     else:
         return s
 
@@ -29,7 +29,7 @@ def _addr_to_str(a: AddressLike) -> str:
         addr = Web3.toChecksumAddress(a)
         return addr
 
-    raise InvalidToken(a)
+    raise NameNotFound(a)
 
 
 def is_same_address(a1: Union[AddressLike, str], a2: Union[AddressLike, str]) -> bool:

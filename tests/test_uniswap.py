@@ -9,10 +9,11 @@ from dataclasses import dataclass
 from time import sleep
 
 from web3 import Web3
+from web3.exceptions import NameNotFound
 
 from uniswap import Uniswap
 from uniswap.constants import ETH_ADDRESS
-from uniswap.exceptions import InvalidToken, InsufficientBalance
+from uniswap.exceptions import InsufficientBalance
 from uniswap.util import _str_to_addr
 
 
@@ -227,7 +228,7 @@ class TestUniswap(object):
         [
             (bat, 0.00001 * ONE_ETH, does_not_raise()),
             (dai, 0.00001 * ONE_ETH, does_not_raise()),
-            ("btc", ONE_ETH, pytest.raises(InvalidToken)),
+            ("btc", ONE_ETH, pytest.raises(NameNotFound)),
         ],
     )
     def test_remove_liquidity(
@@ -251,7 +252,7 @@ class TestUniswap(object):
             # (eth, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # (bat, eth, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # (dai, bat, 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
-            (dai, "btc", ONE_ETH, None, lambda: pytest.raises(InvalidToken)),
+            (dai, "btc", ONE_ETH, None, lambda: pytest.raises(NameNotFound)),
         ],
     )
     def test_make_trade(
@@ -301,7 +302,7 @@ class TestUniswap(object):
                 None,
                 lambda: pytest.raises(InsufficientBalance),
             ),
-            (dai, "btc", ONE_ETH, None, lambda: pytest.raises(InvalidToken)),
+            (dai, "btc", ONE_ETH, None, lambda: pytest.raises(NameNotFound)),
         ],
     )
     def test_make_trade_output(
