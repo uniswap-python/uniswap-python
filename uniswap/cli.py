@@ -76,13 +76,13 @@ def price(
         quantity = 10 ** decimals
     price = uni.get_price_input(token_in, token_out, qty=quantity)
     if raw:
-        print(price)
+        click.echo(price)
     else:
         if token_in == ETH_ADDRESS:
             decimals = 18
         else:
             decimals = uni.get_token(token_out).decimals
-        print(price / 10 ** decimals)
+        click.echo(price / 10 ** decimals)
 
 
 @main.command()
@@ -92,7 +92,7 @@ def token(ctx: click.Context, token: AddressLike) -> None:
     """Show metadata for token"""
     uni: Uniswap = ctx.obj["UNISWAP"]
     t1 = uni.get_token(token)
-    print(t1)
+    click.echo(t1)
 
 
 @main.command()
@@ -105,6 +105,6 @@ def tokendb(ctx: click.Context, metadata: bool) -> None:
         if metadata and addr != "0x0000000000000000000000000000000000000000":
             data = uni.get_token(_str_to_addr(addr))
             assert data.symbol.lower() == symbol.lower()
-            print(data)
+            click.echo(data)
         else:
-            print(BaseToken(symbol, addr))
+            click.echo(BaseToken(symbol, addr))
