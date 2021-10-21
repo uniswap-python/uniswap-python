@@ -6,11 +6,13 @@ _netid_to_name = {
     1: "mainnet",
     3: "ropsten",
     4: "rinkeby",
+    10: "optimism",
     42: "kovan",
     56: "binance",
     97: "binance_testnet",
     137: "polygon",
     100: "xdai",
+    42161: "arbitrum",
 }
 
 _factory_contract_addresses_v1 = {
