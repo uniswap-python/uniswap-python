@@ -18,7 +18,7 @@ _factory_contract_addresses_v1 = {
     "ropsten": "0x9c83dCE8CA20E9aAF9D3efc003b2ea62aBC08351",
     "rinkeby": "0xf5D915570BC477f9B8D6C0E980aA81757A3AaC36",
     "kovan": "0xD3E51Ef092B2845f10401a0159B2B96e8B6c3D30",
-    "görli": "0x6Ce570d02D73d4c384b46135E87f8C592A8c86dA",
+    "görli": "0x6Ce570d02D73d4c384b46135E87f8C592A8c86dA"
 }
 
 
@@ -31,6 +31,7 @@ _factory_contract_addresses_v2 = {
     "görli": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
     "xdai": "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7",
     "binance": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
+    "binance_testnet": "0x6725F303b657a9451d8BA641348b6761A6CC7a17"
 }
 
 _router_contract_addresses_v2 = {
@@ -40,4 +41,5 @@ _router_contract_addresses_v2 = {
     "görli": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
     "xdai": "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77",
     "binance": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+    "binance_testnet": "0xD99D1c33F9fC3444f8101754aBC46c52416550D1"
 }
