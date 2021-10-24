@@ -13,6 +13,7 @@ _netid_to_name = {
     137: "polygon",
     100: "xdai",
     42161: "arbitrum",
+    421611: "arbitrum_testnet",
 }
 
 _factory_contract_addresses_v1 = {
