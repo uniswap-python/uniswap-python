@@ -1187,11 +1187,13 @@ class Uniswap:
                 f"Exception occurred while trying to get token {_addr_to_str(address)}: {e}"
             )
             raise InvalidToken(address)
-        if abi_name == "erc20b32":
+        try:
             name = _name.decode()
-            symbol = _symbol.decode()
-        else:
+        except:
             name = _name
+        try:
+            symbol = _symbol.decode()
+        except:
             symbol = _symbol
         return ERC20Token(symbol, address, name, decimals)
 
