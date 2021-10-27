@@ -1085,6 +1085,8 @@ class Uniswap:
         if not tx_params:
             tx_params = self._get_tx_params()
         transaction = function.buildTransaction(tx_params)
+        # Uniswap3 uses 20% margin for transactions
+        transaction["gas"] = Wei(int(self.w3.eth.estimate_gas(transaction) * 1.2))
         signed_txn = self.w3.eth.account.sign_transaction(
             transaction, private_key=self.private_key
         )
@@ -1096,12 +1098,11 @@ class Uniswap:
             logger.debug(f"nonce: {tx_params['nonce']}")
             self.last_nonce = Nonce(tx_params["nonce"] + 1)
 
-    def _get_tx_params(self, value: Wei = Wei(0), gas: Wei = Wei(250000)) -> TxParams:
+    def _get_tx_params(self, value: Wei = Wei(0)) -> TxParams:
         """Get generic transaction parameters."""
         return {
             "from": _addr_to_str(self.address),
             "value": value,
-            "gas": gas,
             "nonce": max(
                 self.last_nonce, self.w3.eth.get_transaction_count(self.address)
             ),
