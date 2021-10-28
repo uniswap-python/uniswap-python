@@ -1172,22 +1172,30 @@ class Uniswap:
 
     # ------ Helpers ------------------------------------------------------------
 
-    def get_token(self, address: AddressLike) -> ERC20Token:
+    def get_token(self, address: AddressLike, abi_name:str="erc20") -> ERC20Token:
         """
         Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
         """
         # FIXME: This function should always return the same output for the same input
         #        and would therefore benefit from caching
-        token_contract = _load_contract(self.w3, abi_name="erc20", address=address)
+        token_contract = _load_contract(self.w3, abi_name, address=address)
         try:
-            name = token_contract.functions.name().call()
-            symbol = token_contract.functions.symbol().call()
+            _name = token_contract.functions.name().call()
+            _symbol = token_contract.functions.symbol().call()
             decimals = token_contract.functions.decimals().call()
         except Exception as e:
             logger.warning(
                 f"Exception occurred while trying to get token {_addr_to_str(address)}: {e}"
             )
             raise InvalidToken(address)
+        try:
+            name = _name.decode()
+        except:
+            name = _name
+        try:
+            symbol = _symbol.decode()
+        except:
+            symbol = _symbol
         return ERC20Token(symbol, address, name, decimals)
 
     @functools.lru_cache()
