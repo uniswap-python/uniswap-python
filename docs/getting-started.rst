@@ -76,14 +76,14 @@ Quoting prices
 
 .. note::
 
-    These methods assume a certain route for the swap to take, which may not be the optimal route. See :issue:`69` for details.
+    These methods assume a certain route for the swap to take, which may not be the optimal route. See :issue:`93` for details.
 
 There are two functions to retrieve the price for a given pair, one for specifying how much you get given a certain amount of the input token, and another for specifying how much you need to pay to receive a certain amount of the output token.
 
 :func:`~uniswap.Uniswap.get_price_input`
 ````````````````````````````````````````
 
-Returns the cost of the given number of input tokens, priced in the output token.
+Returns the amount of output tokens you get for a given amount of input tokens.
 
 .. code:: python
 
@@ -120,26 +120,34 @@ Making trades
 
     The same route assumptions and need for handling decimals apply here as those mentioned in the previous section.
 
+.. warning::
+
+    Always check the expected price before executing a trade. It's important that you're using a pool with adequate liquidity, or else you may suffer significant losses! (see :issue:`198`)
+
+    Use the Uniswap version with the most liquidity for your route, and if using v3, make sure you set the ``fee`` parameter to use the best pool.
+
 :func:`~uniswap.Uniswap.make_trade`
 ```````````````````````````````````
 
 .. code:: python
 
-    # Make a trade where the input qty being known parameters
-    uniswap.make_trade(eth, bat, 1*10**18)  # sell 1 ETH for however many BAT
-    uniswap.make_trade(bat, eth, 1*10**18)  # sell 1 BAT for however many ETH
-    uniswap.make_trade(bat, dai, 1*10**18)  # sell 1 BAT for however many DAI
-    uniswap.make_trade(eth, bat, 1*10**18, "0x123...")  # sell 1 ETH for however many BAT, and send the BAT to the provided address
+    # Make a trade by specifying the quantity of the input token you wish to sell
+    uniswap.make_trade(eth, bat, 1*10**18)  # sell 1 ETH for BAT
+    uniswap.make_trade(bat, eth, 1*10**18)  # sell 1 BAT for ETH
+    uniswap.make_trade(bat, dai, 1*10**18)  # sell 1 BAT for DAI
+    uniswap.make_trade(eth, bat, 1*10**18, "0x123...")  # sell 1 ETH for BAT, and send the BAT to the provided address
+    uniswap.make_trade(dai, usdc, 1*10**18, fee=500)    # sell 1 DAI for USDC using the 0.05% fee pool (v3 only)
 
 :func:`~uniswap.Uniswap.make_trade_output`
 ``````````````````````````````````````````
 
 .. code:: python
 
-    # Make a trade where the output qty is known, based on the input parameters
-    uniswap.make_trade_output(eth, bat, 1*10**18)  # buy however many ETH for 1 BAT
-    uniswap.make_trade_output(bat, eth, 1*10**18)  # buy however many BAT for 1 ETH
-    uniswap.make_trade_output(bat, dai, 1*10**18, "0x123...") # buy however many BAT for 1 DAI, and send the BAT to the provided address
+    # Make a trade by specifying the quantity of the output token you wish to buy
+    uniswap.make_trade_output(eth, bat, 1*10**18)  # buy ETH for 1 BAT
+    uniswap.make_trade_output(bat, eth, 1*10**18)  # buy BAT for 1 ETH
+    uniswap.make_trade_output(bat, dai, 1*10**18, "0x123...")  # buy BAT for 1 DAI, and send the BAT to the provided address
+    uniswap.make_trade_output(dai, usdc, 1*10**8, fee=500)     # buy USDC for 1 DAI using the 0.05% fee pool (v3 only)
 
 
 Pool Methods (v1 only)
