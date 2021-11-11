@@ -1172,7 +1172,7 @@ class Uniswap:
 
     # ------ Helpers ------------------------------------------------------------
 
-    def get_token(self, address: AddressLike, abi_name:str="erc20") -> ERC20Token:
+    def get_token(self, address: AddressLike, abi_name: str = "erc20") -> ERC20Token:
         """
         Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
         """
@@ -1208,6 +1208,34 @@ class Uniswap:
         elif self.version == 3:
             address = self.router.functions.WETH9().call()
         return address
+
+    def estimate_price_impact(
+        self,
+        token_in: AddressLike,
+        token_out: AddressLike,
+        amount_in: int,
+        fee: int = None,
+        route: Optional[List[AddressLike]] = None,
+    ) -> float:
+        """
+        Returns the estimated price impact as a positive float (0.01 = 1%).
+
+        NOTE: Work-in-progress.
+
+        See ``examples/price_impact.py`` for an example which uses this.
+        """
+        amount_small = 10 ** 2
+        cost_small = self.get_price_input(
+            token_in, token_out, amount_small, fee=fee, route=route
+        )
+        cost_amount = self.get_price_input(
+            token_in, token_out, amount_in, fee=fee, route=route
+        )
+
+        price_small = cost_small / amount_small
+        price_amount = cost_amount / amount_in
+
+        return (price_small - price_amount) / price_small
 
     # ------ Exchange ------------------------------------------------------------------
     @supports([1, 2])
