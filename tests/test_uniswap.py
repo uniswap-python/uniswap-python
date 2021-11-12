@@ -67,10 +67,10 @@ def web3(ganache: GanacheInstance):
 
 @pytest.fixture(scope="module")
 def ganache() -> Generator[GanacheInstance, None, None]:
-    """Fixture that runs ganache-cli which has forked off mainnet"""
-    if not shutil.which("ganache-cli"):
+    """Fixture that runs ganache which has forked off mainnet"""
+    if not shutil.which("ganache"):
         raise Exception(
-            "ganache-cli was not found in PATH, you can install it with `npm install -g ganache-cli`"
+            "ganache was not found in PATH, you can install it with `npm install -g ganache`"
         )
     if "PROVIDER" not in os.environ:
         raise Exception(
@@ -79,7 +79,7 @@ def ganache() -> Generator[GanacheInstance, None, None]:
 
     port = 10999
     p = subprocess.Popen(
-        f"ganache-cli --port {port} -s test --networkId 1 --fork {os.environ['PROVIDER']}",
+        f"ganache --port {port} -s test --networkId 1 --fork {os.environ['PROVIDER']}",
         shell=True,
     )
     # Address #1 when ganache is run with `-s test`, it starts with 100 ETH
@@ -105,7 +105,7 @@ class TestUniswap(object):
     ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
     # TODO: Detect mainnet vs rinkeby and set accordingly, like _get_token_addresses in the Uniswap class
-    # For Mainnet testing (with `ganache-cli --fork` as per the ganache fixture)
+    # For Mainnet testing (with `ganache --fork` as per the ganache fixture)
     eth = "0x0000000000000000000000000000000000000000"
     weth = Web3.toChecksumAddress("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2")
     bat = Web3.toChecksumAddress("0x0D8775F648430679A709E98d2b0Cb6250d2887EF")
