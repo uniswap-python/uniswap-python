@@ -1229,12 +1229,12 @@ class Uniswap:
         if self.version == 2:
             params = [self.w3.toChecksumAddress(token_in), self.w3.toChecksumAddress(token_out)]
             pair_token = self.factory_contract.functions.getPair(*params).call()
-            token_in_erc20 = self.erc20_contract(self.w3.toChecksumAddress(token_in))
+            token_in_erc20 = _load_contract_erc20(self.w3, self.w3.toChecksumAddress(token_in))
             token_in_balance = int(token_in_erc20.functions.balanceOf(self.w3.toChecksumAddress(pair_token)).call())
             token_in_decimals = self.get_token(token_in).decimals
             token_in_balance = token_in_balance/(10**token_in_decimals)
 
-            token_out_erc20 = self.erc20_contract(self.w3.toChecksumAddress(token_out))
+            token_out_erc20 = _load_contract_erc20(self.w3, self.w3.toChecksumAddress(token_out))
             token_out_balance = int(token_out_erc20.functions.balanceOf(self.w3.toChecksumAddress(pair_token)).call())
             token_out_decimals = self.get_token(token_out).decimals
             token_out_balance = token_out_balance/(10**token_out_decimals)
@@ -1258,7 +1258,7 @@ class Uniswap:
             raw_price = (sqrtPriceX96*sqrtPriceX96*10**den1>>(96*2))/(10**den0)
             if t1.lower() == token_in.lower():
                 raw_price = 1/raw_price
-        return str(raw_price)
+        return raw_price
 
     def estimate_price_impact(
         self,
@@ -1283,11 +1283,13 @@ class Uniswap:
             return 1
         if price_small == 0:
             return 1
-        cost_amount = self.get_price_input(
-            token_in, token_out, amount_in, fee=fee, route=route
-        )
-
-        price_amount = cost_amount / amount_in
+        try:
+            cost_amount = self.get_price_input(
+                token_in, token_out, amount_in, fee=fee, route=route
+            )
+        except:
+            return 1
+        price_amount = (cost_amount / (amount_in/(10**self.get_token(token_in).decimals)))/10**self.get_token(token_out).decimals
 
         return (price_small - price_amount) / price_small
 
