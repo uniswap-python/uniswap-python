@@ -136,6 +136,12 @@ class Uniswap:
             )
         elif self.version == 3:
             # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
+            factory_contract_address = _str_to_addr(
+                "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+            )
+            self.factory_contract = _load_contract(
+                self.w3, abi_name="uniswap-v3/factory", address=factory_contract_address
+            )
             quoter_addr = _str_to_addr("0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6")
             self.router_address = _str_to_addr(
                 "0xE592427A0AEce92De3Edee1F18E0157C05861564"
@@ -1209,6 +1215,51 @@ class Uniswap:
             address = self.router.functions.WETH9().call()
         return address
 
+    def get_raw_price(
+        self, 
+        token_in: AddressLike, 
+        token_out: AddressLike,
+        fee: int = 3000) -> float:
+   
+        if token_in == ETH_ADDRESS:
+            token_in = self.get_weth_address()
+        if token_out == ETH_ADDRESS:
+            token_out = self.get_weth_address()
+
+        if self.version == 2:
+            params = [self.w3.toChecksumAddress(token_in), self.w3.toChecksumAddress(token_out)]
+            pair_token = self.factory_contract.functions.getPair(*params).call()
+            token_in_erc20 = self.erc20_contract(self.w3.toChecksumAddress(token_in))
+            token_in_balance = int(token_in_erc20.functions.balanceOf(self.w3.toChecksumAddress(pair_token)).call())
+            token_in_decimals = self.get_token(token_in).decimals
+            token_in_balance = token_in_balance/(10**token_in_decimals)
+
+            token_out_erc20 = self.erc20_contract(self.w3.toChecksumAddress(token_out))
+            token_out_balance = int(token_out_erc20.functions.balanceOf(self.w3.toChecksumAddress(pair_token)).call())
+            token_out_decimals = self.get_token(token_out).decimals
+            token_out_balance = token_out_balance/(10**token_out_decimals)
+
+            raw_price = token_out_balance/token_in_balance
+        else:
+            params = [self.w3.toChecksumAddress(token_in), self.w3.toChecksumAddress(token_out), fee]
+            pool_address = self.factory_contract.functions.getPool(*params).call()
+            pool_contract = _load_contract(
+                    self.w3, abi_name="uniswap-v3/pool", address=pool_address
+                )
+            t0 = pool_contract.functions.token0().call()
+            t1 = pool_contract.functions.token1().call()
+            if t1.lower() == token_in.lower():
+                den0 = self.get_token(token_in).decimals
+                den1 = self.get_token(token_out).decimals
+            else:
+                den0 = self.get_token(token_out).decimals
+                den1 = self.get_token(token_in).decimals
+            sqrtPriceX96 = pool_contract.functions.slot0().call()[0]
+            raw_price = (sqrtPriceX96*sqrtPriceX96*10**den1>>(96*2))/(10**den0)
+            if t1.lower() == token_in.lower():
+                raw_price = 1/raw_price
+        return str(raw_price)
+
     def estimate_price_impact(
         self,
         token_in: AddressLike,
@@ -1224,15 +1275,18 @@ class Uniswap:
 
         See ``examples/price_impact.py`` for an example which uses this.
         """
-        amount_small = 10 ** 2
-        cost_small = self.get_price_input(
-            token_in, token_out, amount_small, fee=fee, route=route
-        )
+        try:
+            price_small = self.get_raw_price(
+                token_in, token_out, fee=fee,
+            )
+        except:
+            return 1
+        if price_small == 0:
+            return 1
         cost_amount = self.get_price_input(
             token_in, token_out, amount_in, fee=fee, route=route
         )
 
-        price_small = cost_small / amount_small
         price_amount = cost_amount / amount_in
 
         return (price_small - price_amount) / price_small
