@@ -7,6 +7,7 @@ from typing import List, Any, Optional, Union, Tuple, Dict
 from web3 import Web3
 from web3.eth import Contract
 from web3.contract import ContractFunction
+from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
     TxParams,
     Wei,
@@ -1215,12 +1216,15 @@ class Uniswap:
             address = self.router.functions.WETH9().call()
         return address
 
+    @supports([2,3])
     def get_raw_price(
         self, 
         token_in: AddressLike, 
         token_out: AddressLike,
         fee: int = 3000) -> float:
-   
+        """Returns current price for pair of tokens [token_in, token_out] regrading liquidity that is being locked in the pool"""
+        """Parameter `fee` is required for V3 only, can be omitted for V2"""
+        """Requires pair [token_in, token_out] having direct pool"""
         if token_in == ETH_ADDRESS:
             token_in = self.get_weth_address()
         if token_out == ETH_ADDRESS:
@@ -1279,15 +1283,21 @@ class Uniswap:
             price_small = self.get_raw_price(
                 token_in, token_out, fee=fee,
             )
-        except:
+        except (ArithmeticError, BadFunctionCallOutput):
+            #ArithmeticError is raised when `token_in` amount in the pool equals 0.
+            #BadFunctionCallOutput is raised when the pool's contract for given `(token_in, token_out, fee)` hasn't been deployed
             return 1
+        
         if price_small == 0:
+            #Occures when `token_out` amount in the pool equals 0
             return 1
         try:
             cost_amount = self.get_price_input(
                 token_in, token_out, amount_in, fee=fee, route=route
             )
-        except:
+        except ContractLogicError:
+            #ContractLogicError is raised when the pool's contract for given `(token_in, token_out, fee)` hasn't been deployed.
+            #As `get_price_input()` uses UniswapV3Quoter for getting prices, that contract raises such exception in this situation.
             return 1
         price_amount = (cost_amount / (amount_in/(10**self.get_token(token_in).decimals)))/10**self.get_token(token_out).decimals
 
