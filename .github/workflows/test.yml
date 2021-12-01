@@ -49,7 +49,7 @@ jobs:
       run: |
         poetry install
         # TODO: Update to stable ganache when released!
-        npm install -g ganache@alpha
+        npm install -g ganache@beta
     - name: Test
       env:
         PROVIDER: ${{ secrets.MAINNET_PROVIDER }}
