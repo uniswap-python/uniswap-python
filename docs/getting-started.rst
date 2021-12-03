@@ -122,7 +122,7 @@ Making trades
 
 .. warning::
 
-    Always check the expected price before executing a trade. It's important that you're using a pool with adequate liquidity, or else you may suffer significant losses! (see :issue:`198`)
+    Always check the expected price before executing a trade. It's important that you're using a pool with adequate liquidity, or else you may suffer significant losses! (see :issue:`198` and :issue:`208`)
 
     Use the Uniswap version with the most liquidity for your route, and if using v3, make sure you set the ``fee`` parameter to use the best pool.
 
