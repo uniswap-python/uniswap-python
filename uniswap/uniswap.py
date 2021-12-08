@@ -2,7 +2,7 @@ import os
 import time
 import logging
 import functools
-from typing import List, Any, Optional, Union, Tuple, Dict
+from typing import List, Any, Optional, Union, Tuple, Dict, Iterable
 
 from web3 import Web3
 from web3.eth import Contract
@@ -1229,7 +1229,7 @@ class Uniswap:
             token_out = self.get_weth_address()
 
         if self.version == 2:
-            params = [
+            params: Iterable[Union[ChecksumAddress,Optional[int]]] = [
                 self.w3.toChecksumAddress(token_in),
                 self.w3.toChecksumAddress(token_out),
             ]
@@ -1310,7 +1310,7 @@ class Uniswap:
             return 1
 
         if price_small == 0:
-            # Occures when `token_out` amount in the pool equals 0
+            # Occurs when `token_out` amount in the pool equals 0
             return 1
         try:
             cost_amount = self.get_price_input(
@@ -1324,7 +1324,7 @@ class Uniswap:
             cost_amount / (amount_in / (10 ** self.get_token(token_in).decimals))
         ) / 10 ** self.get_token(token_out).decimals
 
-        return (price_small - price_amount) / price_small
+        return float((price_small - price_amount) / price_small)
 
     # ------ Exchange ------------------------------------------------------------------
     @supports([1, 2])
