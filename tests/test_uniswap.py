@@ -18,6 +18,7 @@ from uniswap.util import _str_to_addr
 
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 ENV_UNISWAP_VERSION = os.getenv("UNISWAP_VERSION", None)
 if ENV_UNISWAP_VERSION:
@@ -38,7 +39,11 @@ class GanacheInstance:
 @pytest.fixture(scope="module", params=UNISWAP_VERSIONS)
 def client(request, web3: Web3, ganache: GanacheInstance):
     return Uniswap(
-        ganache.eth_address, ganache.eth_privkey, web3=web3, version=request.param
+        ganache.eth_address,
+        ganache.eth_privkey,
+        web3=web3,
+        version=request.param,
+        use_estimate_gas=False,  # see note in _build_and_send_tx
     )
 
 
@@ -80,11 +85,22 @@ def ganache() -> Generator[GanacheInstance, None, None]:
         )
 
     port = 10999
+    defaultGasPrice = 1000_000_000_000  # 1000 gwei
     p = subprocess.Popen(
-        f"ganache --port {port} -s test --networkId 1 --fork {os.environ['PROVIDER']}",
+        f"""ganache
+        --port {port}
+        --wallet.seed test
+        --chain.networkId 1
+        --chain.chainId 1
+        --fork.url {os.environ['PROVIDER']}
+        --miner.defaultGasPrice {defaultGasPrice}
+        --miner.legacyInstamine true
+        """.replace(
+            "\n", " "
+        ),
         shell=True,
     )
-    # Address #1 when ganache is run with `-s test`, it starts with 100 ETH
+    # Address #1 when ganache is run with `--wallet.seed test`, it starts with 1000 ETH
     eth_address = "0x94e3361495bD110114ac0b6e35Ed75E77E6a6cFA"
     eth_privkey = "0x6f1313062db38875fb01ee52682cbf6a8420e92bfbc578c5d4fdc0a32c50266f"
     sleep(3)
