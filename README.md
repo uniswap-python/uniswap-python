@@ -71,6 +71,21 @@ You can support us on [Gitcoin Grants](https://gitcoin.co/grants/2631/uniswap-py
 
 ## Changelog
 
+_0.5.4_
+
+* added use of gas estimation instead of a fixed gas limit (to support Arbitrum)
+* added `use_estimate_gas` constructor argument (used in testing)
+* added constants/basic support for Arbitrum, Optimism, Polygon, and Fantom. (untested)
+* incomplete changelog
+
+_0.5.3_
+
+* incomplete changelog
+
+_0.5.2_
+
+* incomplete changelog
+
 _0.5.1_
 
 * Updated dependencies
