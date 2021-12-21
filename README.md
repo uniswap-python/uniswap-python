@@ -28,6 +28,7 @@ Documentation is available at https://uniswap-python.com/
 ### Supports
 
  - Uniswap v3 (as of v0.5.0)
+    - Including beta support for Arbitrum & Optimism deployments (as of v0.5.4)
  - Uniswap v2 (as of v0.4.0)
  - Uniswap v1 (deprecated)
  - Various forks (untested, but should work)
@@ -47,10 +48,12 @@ Test are run on a fork of the main net using ganache-cli. You need to install it
 
 To run the full test suite, in the project directory set the `PROVIDER` env variable to a mainnet provider, and run:
 
-```
+```sh
 poetry install
 export PROVIDER= # URL of provider, e.g. https://mainnet.infura.io/v3/...
 make test
+# or...
+poetry run pytest --capture=no  # doesn't capture output (verbose)
 ```
 
 ## Support our continued work!
@@ -58,8 +61,13 @@ make test
 You can support us on [Gitcoin Grants](https://gitcoin.co/grants/2631/uniswap-python).
 
 ## Authors
+
 * [Shane Fontaine](https://twitter.com/shanecoin)
 * [Erik Bjäreholt](https://twitter.com/ErikBjare)
+* [@liquid-8](https://github.com/liquid-8)
+* ...and [others](https://github.com/uniswap-python/uniswap-python/graphs/contributors)
+
+*Want to help out with development? We have funding to those that do! See [#181](https://github.com/uniswap-python/uniswap-python/discussions/181)*
 
 ## Changelog
 
