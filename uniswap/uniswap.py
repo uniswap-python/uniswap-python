@@ -46,6 +46,16 @@ class Uniswap:
     Wrapper around Uniswap contracts.
     """
 
+    address: AddressLike
+    version: int
+
+    w3: Web3
+    netid: int
+    netname: str
+
+    default_slippage: float
+    use_estimate_gas: bool
+
     def __init__(
         self,
         address: Union[AddressLike, str, None],
@@ -54,6 +64,8 @@ class Uniswap:
         web3: Web3 = None,
         version: int = 1,
         default_slippage: float = 0.01,
+        use_estimate_gas: bool = True,
+        # use_eip1559: bool = True,
         factory_contract_addr: str = None,
         router_contract_addr: str = None,
     ) -> None:
@@ -67,7 +79,7 @@ class Uniswap:
         :param factory_contract_addr: Can be optionally set to override the address of the factory contract.
         :param router_contract_addr: Can be optionally set to override the address of the router contract (v2 only).
         """
-        self.address: AddressLike = _str_to_addr(
+        self.address = _str_to_addr(
             address or "0x0000000000000000000000000000000000000000"
         )
         self.private_key = (
@@ -79,22 +91,23 @@ class Uniswap:
 
         # TODO: Write tests for slippage
         self.default_slippage = default_slippage
+        self.use_estimate_gas = use_estimate_gas
 
         if web3:
             self.w3 = web3
         else:
             # Initialize web3. Extra provider for testing.
-            self.provider = provider or os.environ["PROVIDER"]
-            self.w3 = Web3(
-                Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60})
-            )
+            if not provider:
+                provider = os.environ["PROVIDER"]
+            self.w3 = Web3(Web3.HTTPProvider(provider, request_kwargs={"timeout": 60}))
 
-        netid = int(self.w3.net.version)
-        if netid in _netid_to_name:
-            self.network = _netid_to_name[netid]
+        # Cache netid to avoid extra RPC calls
+        self.netid = int(self.w3.net.version)
+        if self.netid in _netid_to_name:
+            self.netname = _netid_to_name[self.netid]
         else:
-            raise Exception(f"Unknown netid: {netid}")
-        logger.info(f"Using {self.w3} ('{self.network}')")
+            raise Exception(f"Unknown netid: {self.netid}")
+        logger.info(f"Using {self.w3} ('{self.netname}', netid: {self.netid})")
 
         self.last_nonce: Nonce = self.w3.eth.get_transaction_count(self.address)
 
@@ -103,14 +116,14 @@ class Uniswap:
         # max_approval_check checks that current approval is above a reasonable number
         # The program cannot check for max_approval each time because it decreases
         # with each trade.
-        self.max_approval_hex = f"0x{64 * 'f'}"
-        self.max_approval_int = int(self.max_approval_hex, 16)
-        self.max_approval_check_hex = f"0x{15 * '0'}{49 * 'f'}"
-        self.max_approval_check_int = int(self.max_approval_check_hex, 16)
+        max_approval_hex = f"0x{64 * 'f'}"
+        self.max_approval_int = int(max_approval_hex, 16)
+        max_approval_check_hex = f"0x{15 * '0'}{49 * 'f'}"
+        self.max_approval_check_int = int(max_approval_check_hex, 16)
 
         if self.version == 1:
             if factory_contract_addr is None:
-                factory_contract_addr = _factory_contract_addresses_v1[self.network]
+                factory_contract_addr = _factory_contract_addresses_v1[self.netname]
 
             self.factory_contract = _load_contract(
                 self.w3,
@@ -119,11 +132,11 @@ class Uniswap:
             )
         elif self.version == 2:
             if router_contract_addr is None:
-                router_contract_addr = _router_contract_addresses_v2[self.network]
+                router_contract_addr = _router_contract_addresses_v2[self.netname]
             self.router_address: AddressLike = _str_to_addr(router_contract_addr)
 
             if factory_contract_addr is None:
-                factory_contract_addr = _factory_contract_addresses_v2[self.network]
+                factory_contract_addr = _factory_contract_addresses_v2[self.netname]
             self.factory_contract = _load_contract(
                 self.w3,
                 abi_name="uniswap-v2/factory",
@@ -1092,8 +1105,19 @@ class Uniswap:
         if not tx_params:
             tx_params = self._get_tx_params()
         transaction = function.buildTransaction(tx_params)
-        # Uniswap3 uses 20% margin for transactions
-        transaction["gas"] = Wei(int(self.w3.eth.estimate_gas(transaction) * 1.2))
+
+        if "gas" not in tx_params:
+            # `use_estimate_gas` needs to be True for networks like Arbitrum (can't assume 250000 gas),
+            # but it breaks tests for unknown reasons because estimateGas takes forever on some tx's.
+            # Maybe an issue with ganache? (got GC warnings once...)
+            if self.use_estimate_gas:
+                # The Uniswap V3 UI uses 20% margin for transactions
+                transaction["gas"] = Wei(
+                    int(self.w3.eth.estimate_gas(transaction) * 1.2)
+                )
+            else:
+                transaction["gas"] = Wei(250000)
+
         signed_txn = self.w3.eth.account.sign_transaction(
             transaction, private_key=self.private_key
         )
@@ -1105,15 +1129,18 @@ class Uniswap:
             logger.debug(f"nonce: {tx_params['nonce']}")
             self.last_nonce = Nonce(tx_params["nonce"] + 1)
 
-    def _get_tx_params(self, value: Wei = Wei(0)) -> TxParams:
+    def _get_tx_params(self, value: Wei = Wei(0), gas: Wei = None) -> TxParams:
         """Get generic transaction parameters."""
-        return {
+        params: TxParams = {
             "from": _addr_to_str(self.address),
             "value": value,
             "nonce": max(
                 self.last_nonce, self.w3.eth.get_transaction_count(self.address)
             ),
         }
+        if gas:
+            params["gas"] = gas
+        return params
 
     # ------ Price Calculation Utils ---------------------------------------------------
     def _calculate_max_input_token(
@@ -1344,14 +1371,12 @@ class Uniswap:
         Returns a dict with addresses for tokens for the current net.
         Used in testing.
         """
-        netid = int(self.w3.net.version)
-        netname = _netid_to_name[netid]
-        if netname == "mainnet":
+        if self.netname == "mainnet":
             return tokens
-        elif netname == "rinkeby":
+        elif self.netname == "rinkeby":
             return tokens_rinkeby
         else:
-            raise Exception(f"Unknown net '{netname}'")
+            raise Exception(f"Unknown net '{self.netname}'")
 
     # ---- Old v1 utils ----
 

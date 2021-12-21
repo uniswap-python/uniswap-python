@@ -18,12 +18,15 @@ from uniswap.util import _str_to_addr
 
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 ENV_UNISWAP_VERSION = os.getenv("UNISWAP_VERSION", None)
 if ENV_UNISWAP_VERSION:
     UNISWAP_VERSIONS = [int(ENV_UNISWAP_VERSION)]
 else:
     UNISWAP_VERSIONS = [1, 2, 3]
+
+RECEIPT_TIMEOUT = 5
 
 
 @dataclass
@@ -36,7 +39,11 @@ class GanacheInstance:
 @pytest.fixture(scope="module", params=UNISWAP_VERSIONS)
 def client(request, web3: Web3, ganache: GanacheInstance):
     return Uniswap(
-        ganache.eth_address, ganache.eth_privkey, web3=web3, version=request.param
+        ganache.eth_address,
+        ganache.eth_privkey,
+        web3=web3,
+        version=request.param,
+        use_estimate_gas=False,  # see note in _build_and_send_tx
     )
 
 
@@ -54,12 +61,12 @@ def test_assets(client: Uniswap):
         logger.info("Buying...")
 
         tx = client.make_trade_output(tokens["ETH"], token_addr, amount)
-        client.w3.eth.wait_for_transaction_receipt(tx)
+        client.w3.eth.wait_for_transaction_receipt(tx, timeout=RECEIPT_TIMEOUT)
 
 
 @pytest.fixture(scope="module")
 def web3(ganache: GanacheInstance):
-    w3 = Web3(Web3.HTTPProvider(ganache.provider, request_kwargs={"timeout": 60}))
+    w3 = Web3(Web3.HTTPProvider(ganache.provider, request_kwargs={"timeout": 30}))
     if 1 != int(w3.net.version):
         raise Exception("PROVIDER was not a mainnet provider, which the tests require")
     return w3
@@ -67,10 +74,10 @@ def web3(ganache: GanacheInstance):
 
 @pytest.fixture(scope="module")
 def ganache() -> Generator[GanacheInstance, None, None]:
-    """Fixture that runs ganache-cli which has forked off mainnet"""
-    if not shutil.which("ganache-cli"):
+    """Fixture that runs ganache which has forked off mainnet"""
+    if not shutil.which("ganache"):
         raise Exception(
-            "ganache-cli was not found in PATH, you can install it with `npm install -g ganache-cli`"
+            "ganache was not found in PATH, you can install it with `npm install -g ganache`"
         )
     if "PROVIDER" not in os.environ:
         raise Exception(
@@ -78,11 +85,22 @@ def ganache() -> Generator[GanacheInstance, None, None]:
         )
 
     port = 10999
+    defaultGasPrice = 1000_000_000_000  # 1000 gwei
     p = subprocess.Popen(
-        f"ganache-cli --port {port} -s test --networkId 1 --fork {os.environ['PROVIDER']}",
+        f"""ganache
+        --port {port}
+        --wallet.seed test
+        --chain.networkId 1
+        --chain.chainId 1
+        --fork.url {os.environ['PROVIDER']}
+        --miner.defaultGasPrice {defaultGasPrice}
+        --miner.legacyInstamine true
+        """.replace(
+            "\n", " "
+        ),
         shell=True,
     )
-    # Address #1 when ganache is run with `-s test`, it starts with 100 ETH
+    # Address #1 when ganache is run with `--wallet.seed test`, it starts with 1000 ETH
     eth_address = "0x94e3361495bD110114ac0b6e35Ed75E77E6a6cFA"
     eth_privkey = "0x6f1313062db38875fb01ee52682cbf6a8420e92bfbc578c5d4fdc0a32c50266f"
     sleep(3)
@@ -105,7 +123,7 @@ class TestUniswap(object):
     ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
     # TODO: Detect mainnet vs rinkeby and set accordingly, like _get_token_addresses in the Uniswap class
-    # For Mainnet testing (with `ganache-cli --fork` as per the ganache fixture)
+    # For Mainnet testing (with `ganache --fork` as per the ganache fixture)
     eth = "0x0000000000000000000000000000000000000000"
     weth = Web3.toChecksumAddress("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2")
     bat = Web3.toChecksumAddress("0x0D8775F648430679A709E98d2b0Cb6250d2887EF")
@@ -219,7 +237,7 @@ class TestUniswap(object):
     )
     def test_add_liquidity(self, client: Uniswap, web3: Web3, token, max_eth):
         r = client.add_liquidity(token, max_eth)
-        tx = web3.eth.wait_for_transaction_receipt(r, timeout=6000)
+        tx = web3.eth.wait_for_transaction_receipt(r, timeout=RECEIPT_TIMEOUT)
         assert tx["status"]
 
     @pytest.mark.skip
@@ -274,7 +292,7 @@ class TestUniswap(object):
             bal_in_before = client.get_token_balance(input_token)
 
             txid = client.make_trade(input_token, output_token, qty, recipient)
-            tx = web3.eth.wait_for_transaction_receipt(txid)
+            tx = web3.eth.wait_for_transaction_receipt(txid, timeout=RECEIPT_TIMEOUT)
             assert tx["status"]
 
             # TODO: Checks for ETH, taking gas into account
@@ -324,7 +342,7 @@ class TestUniswap(object):
             balance_before = client.get_token_balance(output_token)
 
             r = client.make_trade_output(input_token, output_token, qty, recipient)
-            tx = web3.eth.wait_for_transaction_receipt(r, timeout=30)
+            tx = web3.eth.wait_for_transaction_receipt(r, timeout=RECEIPT_TIMEOUT)
             assert tx["status"]
 
             # TODO: Checks for ETH, taking gas into account

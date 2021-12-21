@@ -48,7 +48,8 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install
-        npm install -g ganache-cli
+        # TODO: Update to stable ganache when released!
+        npm install -g ganache@beta
     - name: Test
       env:
         PROVIDER: ${{ secrets.MAINNET_PROVIDER }}
