@@ -25,6 +25,8 @@ if ENV_UNISWAP_VERSION:
 else:
     UNISWAP_VERSIONS = [1, 2, 3]
 
+RECEIPT_TIMEOUT = 5
+
 
 @dataclass
 class GanacheInstance:
@@ -54,12 +56,12 @@ def test_assets(client: Uniswap):
         logger.info("Buying...")
 
         tx = client.make_trade_output(tokens["ETH"], token_addr, amount)
-        client.w3.eth.wait_for_transaction_receipt(tx)
+        client.w3.eth.wait_for_transaction_receipt(tx, timeout=RECEIPT_TIMEOUT)
 
 
 @pytest.fixture(scope="module")
 def web3(ganache: GanacheInstance):
-    w3 = Web3(Web3.HTTPProvider(ganache.provider, request_kwargs={"timeout": 60}))
+    w3 = Web3(Web3.HTTPProvider(ganache.provider, request_kwargs={"timeout": 30}))
     if 1 != int(w3.net.version):
         raise Exception("PROVIDER was not a mainnet provider, which the tests require")
     return w3
@@ -219,7 +221,7 @@ class TestUniswap(object):
     )
     def test_add_liquidity(self, client: Uniswap, web3: Web3, token, max_eth):
         r = client.add_liquidity(token, max_eth)
-        tx = web3.eth.wait_for_transaction_receipt(r, timeout=6000)
+        tx = web3.eth.wait_for_transaction_receipt(r, timeout=RECEIPT_TIMEOUT)
         assert tx["status"]
 
     @pytest.mark.skip
@@ -274,7 +276,7 @@ class TestUniswap(object):
             bal_in_before = client.get_token_balance(input_token)
 
             txid = client.make_trade(input_token, output_token, qty, recipient)
-            tx = web3.eth.wait_for_transaction_receipt(txid)
+            tx = web3.eth.wait_for_transaction_receipt(txid, timeout=RECEIPT_TIMEOUT)
             assert tx["status"]
 
             # TODO: Checks for ETH, taking gas into account
@@ -324,7 +326,7 @@ class TestUniswap(object):
             balance_before = client.get_token_balance(output_token)
 
             r = client.make_trade_output(input_token, output_token, qty, recipient)
-            tx = web3.eth.wait_for_transaction_receipt(r, timeout=30)
+            tx = web3.eth.wait_for_transaction_receipt(r, timeout=RECEIPT_TIMEOUT)
             assert tx["status"]
 
             # TODO: Checks for ETH, taking gas into account
