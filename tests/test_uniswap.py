@@ -1,3 +1,4 @@
+from async_timeout import timeout
 import pytest
 import os
 import subprocess
@@ -11,11 +12,11 @@ from time import sleep
 from web3 import Web3
 from web3.exceptions import NameNotFound
 
-from uniswap import Uniswap
-from uniswap.constants import ETH_ADDRESS
+from uniswap import Uniswap, token
+from uniswap.constants import ETH_ADDRESS, WETH9_ADDRESS
 from uniswap.exceptions import InsufficientBalance
-from uniswap.util import _str_to_addr
 from uniswap.tokens import get_tokens
+from uniswap.util import _str_to_addr, default_tick_range, _addr_to_str, _load_contract_erc20
 
 
 logger = logging.getLogger(__name__)
@@ -193,6 +194,60 @@ class TestUniswap(object):
         r = client.get_raw_price(token0, token1, fee=fee)
         assert r
 
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            (weth, dai, {"fee": 500}),
+        ]
+    )
+    def test_get_pool_instance(self, client, token0, token1, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        r = client.get_pool_instance(token0, token1, **kwargs)
+        assert r
+
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            (weth, dai, {"fee": 500}),
+        ]
+    )
+    def test_get_pool_immutables(self, client, token0, token1, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = client.get_pool_instance(token0, token1, **kwargs)
+        r = client.get_pool_immutables(pool)
+        print(r)
+        assert r
+
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            (weth, dai, {"fee": 500}),
+        ]
+    )
+    def test_get_pool_state(self, client, token0, token1, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = client.get_pool_instance(token0, token1, **kwargs)
+        r = client.get_pool_state(pool)
+        print(r)
+        assert r
+
+    @pytest.mark.parametrize(
+        "amount0, amount1, token0, token1, kwargs",
+        [
+            (1, 10, weth, dai, {"fee":500}),
+        ]
+    )
+    def test_mint_position(self, client, amount0, amount1, token0, token1, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = client.get_pool_instance(token0, token1, **kwargs)
+        r = client.mint_position(pool, amount0, amount1)
+        print(r)
+        assert r
+
     # ------ ERC20 Pool ----------------------------------------------------------------
     @pytest.mark.parametrize("token", [("UNI"), ("DAI")])
     def test_get_ex_eth_balance(
@@ -231,6 +286,80 @@ class TestUniswap(object):
         assert r
 
     # ------ Liquidity -----------------------------------------------------------------
+    @pytest.mark.parametrize(
+        "token0, token1, amount0, amount1, qty, fee",
+        [
+            ('DAI', 'USDC', ONE_ETH, ONE_USDC, ONE_ETH, 3000),
+        ]
+    )
+    def test_v3_deploy_pool_with_liquidity(self, client: Uniswap, tokens, token0, token1, amount0, amount1, qty, fee):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+
+        try:
+            pool = client.create_pool_instance(tokens[token0], tokens[token1], fee)
+        except Exception:
+            pool = client.get_pool_instance(tokens[token0], tokens[token1], fee)
+
+        print(pool.address)
+        # Ensuring client has sufficient balance of both tokens
+        eth_to_dai = client.make_trade(tokens['ETH'], tokens[token0], qty, client.address)
+        eth_to_dai_tx = client.w3.eth.wait_for_transaction_receipt(eth_to_dai, timeout=RECEIPT_TIMEOUT)
+        assert eth_to_dai_tx["status"]
+        dai_to_usdc = client.make_trade(tokens[token0], tokens[token1], qty*10, client.address)
+        dai_to_usdc_tx = client.w3.eth.wait_for_transaction_receipt(dai_to_usdc, timeout=RECEIPT_TIMEOUT)
+        assert dai_to_usdc_tx["status"]
+
+        balance_0 = client.get_token_balance(tokens[token0])
+        balance_1 = client.get_token_balance(tokens[token1])
+
+        assert balance_0 > amount0, f'Have: {balance_0} need {amount0}'
+        assert balance_1 > amount1, f'Have: {balance_1} need {amount1}'
+
+
+        min_tick, max_tick = default_tick_range(fee)
+        r = client.mint_liquidity(
+          pool,
+          amount0,
+          amount1,
+          tick_lower=min_tick,
+          tick_upper=max_tick,
+          deadline=2**64
+        )
+        assert r["status"]
+
+        position_balance = client.nonFungiblePositionManager.functions.balanceOf(_addr_to_str(client.address)).call()
+        assert position_balance > 0
+
+        position_array = client.get_liquidity_positions()
+        assert len(position_array) > 0
+
+
+    @pytest.mark.parametrize(
+        "deadline",
+        [(2**64)],
+    )
+    def test_close_position(self, client: Uniswap, deadline):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        position_array = client.get_liquidity_positions()
+        tokenId = position_array[0]
+        r = client.close_position(tokenId, deadline=deadline)
+        assert r["status"]
+
+    @pytest.mark.parametrize(
+        "token0, token1",
+        [("DAI", "USDC")]
+    )
+    def test_get_tvl_in_pool_on_chain(self, client: Uniswap, tokens, token0, token1):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+
+        pool = client.get_pool_instance(tokens[token0], tokens[token1])
+        tvl_0, tvl_1 = client.get_tvl_in_pool(pool)
+        assert tvl_0 > 0
+        assert tvl_1 > 0
+
     @pytest.mark.skip
     @pytest.mark.parametrize(
         "token, max_eth",
@@ -271,7 +400,7 @@ class TestUniswap(object):
             # Token -> Token
             ("DAI", "USDC", ONE_ETH, None, does_not_raise),
             # Token -> ETH
-            ("USDC", "ETH", 100 * ONE_USDC, None, does_not_raise),
+            ("USDC", "ETH", ONE_USDC, None, does_not_raise),
             # ("ETH", "UNI", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # ("UNI", "ETH", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # ("DAI", "UNI", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
@@ -310,11 +439,11 @@ class TestUniswap(object):
         "input_token, output_token, qty, recipient, expectation",
         [
             # ETH -> Token
-            ("ETH", "DAI", 10 ** 18, None, does_not_raise),
+            ("ETH", "DAI", ONE_ETH, None, does_not_raise),
             # Token -> Token
             ("DAI", "USDC", ONE_USDC, None, does_not_raise),
             # Token -> ETH
-            ("DAI", "ETH", 10 ** 16, None, does_not_raise),
+            ("DAI", "ETH", 100 * ONE_USDC, None, does_not_raise),
             # FIXME: These should probably be uncommented eventually
             # ("ETH", "UNI", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # ("UNI", "ETH", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
@@ -322,7 +451,7 @@ class TestUniswap(object):
             (
                 "DAI",
                 "ETH",
-                10 * 10 ** 18,
+                10 * ONE_ETH,
                 None,
                 lambda: pytest.raises(InsufficientBalance),
             ),

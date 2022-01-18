@@ -56,3 +56,22 @@ _router_contract_addresses_v2 = {
     "harmony_mainnet": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
     "harmony_testnet": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
 }
+
+MAX_UINT_128 = (2**128)-1
+
+# Source: https://github.com/Uniswap/v3-core/blob/v1.0.0/contracts/libraries/TickMath.sol#L8-L11
+MIN_TICK = -887272
+MAX_TICK = -MIN_TICK
+
+# Source: https://github.com/Uniswap/v3-core/blob/v1.0.0/contracts/UniswapV3Factory.sol#L26-L31
+_tick_spacing = {
+    500: 10,
+    3_000: 60,
+    10_000: 200
+}
+
+_tick_bitmap_range = {
+    500: (-347, 346),
+    3_000: (-58, 57),
+    10_000: (-18, 17)
+}
