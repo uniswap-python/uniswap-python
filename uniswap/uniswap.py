@@ -17,7 +17,7 @@ from web3.types import (
     HexBytes,
 )
 
-from .types import AddressLike
+from .types import AddressLike, Contract
 from .token import ERC20Token
 from .tokens import tokens, tokens_rinkeby
 from .exceptions import InvalidToken, InsufficientBalance
@@ -165,6 +165,10 @@ class Uniswap:
             )
             self.router = _load_contract(
                 self.w3, abi_name="uniswap-v3/router", address=self.router_address
+            )
+            self.positionManager_addr = _str_to_addr("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
+            self.nonFungiblePositionManager = _load_contract(
+                self.w3, abi_name="uniswap-v3/nonFungiblePositionManager", address=self.positionManager_addr
             )
         else:
             raise Exception(
@@ -1242,6 +1246,83 @@ class Uniswap:
         elif self.version == 3:
             address = self.router.functions.WETH9().call()
         return address
+
+    @supports([3])
+    def get_pool_instance(
+        self, token_in: AddressLike, token_out: AddressLike, fee: int = 3000
+    ) -> Contract:
+        """
+        Returns an instance of a pool contract for a given token pair and fee.
+        Requires pair [token_in, token_out] has a direct pool.
+
+        """
+        if token_in == ETH_ADDRESS:
+            token_in = self.get_weth_address()
+        if token_out == ETH_ADDRESS:
+            token_out = self.get_weth_address()
+
+        params: Iterable[Union[ChecksumAddress, int]] = [
+            self.w3.toChecksumAddress(token_in),
+            self.w3.toChecksumAddress(token_out),
+            fee,
+        ]
+        pool_address = self.factory_contract.functions.getPool(*params).call()
+        pool_contract = _load_contract(
+            self.w3, abi_name="uniswap-v3/pool", address=pool_address
+        )
+        return pool_contract
+
+    @supports([3])
+    def get_pool_immutables(
+        self, pool: Contract
+    ) -> Dict:
+        """
+        Fetch on-chain pool data.
+        """
+        pool_immutables = {
+            'factory': pool.functions.factory().call(),
+            'token0': pool.functions.token0().call(),
+            'token1': pool.functions.token1().call(),
+            'fee': pool.functions.fee().call(),
+            'tickSpacing': pool.functions.tickSpacing().call(),
+            'maxLiquidityPerTick': pool.functions.maxLiquidityPerTick().call()
+        }
+
+        return pool_immutables
+
+    @supports([3])
+    def get_pool_state(
+        self, pool: Contract
+    ) -> Dict:
+        """
+        Fetch on-chain pool state.
+        """
+        liquidity = pool.functions.liquidity().call()
+        slot = pool.functions.slot0().call()
+        pool_state = {
+            'liquidity':liquidity,
+            'sqrtPriceX96': slot[0],
+            'tick': slot[1],
+            'observationIndex': slot[2],
+            'observationCardinality': slot[3],
+            'observationCardinalityNext': slot[4],
+            'feeProtocol': slot[5],
+            'unlocked': slot[6]
+        }
+
+        return pool_state
+
+    # TODO: define Position struct
+
+    @supports([3])
+    def mint_position(
+        self, pool: Contract, amount0: int, amount1: int, slippage: float
+    ) -> None:
+
+        positionManager = self.nonFungiblePositionManager
+
+
+        return
 
     @supports([2, 3])
     def get_raw_price(

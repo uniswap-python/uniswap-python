@@ -193,6 +193,57 @@ class TestUniswap(object):
         r = client.get_price_output(token0, token1, qty, **kwargs)
         assert r
 
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            (weth, dai, {"fee": 500}),
+        ]
+    )
+    def test_get_pool_instance(self, client, token0, token1, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        r = client.get_pool_instance(token0, token1, **kwargs)
+        assert r
+
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            (weth, dai, {"fee": 500}),
+        ]
+    )
+    def test_get_pool_immutables(self, client, token0, token1, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = client.get_pool_instance(token0, token1, **kwargs)
+        r = client.get_pool_immutables(pool)
+        assert r
+
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            (weth, dai, {"fee": 500}),
+        ]
+    )
+    def test_get_pool_state(self, client, token0, token1, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = client.get_pool_instance(token0, token1, **kwargs)
+        r = client.get_pool_state(pool)
+        assert r
+
+    @pytest.mark.parametrize(
+        "token0, token1, amount0, amount1, slippage, kwargs",
+        [
+            (weth, dai, 10, 10, .02, {"fee": 500}),
+        ]
+    )
+    def test_mint_position(self, client, token0, token1, amount0, amount1, slippage, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = client.get_pool_instance(token0, token1, **kwargs)
+        r = client.mint_position(pool, amount0, amount1, slippage)
+        assert r
+
     # ------ ERC20 Pool ----------------------------------------------------------------
     @pytest.mark.parametrize("token", [(bat), (dai)])
     def test_get_ex_eth_balance(
