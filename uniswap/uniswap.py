@@ -1316,13 +1316,44 @@ class Uniswap:
 
     @supports([3])
     def mint_position(
-        self, pool: Contract, amount0: int, amount1: int, slippage: float
+        self, pool: Contract, amount0: int, amount1: int
     ) -> None:
+
+        #TODO: add to constants.py
+        MIN_TICK = -887272
+        MAX_TICK = -MIN_TICK
+
+        pool_sate = self.get_pool_state(pool)
+        pool_immutables = self.get_pool_immutables(pool)
+
+        token0 = pool_immutables['token0']
+        token1 = pool_immutables['token1']
+        fee = pool_immutables['fee']
 
         positionManager = self.nonFungiblePositionManager
 
+        approve0 = _load_contract_erc20(self.w3, token0).functions.approve(
+            self.positionManager_addr, amount0
+        )
+        logger.warning(f"Approving {_addr_to_str(token0)}...")
+        tx0 = self._build_and_send_tx(approve0)
+        self.w3.eth.wait_for_transaction_receipt(tx0, timeout=6000)
 
-        return
+        approve1 = _load_contract_erc20(self.w3, token1).functions.approve(
+            self.positionManager_addr, amount1
+        )
+        logger.warning(f"Approving {_addr_to_str(token1)}...")
+        tx1 = self._build_and_send_tx(approve1)
+        self.w3.eth.wait_for_transaction_receipt(tx1, timeout=6000)
+
+        position = positionManager.functions.mint({
+        'token0':token0,'token1':token1,'fee':fee,'tickLower':MIN_TICK,'tickUpper':MAX_TICK,
+        'amount0Desired':amount0,'amount1Desired':amount1,'amount0Min':0,'amount1Min':0,'recipient':_addr_to_str(self.address),'deadline':self._deadline()
+        })
+        mint_tx = self._build_and_send_tx(position)
+        self.w3.eth.wait_for_transaction_receipt(mint_tx, timeout=6000)
+
+        return mint_tx
 
     @supports([2, 3])
     def get_raw_price(

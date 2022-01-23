@@ -216,6 +216,7 @@ class TestUniswap(object):
             pytest.skip("Not supported in this version of Uniswap")
         pool = client.get_pool_instance(token0, token1, **kwargs)
         r = client.get_pool_immutables(pool)
+        print(r)
         assert r
 
     @pytest.mark.parametrize(
@@ -229,19 +230,21 @@ class TestUniswap(object):
             pytest.skip("Not supported in this version of Uniswap")
         pool = client.get_pool_instance(token0, token1, **kwargs)
         r = client.get_pool_state(pool)
+        print(r)
         assert r
 
     @pytest.mark.parametrize(
-        "token0, token1, amount0, amount1, slippage, kwargs",
+        "amount0, amount1, token0, token1, kwargs",
         [
-            (weth, dai, 10, 10, .02, {"fee": 500}),
+            (1000, 1000, weth, dai, {"fee":500}),
         ]
     )
-    def test_mint_position(self, client, token0, token1, amount0, amount1, slippage, kwargs):
+    def test_mint_position(self, client, amount0, amount1, token0, token1, kwargs):
         if client.version != 3:
             pytest.skip("Not supported in this version of Uniswap")
         pool = client.get_pool_instance(token0, token1, **kwargs)
-        r = client.mint_position(pool, amount0, amount1, slippage)
+        r = client.mint_position(pool, amount0, amount1)
+        print(r)
         assert r
 
     # ------ ERC20 Pool ----------------------------------------------------------------
