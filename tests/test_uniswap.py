@@ -43,7 +43,7 @@ def client(request, web3: Web3, ganache: GanacheInstance):
         ganache.eth_privkey,
         web3=web3,
         version=request.param,
-        use_estimate_gas=False,  # see note in _build_and_send_tx
+        use_estimate_gas=True,  # see note in _build_and_send_tx
     )
 
 
