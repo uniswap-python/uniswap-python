@@ -1312,7 +1312,7 @@ class Uniswap:
 
         return pool_state
 
-    # TODO: define Position struct
+    # FIXME: mint call reverting - likely to do w/ passing struct args to contract function call
 
     @supports([3])
     def mint_position(
@@ -1346,14 +1346,24 @@ class Uniswap:
         tx1 = self._build_and_send_tx(approve1)
         self.w3.eth.wait_for_transaction_receipt(tx1, timeout=6000)
 
-        position = positionManager.functions.mint({
-        'token0':token0,'token1':token1,'fee':fee,'tickLower':MIN_TICK,'tickUpper':MAX_TICK,
+        position = positionManager.encodeABI(fn_name="mint", args=[{'token0':token0,'token1':token1,'fee':fee,'tickLower':MIN_TICK,'tickUpper':MAX_TICK,
         'amount0Desired':amount0,'amount1Desired':amount1,'amount0Min':0,'amount1Min':0,'recipient':_addr_to_str(self.address),'deadline':self._deadline()
-        })
-        mint_tx = self._build_and_send_tx(position)
-        self.w3.eth.wait_for_transaction_receipt(mint_tx, timeout=6000)
+        }])
+        print(position)
 
-        return mint_tx
+        multicall = positionManager.functions.multicall([position]).transact({"from":_addr_to_str(self.address), "gas":417918})
+
+        print(multicall)
+        #
+        # tx2 = self._build_and_send_tx(multicall,)
+        # self.w3.eth.wait_for_transaction_receipt(tx2, timeout=6000)
+
+
+        # position = positionManager.functions.mint().buildTransaction()
+        # print(position['data'])
+
+
+        return multicall
 
     @supports([2, 3])
     def get_raw_price(
