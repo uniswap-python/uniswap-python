@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "uniswap-python"
-version = "0.5.5.a"
+name = "uniswap-python-route"
+version = "0.5.5.2"
 description = "An unofficial Python wrapper for the decentralized exchange Uniswap"
-repository = "https://github.com/shanefontaine/uniswap-python"
+repository = "https://github.com/starascendin/uniswap-python"
 readme = "README.md"
 keywords = ["uniswap", "ethereum", "exchange", "trading"]
 authors = ["Shane Fontaine <shane6fontaine@gmail.com>", "Erik Bjäreholt <erik@bjareho.lt>"]
