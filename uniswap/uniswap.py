@@ -401,6 +401,7 @@ class Uniswap:
         fee: int = None,
         slippage: float = None,
         fee_on_transfer: bool = False,
+        route: Optional[List[AddressLike]] = None,
     ) -> HexBytes:
         """Make a trade by defining the qty of the input token."""
         if fee is None:
@@ -431,6 +432,7 @@ class Uniswap:
                 fee,
                 slippage,
                 fee_on_transfer,
+                route=route
             )
 
     @check_approval
@@ -652,6 +654,7 @@ class Uniswap:
         fee: int,
         slippage: float,
         fee_on_transfer: bool = False,
+        route: Optional[List[AddressLike]] = None,
     ) -> HexBytes:
         """Convert tokens to tokens given an input amount."""
         # Balance check
@@ -690,7 +693,7 @@ class Uniswap:
             min_tokens_bought = int(
                 (1 - slippage)
                 * self._get_token_token_input_price(
-                    input_token, output_token, qty, fee=fee
+                    input_token, output_token, qty, fee=fee, route=route
                 )
             )
             if fee_on_transfer:
