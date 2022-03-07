@@ -284,6 +284,7 @@ class Uniswap:
                 logger.warning(f"No route specified, assuming route: {route}")
 
         if self.version == 2:
+            # BL: This is where route param gets called
             price: int = self.router.functions.getAmountsOut(qty, route).call()[-1]
         elif self.version == 3:
             if route:
