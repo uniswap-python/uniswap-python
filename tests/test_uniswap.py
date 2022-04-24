@@ -236,7 +236,7 @@ class TestUniswap(object):
     @pytest.mark.parametrize(
         "amount0, amount1, token0, token1, kwargs",
         [
-            (1, 100, weth, dai, {"fee":500}),
+            (1, 10, weth, dai, {"fee":500}),
         ]
     )
     def test_mint_position(self, client, amount0, amount1, token0, token1, kwargs):
