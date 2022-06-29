@@ -6,6 +6,7 @@ _netid_to_name = {
     1: "mainnet",
     3: "ropsten",
     4: "rinkeby",
+    5: "görli",
     10: "optimism",
     42: "kovan",
     56: "binance",
