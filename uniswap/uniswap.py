@@ -182,7 +182,7 @@ class Uniswap:
         token1: AddressLike,  # output token
         qty: int,
         fee: int = None,
-        route: Optional[List[AddressLike]] = None,
+        route: List[AddressLike] = None,
     ) -> int:
         """Given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`."""
         if fee is None:
@@ -203,7 +203,7 @@ class Uniswap:
         token1: AddressLike,
         qty: int,
         fee: int = None,
-        route: Optional[List[AddressLike]] = None,
+        route: List[AddressLike] = None,
     ) -> int:
         """Returns the minimum amount of `token0` required to buy `qty` amount of `token1`."""
         if fee is None:
@@ -264,7 +264,7 @@ class Uniswap:
         token1: AddressLike,  # output token
         qty: int,
         fee: int,
-        route: Optional[List[AddressLike]] = None,
+        route: List[AddressLike] = None,
     ) -> int:
         """
         Public price (i.e. amount of output token received) for token to token trades with an exact input.
@@ -286,13 +286,14 @@ class Uniswap:
         if self.version == 2:
             price: int = self.router.functions.getAmountsOut(qty, route).call()[-1]
         elif self.version == 3:
+            # FIXME: How to calculate this properly? See https://docs.uniswap.org/reference/libraries/SqrtPriceMath
+            sqrtPriceLimitX96 = 0
+
             if route:
                 # NOTE: to support custom routes we need to support the Path data encoding: https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/Path.sol
                 # result: tuple = self.quoter.functions.quoteExactInput(route, qty).call()
                 raise Exception("custom route not yet supported for v3")
 
-            # FIXME: How to calculate this properly? See https://docs.uniswap.org/reference/libraries/SqrtPriceMath
-            sqrtPriceLimitX96 = 0
             price = self.quoter.functions.quoteExactInputSingle(
                 token0, token1, fee, qty, sqrtPriceLimitX96
             ).call()
@@ -580,68 +581,93 @@ class Uniswap:
                 function = token_funcs.tokenToEthTransferInput(*func_params)
             return self._build_and_send_tx(function)
         elif self.version == 2:
-            if recipient is None:
-                recipient = self.address
-            amount_out_min = int(
-                (1 - slippage) * self._get_token_eth_input_price(input_token, qty, fee)
-            )
-            if fee_on_transfer:
-                func = (
-                    self.router.functions.swapExactTokensForETHSupportingFeeOnTransferTokens
-                )
-            else:
-                func = self.router.functions.swapExactTokensForETH
-            return self._build_and_send_tx(
-                func(
-                    qty,
-                    amount_out_min,
-                    [input_token, self.get_weth_address()],
-                    recipient,
-                    self._deadline(),
-                ),
+            return self._token_to_eth_swap_input_v2(
+                input_token, qty, recipient, fee, slippage, fee_on_transfer
             )
         elif self.version == 3:
-            if recipient is None:
-                recipient = self.address
-
             if fee_on_transfer:
                 raise Exception("fee on transfer not supported by Uniswap v3")
 
-            output_token = self.get_weth_address()
-            min_tokens_bought = int(
-                (1 - slippage)
-                * self._get_token_eth_input_price(input_token, qty, fee=fee)
+            return self._token_to_eth_swap_input_v3(
+                input_token, qty, recipient, fee, slippage
             )
-            sqrtPriceLimitX96 = 0
-
-            swap_data = self.router.encodeABI(
-                fn_name="exactInputSingle",
-                args=[
-                    (
-                        input_token,
-                        output_token,
-                        fee,
-                        ETH_ADDRESS,
-                        self._deadline(),
-                        qty,
-                        min_tokens_bought,
-                        sqrtPriceLimitX96,
-                    )
-                ],
-            )
-
-            unwrap_data = self.router.encodeABI(
-                fn_name="unwrapWETH9", args=[min_tokens_bought, recipient]
-            )
-
-            # Multicall
-            return self._build_and_send_tx(
-                self.router.functions.multicall([swap_data, unwrap_data]),
-                self._get_tx_params(),
-            )
-
         else:
             raise ValueError
+
+    def _token_to_eth_swap_input_v2(
+        self,
+        input_token: AddressLike,
+        qty: int,
+        recipient: Optional[AddressLike],
+        fee: int,
+        slippage: float,
+        fee_on_transfer: bool,
+    ) -> HexBytes:
+        if recipient is None:
+            recipient = self.address
+        amount_out_min = int(
+            (1 - slippage) * self._get_token_eth_input_price(input_token, qty, fee)
+        )
+        if fee_on_transfer:
+            func = (
+                self.router.functions.swapExactTokensForETHSupportingFeeOnTransferTokens
+            )
+        else:
+            func = self.router.functions.swapExactTokensForETH
+        return self._build_and_send_tx(
+            func(
+                qty,
+                amount_out_min,
+                [input_token, self.get_weth_address()],
+                recipient,
+                self._deadline(),
+            ),
+        )
+
+    def _token_to_eth_swap_input_v3(
+        self,
+        input_token: AddressLike,
+        qty: int,
+        recipient: Optional[AddressLike],
+        fee: int,
+        slippage: float,
+    ) -> HexBytes:
+        """NOTE: Should always be called via the dispatcher `_token_to_eth_swap_input`"""
+        if recipient is None:
+            recipient = self.address
+
+        output_token = self.get_weth_address()
+        min_tokens_bought = int(
+            (1 - slippage) * self._get_token_eth_input_price(input_token, qty, fee=fee)
+        )
+        sqrtPriceLimitX96 = 0
+
+        swap_data = self.router.encodeABI(
+            fn_name="exactInputSingle",
+            args=[
+                (
+                    input_token,
+                    output_token,
+                    fee,
+                    ETH_ADDRESS,
+                    self._deadline(),
+                    qty,
+                    min_tokens_bought,
+                    sqrtPriceLimitX96,
+                )
+            ],
+        )
+
+        # NOTE: This will probably lead to dust WETH accumulation
+        unwrap_data = self.router.encodeABI(
+            fn_name="unwrapWETH9", args=[min_tokens_bought, recipient]
+        )
+
+        # Multicall
+        return self._build_and_send_tx(
+            self.router.functions.multicall([swap_data, unwrap_data]),
+            self._get_tx_params(),
+        )
 
     def _token_to_token_swap_input(
         self,
@@ -1110,13 +1136,17 @@ class Uniswap:
             # `use_estimate_gas` needs to be True for networks like Arbitrum (can't assume 250000 gas),
             # but it breaks tests for unknown reasons because estimateGas takes forever on some tx's.
             # Maybe an issue with ganache? (got GC warnings once...)
+
+            # In case gas estimation is disabled.
+            # Without this set before gas estimation, it can lead to ganache stack overflow.
+            # See: https://github.com/trufflesuite/ganache/issues/985#issuecomment-998937085
+            transaction["gas"] = Wei(250000)
+
             if self.use_estimate_gas:
                 # The Uniswap V3 UI uses 20% margin for transactions
                 transaction["gas"] = Wei(
                     int(self.w3.eth.estimate_gas(transaction) * 1.2)
                 )
-            else:
-                transaction["gas"] = Wei(250000)
 
         signed_txn = self.w3.eth.account.sign_transaction(
             transaction, private_key=self.private_key
@@ -1224,11 +1254,11 @@ class Uniswap:
             raise InvalidToken(address)
         try:
             name = _name.decode()
-        except:
+        except Exception:  # FIXME: Be more precise about exception to catch
             name = _name
         try:
             symbol = _symbol.decode()
-        except:
+        except Exception:  # FIXME: Be more precise about exception to catch
             symbol = _symbol
         return ERC20Token(symbol, address, name, decimals)
 
@@ -1255,11 +1285,11 @@ class Uniswap:
         if token_out == ETH_ADDRESS:
             token_out = self.get_weth_address()
 
+        params: Tuple[ChecksumAddress, ChecksumAddress] = (
+            self.w3.toChecksumAddress(token_in),
+            self.w3.toChecksumAddress(token_out),
+        )
         if self.version == 2:
-            params: Iterable[Union[ChecksumAddress,Optional[int]]] = [
-                self.w3.toChecksumAddress(token_in),
-                self.w3.toChecksumAddress(token_out),
-            ]
             pair_token = self.factory_contract.functions.getPair(*params).call()
             token_in_erc20 = _load_contract_erc20(
                 self.w3, self.w3.toChecksumAddress(token_in)
@@ -1285,12 +1315,7 @@ class Uniswap:
 
             raw_price = token_out_balance / token_in_balance
         else:
-            params = [
-                self.w3.toChecksumAddress(token_in),
-                self.w3.toChecksumAddress(token_out),
-                fee,
-            ]
-            pool_address = self.factory_contract.functions.getPool(*params).call()
+            pool_address = self.factory_contract.functions.getPool(*params, fee).call()
             pool_contract = _load_contract(
                 self.w3, abi_name="uniswap-v3/pool", address=pool_address
             )
@@ -1316,7 +1341,7 @@ class Uniswap:
         token_out: AddressLike,
         amount_in: int,
         fee: int = None,
-        route: Optional[List[AddressLike]] = None,
+        route: List[AddressLike] = None,
     ) -> float:
         """
         Returns the estimated price impact as a positive float (0.01 = 1%).
