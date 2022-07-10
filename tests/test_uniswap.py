@@ -94,7 +94,7 @@ def ganache() -> Generator[GanacheInstance, None, None]:
         --chain.chainId 1
         --fork.url {os.environ['PROVIDER']}
         --miner.defaultGasPrice {defaultGasPrice}
-        --miner.legacyInstamine true
+        --miner.instamine "strict"
         """.replace(
             "\n", " "
         ),
