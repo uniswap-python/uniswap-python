@@ -1,11 +1,13 @@
 import os
 import json
+import math
 import functools
 from typing import Union, List, Tuple
 
 from web3 import Web3
 from web3.exceptions import NameNotFound
 
+from .constants import MIN_TICK, MAX_TICK, _tick_spacing
 from .types import AddressLike, Address, Contract
 
 
@@ -64,3 +66,39 @@ def _encode_path(token_in: AddressLike, route: List[Tuple[int, AddressLike]]) ->
     https://github.com/Uniswap/uniswap-v3-sdk/blob/1a74d5f0a31040fec4aeb1f83bba01d7c03f4870/src/utils/encodeRouteToPath.ts
     """
     raise NotImplementedError
+
+# Adapted from: https://github.com/Uniswap/v3-sdk/blob/main/src/utils/encodeSqrtRatioX96.ts
+def encode_sqrt_ratioX96(amount_0: int, amount_1: int) -> int:
+    numerator = amount_1 << 192
+    denominator = amount_0
+    ratioX192 = numerator // denominator
+    return int(math.sqrt(ratioX192))
+
+# Adapted from: https://github.com/tradingstrategy-ai/web3-ethereum-defi/blob/c3c68bc723d55dda0cc8252a0dadb534c4fdb2c5/eth_defi/uniswap_v3/utils.py#L77
+def get_min_tick(fee: int) -> int:
+    min_tick_spacing: int = _tick_spacing[fee]
+    return -(MIN_TICK // -min_tick_spacing) * min_tick_spacing
+
+def get_max_tick(fee: int) -> int:
+    max_tick_spacing: int = _tick_spacing[fee]
+    return (MAX_TICK // max_tick_spacing) * max_tick_spacing
+
+def default_tick_range(fee: int) -> Tuple[int, int]:
+    min_tick = get_min_tick(fee)
+    max_tick = get_max_tick(fee)
+
+    return min_tick, max_tick
+
+def nearest_tick(tick: int, fee: int) -> int:
+    min_tick, max_tick = default_tick_range(fee)
+    assert min_tick <= tick <= max_tick, f'Provided tick is out of bounds: {(min_tick, max_tick)}'
+
+    tick_spacing = _tick_spacing[fee]
+    rounded_tick_spacing = round(tick/tick_spacing) * tick_spacing
+
+    if rounded_tick_spacing < min_tick:
+        return rounded_tick_spacing + tick_spacing
+    elif rounded_tick_spacing > max_tick:
+        return rounded_tick_spacing - tick_spacing
+    else:
+        return rounded_tick_spacing
