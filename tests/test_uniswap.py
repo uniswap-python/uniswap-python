@@ -11,10 +11,10 @@ from time import sleep
 from web3 import Web3
 from web3.exceptions import NameNotFound
 
-from uniswap import Uniswap
-from uniswap.constants import ETH_ADDRESS
+from uniswap import Uniswap, token
+from uniswap.constants import ETH_ADDRESS, WETH9_ADDRESS
 from uniswap.exceptions import InsufficientBalance
-from uniswap.util import _str_to_addr
+from uniswap.util import _str_to_addr, default_tick_range, _addr_to_str, _load_contract_erc20
 
 
 logger = logging.getLogger(__name__)
@@ -193,60 +193,6 @@ class TestUniswap(object):
         r = client.get_price_output(token0, token1, qty, **kwargs)
         assert r
 
-    @pytest.mark.parametrize(
-        "token0, token1, kwargs",
-        [
-            (weth, dai, {"fee": 500}),
-        ]
-    )
-    def test_get_pool_instance(self, client, token0, token1, kwargs):
-        if client.version != 3:
-            pytest.skip("Not supported in this version of Uniswap")
-        r = client.get_pool_instance(token0, token1, **kwargs)
-        assert r
-
-    @pytest.mark.parametrize(
-        "token0, token1, kwargs",
-        [
-            (weth, dai, {"fee": 500}),
-        ]
-    )
-    def test_get_pool_immutables(self, client, token0, token1, kwargs):
-        if client.version != 3:
-            pytest.skip("Not supported in this version of Uniswap")
-        pool = client.get_pool_instance(token0, token1, **kwargs)
-        r = client.get_pool_immutables(pool)
-        print(r)
-        assert r
-
-    @pytest.mark.parametrize(
-        "token0, token1, kwargs",
-        [
-            (weth, dai, {"fee": 500}),
-        ]
-    )
-    def test_get_pool_state(self, client, token0, token1, kwargs):
-        if client.version != 3:
-            pytest.skip("Not supported in this version of Uniswap")
-        pool = client.get_pool_instance(token0, token1, **kwargs)
-        r = client.get_pool_state(pool)
-        print(r)
-        assert r
-
-    @pytest.mark.parametrize(
-        "amount0, amount1, token0, token1, kwargs",
-        [
-            (1, 10, weth, dai, {"fee":500}),
-        ]
-    )
-    def test_mint_position(self, client, amount0, amount1, token0, token1, kwargs):
-        if client.version != 3:
-            pytest.skip("Not supported in this version of Uniswap")
-        pool = client.get_pool_instance(token0, token1, **kwargs)
-        r = client.mint_position(pool, amount0, amount1)
-        print(r)
-        assert r
-
     # ------ ERC20 Pool ----------------------------------------------------------------
     @pytest.mark.parametrize("token", [(bat), (dai)])
     def test_get_ex_eth_balance(
@@ -280,6 +226,39 @@ class TestUniswap(object):
         assert r
 
     # ------ Liquidity -----------------------------------------------------------------
+    @pytest.mark.parametrize(
+        "token0, token1, amount0, amount1, qty, fee",
+        [
+            (dai, usdc, ONE_ETH, ONE_USDC, ONE_ETH, 3000),
+        ]
+    )
+    def test_v3_deploy_pool_with_liquidity(self, client: Uniswap, token0, token1, amount0, amount1, qty, fee):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+
+        try:
+            pool = client.create_pool_instance(token0, token1, fee)
+        except Exception:
+            pool = client.get_pool_instance(token0, token1, fee)
+
+        # Ensuring client has sufficient balance of both tokens
+        eth_to_dai = client.make_trade(ETH_ADDRESS, token0, qty, None)
+        eth_to_dai_tx = client.w3.eth.wait_for_transaction_receipt(eth_to_dai, timeout=RECEIPT_TIMEOUT)
+
+        dai_to_usdc = client.make_trade(token0, token1, amount1, None)
+        dai_to_usdc_tx = client.w3.eth.wait_for_transaction_receipt(dai_to_usdc, timeout=RECEIPT_TIMEOUT)
+
+        min_tick, max_tick = default_tick_range(fee)
+        r = client.mint_liquidity(
+          pool,
+          amount0,
+          amount1,
+          tick_lower=min_tick,
+          tick_upper=max_tick,
+          deadline=2**64  
+        )
+        assert r.status == 1
+    
     @pytest.mark.skip
     @pytest.mark.parametrize(
         "token, max_eth",

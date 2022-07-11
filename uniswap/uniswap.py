@@ -1,3 +1,4 @@
+from multiprocessing import pool
 import os
 import time
 import logging
@@ -10,6 +11,7 @@ from web3.contract import ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
     TxParams,
+    TxReceipt,
     Wei,
     Address,
     ChecksumAddress,
@@ -27,7 +29,9 @@ from .util import (
     _validate_address,
     _load_contract,
     _load_contract_erc20,
+    encode_sqrt_ratioX96,
     is_same_address,
+    nearest_tick,
 )
 from .decorators import supports, check_approval
 from .constants import (
@@ -35,6 +39,7 @@ from .constants import (
     _factory_contract_addresses_v1,
     _factory_contract_addresses_v2,
     _router_contract_addresses_v2,
+    _tick_spacing,
     ETH_ADDRESS,
 )
 
@@ -427,6 +432,7 @@ class Uniswap:
                 input_token, qty, recipient, fee, slippage, fee_on_transfer
             )
         else:
+            print(input_token)
             return self._token_to_token_swap_input(
                 input_token,
                 output_token,
@@ -1037,6 +1043,7 @@ class Uniswap:
         return float(token_reserve / eth_reserve)
 
     # ------ Liquidity -----------------------------------------------------------------
+    # TODO: add v3
     @supports([1])
     @check_approval
     def add_liquidity(
@@ -1249,29 +1256,111 @@ class Uniswap:
 
     @supports([3])
     def get_pool_instance(
-        self, token_in: AddressLike, token_out: AddressLike, fee: int = 3000
+        self, token_0: AddressLike, token_1: AddressLike, fee: int = 3_000
     ) -> Contract:
         """
         Returns an instance of a pool contract for a given token pair and fee.
-        Requires pair [token_in, token_out] has a direct pool.
+        Requires pair [token_in, token_out, fee] has a direct pool.
 
         """
-        if token_in == ETH_ADDRESS:
-            token_in = self.get_weth_address()
-        if token_out == ETH_ADDRESS:
-            token_out = self.get_weth_address()
 
-        params: Iterable[Union[ChecksumAddress, int]] = [
-            self.w3.toChecksumAddress(token_in),
-            self.w3.toChecksumAddress(token_out),
-            fee,
-        ]
-        pool_address = self.factory_contract.functions.getPool(*params).call()
-        pool_contract = _load_contract(
+        assert token_0 != token_1, "Token addresses cannot be the same"
+        assert fee in list(_tick_spacing.keys()), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
+
+        pool_address = self.factory_contract.functions.getPool(token_0, token_1, fee).call()
+        pool_instance = _load_contract(
             self.w3, abi_name="uniswap-v3/pool", address=pool_address
         )
-        return pool_contract
 
+        return pool_instance
+
+    @supports([3])
+    def create_pool_instance(
+        self, token_0: AddressLike, token_1: AddressLike, fee: int = 3_000
+    ) -> Contract:
+        """
+        Creates and returns UniswapV3 Pool instance. Requires that fee is valid and no similar pool already exists.
+
+        """
+        address = _addr_to_str(self.address)
+        assert token_0 != token_1, "Token addresses cannot be the same"
+        assert fee in list(_tick_spacing.keys()), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
+
+        tx = self.factory_contract.functions.createPool(token_0, token_1, fee).transact({'from':address})
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx)
+        
+        event_logs = self.factory_contract.events.PoolCreated().processReceipt(receipt)
+        pool_address = event_logs[0]['args']['pool']
+        pool_instance = _load_contract(
+            self.w3, abi_name="uniswap-v3/pool", address=pool_address
+        )
+
+        return pool_instance
+    
+    @supports([3])
+    def mint_liquidity(
+        self,
+        pool: Contract,
+        amount_0: int,
+        amount_1: int,
+        tick_lower: int,
+        tick_upper: int,
+        deadline: int = 2**64
+    ) -> TxReceipt:
+        """
+        add liquidity to pool and mint position nft
+        """
+        address = _addr_to_str(self.address)
+        token_0 = pool.functions.token0().call()
+        token_1 = pool.functions.token1().call()
+
+        token_0_instance = _load_contract(
+            self.w3, abi_name="erc20", address=token_0
+        )
+        token_1_instance = _load_contract(
+            self.w3, abi_name="erc20", address=token_1
+        )
+
+        assert token_0_instance.functions.balanceOf(address).call() > amount_0
+        assert token_1_instance.functions.balanceOf(address).call() > amount_1
+
+        fee = pool.functions.fee().call()
+        tick_lower = nearest_tick(tick_lower, fee)
+        tick_upper = nearest_tick(tick_upper, fee)
+        assert tick_lower < tick_upper, "Invalid tick range"
+
+        *_, isInit = pool.functions.slot0().call()
+        # If pool is not initialized, init pool w/ sqrt_price_x96 encoded from amount_0 & amount_1
+        if isInit is False:
+            sqrt_pricex96 = encode_sqrt_ratioX96(amount_0, amount_1)
+            pool.functions.initialize(sqrt_pricex96).transact({'from':address})
+        
+        nft_manager = self.nonFungiblePositionManager
+        token_0_instance.functions.approve(nft_manager.address, amount_0).transact({'from':address})
+        token_1_instance.functions.approve(nft_manager.address, amount_1).transact({'from':address})
+
+        # TODO: add slippage param
+        tx_hash = nft_manager.functions.mint(
+            (
+                token_0,
+                token_1,
+                fee, 
+                tick_lower,
+                tick_upper,
+                amount_0,
+                amount_1,
+                0,
+                0,
+                self.address,
+                deadline
+            )
+        ).transact({'from':address})
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+
+        return receipt
+
+
+    
     @supports([3])
     def get_pool_immutables(
         self, pool: Contract
@@ -1311,67 +1400,6 @@ class Uniswap:
         }
 
         return pool_state
-
-    # FIXME: mint call reverting - likely due to handling of token amounts
-
-    @supports([3])
-    def mint_position(
-        self, pool: Contract, amount0: int, amount1: int
-    ) -> None:
-
-        #TODO: add to constants.py
-        MIN_TICK = -887272
-        MAX_TICK = -MIN_TICK
-
-        pool_sate = self.get_pool_state(pool)
-        pool_immutables = self.get_pool_immutables(pool)
-
-        token0 = pool_immutables['token0']
-        token1 = pool_immutables['token1']
-        fee = pool_immutables['fee']
-
-        positionManager = self.nonFungiblePositionManager
-
-        approve0 = _load_contract_erc20(self.w3, token0).functions.approve(
-            self.positionManager_addr, amount0
-        )
-        logger.warning(f"Approving {_addr_to_str(token0)}...")
-        tx0 = self._build_and_send_tx(approve0)
-        self.w3.eth.wait_for_transaction_receipt(tx0, timeout=6000)
-
-        approve1 = _load_contract_erc20(self.w3, token1).functions.approve(
-            self.positionManager_addr, amount1*1000
-        )
-        logger.warning(f"Approving {_addr_to_str(token1)}...")
-        tx1 = self._build_and_send_tx(approve1)
-        self.w3.eth.wait_for_transaction_receipt(tx1, timeout=6000)
-        
-        # tx_mint = pool.functions.mint(self.address, MIN_TICK, MAX_TICK, amount0,'').transact();
-
-        position = positionManager.encodeABI(fn_name="mint", args=[{'token0':token0,'token1':token1,'fee':fee,'tickLower':MIN_TICK,'tickUpper':MAX_TICK,
-        'amount0Desired':amount0,'amount1Desired':amount1,'amount0Min':0,'amount1Min':0,'recipient':_addr_to_str(self.address),'deadline':self._deadline()
-        }])
-        print(position)
-
-        multicall = positionManager.functions.multicall([position]).transact({"from":_addr_to_str(self.address), "gas":417918})
-
-        print(multicall)
-        # mint_position = positionManager.functions.mint({'token0':token0,'token1':token1,'fee':fee,'tickLower':MIN_TICK,'tickUpper':MAX_TICK,
-        # 'amount0Desired':amount0,'amount1Desired':amount1,'amount0Min':0,'amount1Min':0,'recipient':_addr_to_str(self.address),'deadline':self._deadline()
-        # })
-
-        # mint_tx = self._build_and_send_tx(mint_position)
-        # self.w3.eth.wait_for_transaction_receipt(mint_tx, timeout=6000)
-        #
-        # tx2 = self._build_and_send_tx(multicall,)
-        # self.w3.eth.wait_for_transaction_receipt(tx2, timeout=6000)
-
-
-        # position = positionManager.functions.mint().buildTransaction()
-        # print(position['data'])
-
-
-        return multicall
 
     @supports([2, 3])
     def get_raw_price(
