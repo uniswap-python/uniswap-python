@@ -1261,6 +1261,7 @@ class Uniswap:
         """
         Returns an instance of a pool contract for a given token pair and fee.
         Requires pair [token_in, token_out, fee] has a direct pool.
+        Will return 0x0 address if pool does not exist.
 
         """
 
@@ -1268,6 +1269,7 @@ class Uniswap:
         assert fee in list(_tick_spacing.keys()), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
 
         pool_address = self.factory_contract.functions.getPool(token_0, token_1, fee).call()
+        assert pool_address != ETH_ADDRESS, "0 address returned. Pool does not exist"
         pool_instance = _load_contract(
             self.w3, abi_name="uniswap-v3/pool", address=pool_address
         )
