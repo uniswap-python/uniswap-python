@@ -266,7 +266,6 @@ class TestUniswap(object):
         position_array = client.get_liquidity_positions()
         assert len(position_array) > 0
 
-
     @pytest.mark.parametrize(
         "deadline",
         [(2**64)],
@@ -279,7 +278,6 @@ class TestUniswap(object):
         r = client.close_position(tokenId, deadline=deadline)
         assert r.status == 1
         
-    
     @pytest.mark.skip
     @pytest.mark.parametrize(
         "token, max_eth",

@@ -1132,12 +1132,23 @@ class Uniswap:
     
     # TODO: should this be multiple functions?
     @supports([3])
-    def close_position(self, tokenId: int, amount0Min: int = 0, amount1Min: int = 0, deadline: int = None) -> TxReceipt:
+    def close_position(
+        self, 
+        tokenId: int, 
+        amount0Min: int = 0, 
+        amount1Min: int = 0, 
+        deadline: int = None
+        ) -> TxReceipt:
+        """
+        remove all liquidity from the position associated w/ tokenId, collect fees, and burn token.
+        """
         position = self.nonFungiblePositionManager.functions.positions(tokenId).call()
         
         if deadline is None:
             deadline = self._deadline()
 
+        # If collecting fees in ETH, fees must be precomputed to protect against reentrancy
+        # source: https://docs.uniswap.org/sdk/guides/liquidity/removing
         if position[2] == WETH9_ADDRESS or position[3] == WETH9_ADDRESS:
             amount0Min, amount1Min = self.nonFungiblePositionManager.functions.collect((
                 tokenId,_addr_to_str(self.address),MAX_UINT_128,MAX_UINT_128
@@ -1157,7 +1168,6 @@ class Uniswap:
         receipt = self.w3.eth.wait_for_transaction_receipt(tx_burn)
 
         return receipt
-
 
     # ------ Approval Utils ------------------------------------------------------------
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
