@@ -1,3 +1,4 @@
+from async_timeout import timeout
 import pytest
 import os
 import subprocess
@@ -258,6 +259,26 @@ class TestUniswap(object):
           deadline=2**64  
         )
         assert r.status == 1
+
+        position_balance = client.nonFungiblePositionManager.functions.balanceOf(_addr_to_str(client.address)).call()
+        assert position_balance > 0
+
+        position_array = client.get_liquidity_positions()
+        assert len(position_array) > 0
+
+
+    @pytest.mark.parametrize(
+        "deadline",
+        [(2**64)],
+    )
+    def test_close_position(self, client: Uniswap, deadline):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        position_array = client.get_liquidity_positions()
+        tokenId = position_array[0]
+        r = client.close_position(tokenId, deadline=deadline)
+        assert r.status == 1
+        
     
     @pytest.mark.skip
     @pytest.mark.parametrize(
