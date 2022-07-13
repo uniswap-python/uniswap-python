@@ -57,6 +57,8 @@ _router_contract_addresses_v2 = {
     "harmony_testnet": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
 }
 
+MAX_UINT_128 = (2**128)-1
+
 # Source: https://github.com/Uniswap/v3-core/blob/v1.0.0/contracts/libraries/TickMath.sol#L8-L11
 MIN_TICK = -887272
 MAX_TICK = -MIN_TICK

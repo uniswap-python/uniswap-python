@@ -35,6 +35,8 @@ from .util import (
 )
 from .decorators import supports, check_approval
 from .constants import (
+    MAX_UINT_128,
+    WETH9_ADDRESS,
     _netid_to_name,
     _factory_contract_addresses_v1,
     _factory_contract_addresses_v2,
@@ -1043,7 +1045,6 @@ class Uniswap:
         return float(token_reserve / eth_reserve)
 
     # ------ Liquidity -----------------------------------------------------------------
-    # TODO: add v3
     @supports([1])
     @check_approval
     def add_liquidity(
@@ -1067,6 +1068,96 @@ class Uniswap:
             *func_params
         )
         return self._build_and_send_tx(function)
+
+    @supports([3])
+    def mint_liquidity(
+        self,
+        pool: Contract,
+        amount_0: int,
+        amount_1: int,
+        tick_lower: int,
+        tick_upper: int,
+        deadline: int = 2**64
+    ) -> TxReceipt:
+        """
+        add liquidity to pool and mint position nft
+        """
+        address = _addr_to_str(self.address)
+        token_0 = pool.functions.token0().call()
+        token_1 = pool.functions.token1().call()
+
+        token_0_instance = _load_contract(
+            self.w3, abi_name="erc20", address=token_0
+        )
+        token_1_instance = _load_contract(
+            self.w3, abi_name="erc20", address=token_1
+        )
+
+        assert token_0_instance.functions.balanceOf(address).call() > amount_0
+        assert token_1_instance.functions.balanceOf(address).call() > amount_1
+
+        fee = pool.functions.fee().call()
+        tick_lower = nearest_tick(tick_lower, fee)
+        tick_upper = nearest_tick(tick_upper, fee)
+        assert tick_lower < tick_upper, "Invalid tick range"
+
+        *_, isInit = pool.functions.slot0().call()
+        # If pool is not initialized, init pool w/ sqrt_price_x96 encoded from amount_0 & amount_1
+        if isInit is False:
+            sqrt_pricex96 = encode_sqrt_ratioX96(amount_0, amount_1)
+            pool.functions.initialize(sqrt_pricex96).transact({'from':address})
+        
+        nft_manager = self.nonFungiblePositionManager
+        token_0_instance.functions.approve(nft_manager.address, amount_0).transact({'from':address})
+        token_1_instance.functions.approve(nft_manager.address, amount_1).transact({'from':address})
+
+        # TODO: add slippage param
+        tx_hash = nft_manager.functions.mint(
+            (
+                token_0,
+                token_1,
+                fee, 
+                tick_lower,
+                tick_upper,
+                amount_0,
+                amount_1,
+                0,
+                0,
+                self.address,
+                deadline
+            )
+        ).transact({'from':address})
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+        return receipt
+    
+    # TODO: should this be multiple functions?
+    @supports([3])
+    def close_position(self, tokenId: int, amount0Min: int = 0, amount1Min: int = 0, deadline: int = None) -> TxReceipt:
+        position = self.nonFungiblePositionManager.functions.positions(tokenId).call()
+        
+        if deadline is None:
+            deadline = self._deadline()
+
+        if position[2] == WETH9_ADDRESS or position[3] == WETH9_ADDRESS:
+            amount0Min, amount1Min = self.nonFungiblePositionManager.functions.collect((
+                tokenId,_addr_to_str(self.address),MAX_UINT_128,MAX_UINT_128
+            )).call()
+        
+        tx_remove_liquidity = self.nonFungiblePositionManager.functions.decreaseLiquidity((
+            tokenId, position[7], amount0Min, amount1Min, deadline
+        )).transact({"from":_addr_to_str(self.address)})
+        self.w3.eth.wait_for_transaction_receipt(tx_remove_liquidity)
+        
+        tx_collect_fees = self.nonFungiblePositionManager.functions.collect((
+                tokenId,_addr_to_str(self.address),MAX_UINT_128,MAX_UINT_128
+            )).transact({"from":_addr_to_str(self.address)})
+        self.w3.eth.wait_for_transaction_receipt(tx_collect_fees)
+
+        tx_burn = self.nonFungiblePositionManager.functions.burn(tokenId).transact({"from":_addr_to_str(self.address)})
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx_burn)
+
+        return receipt
+
 
     # ------ Approval Utils ------------------------------------------------------------
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
@@ -1300,70 +1391,6 @@ class Uniswap:
         return pool_instance
     
     @supports([3])
-    def mint_liquidity(
-        self,
-        pool: Contract,
-        amount_0: int,
-        amount_1: int,
-        tick_lower: int,
-        tick_upper: int,
-        deadline: int = 2**64
-    ) -> TxReceipt:
-        """
-        add liquidity to pool and mint position nft
-        """
-        address = _addr_to_str(self.address)
-        token_0 = pool.functions.token0().call()
-        token_1 = pool.functions.token1().call()
-
-        token_0_instance = _load_contract(
-            self.w3, abi_name="erc20", address=token_0
-        )
-        token_1_instance = _load_contract(
-            self.w3, abi_name="erc20", address=token_1
-        )
-
-        assert token_0_instance.functions.balanceOf(address).call() > amount_0
-        assert token_1_instance.functions.balanceOf(address).call() > amount_1
-
-        fee = pool.functions.fee().call()
-        tick_lower = nearest_tick(tick_lower, fee)
-        tick_upper = nearest_tick(tick_upper, fee)
-        assert tick_lower < tick_upper, "Invalid tick range"
-
-        *_, isInit = pool.functions.slot0().call()
-        # If pool is not initialized, init pool w/ sqrt_price_x96 encoded from amount_0 & amount_1
-        if isInit is False:
-            sqrt_pricex96 = encode_sqrt_ratioX96(amount_0, amount_1)
-            pool.functions.initialize(sqrt_pricex96).transact({'from':address})
-        
-        nft_manager = self.nonFungiblePositionManager
-        token_0_instance.functions.approve(nft_manager.address, amount_0).transact({'from':address})
-        token_1_instance.functions.approve(nft_manager.address, amount_1).transact({'from':address})
-
-        # TODO: add slippage param
-        tx_hash = nft_manager.functions.mint(
-            (
-                token_0,
-                token_1,
-                fee, 
-                tick_lower,
-                tick_upper,
-                amount_0,
-                amount_1,
-                0,
-                0,
-                self.address,
-                deadline
-            )
-        ).transact({'from':address})
-        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
-
-        return receipt
-
-
-    
-    @supports([3])
     def get_pool_immutables(
         self, pool: Contract
     ) -> Dict:
@@ -1402,6 +1429,20 @@ class Uniswap:
         }
 
         return pool_state
+    
+    @supports([3])
+    def get_liquidity_positions(self) -> List[int]:
+        """
+        Enumerates liquidity position tokens owned by address.
+        Returns array of token IDs.
+        """
+        positions: List[int] = []
+        number_of_positions = self.nonFungiblePositionManager.functions.balanceOf(_addr_to_str(self.address)).call()
+        if number_of_positions > 0:
+            for idx in range(number_of_positions):
+                position = self.nonFungiblePositionManager.functions.tokenOfOwnerByIndex(_addr_to_str(self.address), idx).call()
+                positions.append(position)
+        return positions
 
     @supports([2, 3])
     def get_raw_price(
