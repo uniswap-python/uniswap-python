@@ -1110,11 +1110,11 @@ class Uniswap:
         """Build and send a transaction."""
         if not tx_params:
             tx_params = self._get_tx_params()
-        transaction = function.buildTransaction(tx_params)
+        transaction = function.build_transaction(tx_params)
 
         if "gas" not in tx_params:
             # `use_estimate_gas` needs to be True for networks like Arbitrum (can't assume 250000 gas),
-            # but it breaks tests for unknown reasons because estimateGas takes forever on some tx's.
+            # but it breaks tests for unknown reasons because estimate_gas takes forever on some tx's.
             # Maybe an issue with ganache? (got GC warnings once...)
             if self.use_estimate_gas:
                 # The Uniswap V3 UI uses 20% margin for transactions
