@@ -37,6 +37,31 @@ tokens_arbitrum: Dict[str, ChecksumAddress] = {
     }.items()
 }
 
+tokens_xdai: Dict[str, ChecksumAddress] = {
+    k: Web3.toChecksumAddress(v)
+    for k, v in {
+        "XDAI": "0x0000000000000000000000000000000000000000",
+        "WXDAI": "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
+        "ETH": "0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1",  # WETH
+        "WETH": "0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1",
+        "DAI": "0x44fa8e6f47987339850636f88629646662444217",  # bridged DAI
+        "USDC": "0xddafbb505ad214d7b80b1f830fccc89b60fb7a83",
+        "UNI": "0x4537e328bf7e4efa29d05caea260d7fe26af9d74",
+    }.items()
+}
+
+tokens_polygon: Dict[str, ChecksumAddress] = {
+    k: Web3.toChecksumAddress(v)
+    for k, v in {
+        "MATIC": "0x0000000000000000000000000000000000001010",
+        "ETH": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",  # WETH
+        "WETH": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+        "UNI": "0xb33eaad8d922b1083446dc23f610c2567fb5180f",
+        "DAI": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "USDC": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+    }.items()
+}
+
 
 def get_tokens(netname: str) -> Dict[str, ChecksumAddress]:
     """
@@ -49,5 +74,9 @@ def get_tokens(netname: str) -> Dict[str, ChecksumAddress]:
         return tokens_rinkeby
     elif netname == "arbitrum":
         return tokens_arbitrum
+    elif netname == "xdai":
+        return tokens_xdai
+    elif netname == "polygon":
+        return tokens_polygon
     else:
-        raise Exception(f"Unknown net '{netname}'")
+        raise Exception(f"Unknown net '{netname}' for tokendb")
