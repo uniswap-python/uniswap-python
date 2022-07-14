@@ -86,6 +86,10 @@ class Uniswap:
         )
 
         self.version = version
+        if self.version not in [1, 2, 3]:
+            raise Exception(
+                f"Invalid version '{self.version}', only 1, 2 or 3 supported"
+            )  # pragma: no cover
 
         # TODO: Write tests for slippage
         self.default_slippage = default_slippage
@@ -104,7 +108,7 @@ class Uniswap:
         if self.netid in _netid_to_name:
             self.netname = _netid_to_name[self.netid]
         else:
-            raise Exception(f"Unknown netid: {self.netid}")
+            raise Exception(f"Unknown netid: {self.netid}")  # pragma: no cover
         logger.info(f"Using {self.w3} ('{self.netname}', netid: {self.netid})")
 
         self.last_nonce: Nonce = self.w3.eth.get_transaction_count(self.address)
@@ -163,10 +167,6 @@ class Uniswap:
             )
             self.router = _load_contract(
                 self.w3, abi_name="uniswap-v3/router", address=self.router_address
-            )
-        else:
-            raise Exception(
-                f"Invalid version '{self.version}', only 1, 2 or 3 supported"
             )
 
         if hasattr(self, "factory_contract"):
@@ -234,6 +234,8 @@ class Uniswap:
             price = self._get_token_token_input_price(
                 self.get_weth_address(), token, qty, fee=fee
             )  # type: ignore
+        else:
+            raise ValueError  # pragma: no cover
         return price
 
     def _get_token_eth_input_price(
@@ -254,6 +256,8 @@ class Uniswap:
             price = self._get_token_token_input_price(
                 token, self.get_weth_address(), qty, fee=fee
             )
+        else:
+            raise ValueError  # pragma: no cover
         return price
 
     def _get_token_token_input_price(
@@ -320,6 +324,8 @@ class Uniswap:
                     self.get_weth_address(), token, qty, fee=fee
                 )
             )
+        else:
+            raise ValueError  # pragma: no cover
         return price
 
     def _get_token_eth_output_price(
@@ -339,8 +345,11 @@ class Uniswap:
             price = self._get_token_token_output_price(
                 token, self.get_weth_address(), qty, fee=fee
             )
+        else:
+            raise ValueError  # pragma: no cover
         return price
 
+    @supports([2, 3])
     def _get_token_token_output_price(
         self,
         token0: AddressLike,  # input token
@@ -385,7 +394,7 @@ class Uniswap:
                 token0, token1, fee, qty, sqrtPriceLimitX96
             ).call()
         else:
-            raise ValueError("function not supported for this version of Uniswap")
+            raise ValueError  # pragma: no cover
         return price
 
     # ------ Make Trade ----------------------------------------------------------------
@@ -548,7 +557,7 @@ class Uniswap:
                 self._get_tx_params(value=qty),
             )
         else:
-            raise ValueError
+            raise ValueError  # pragma: no cover
 
     def _token_to_eth_swap_input(
         self,
@@ -637,9 +646,8 @@ class Uniswap:
                 self.router.functions.multicall([swap_data, unwrap_data]),
                 self._get_tx_params(),
             )
-
         else:
-            raise ValueError
+            raise ValueError  # pragma: no cover
 
     def _token_to_token_swap_input(
         self,
@@ -734,7 +742,7 @@ class Uniswap:
                 self._get_tx_params(),
             )
         else:
-            raise ValueError
+            raise ValueError  # pragma: no cover
 
     def _eth_to_token_swap_output(
         self,
