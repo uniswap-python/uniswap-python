@@ -1,5 +1,6 @@
 import functools
-from typing import Callable, Any, List, Dict, TYPE_CHECKING
+from typing import Callable, Any, List, TYPE_CHECKING, TypeVar
+from typing_extensions import ParamSpec, Concatenate
 
 from .constants import ETH_ADDRESS
 
@@ -7,7 +8,13 @@ if TYPE_CHECKING:
     from .uniswap import Uniswap
 
 
-def check_approval(method: Callable) -> Callable:
+T = TypeVar("T")
+P = ParamSpec("P")
+
+
+def check_approval(
+    method: Callable[Concatenate[Uniswap, P], T]
+) -> Callable[Concatenate[Uniswap, P], T]:
     """Decorator to check if user is approved for a token. It approves them if they
     need to be approved."""
 
@@ -32,8 +39,14 @@ def check_approval(method: Callable) -> Callable:
     return approved
 
 
-def supports(versions: List[int]) -> Callable:
-    def g(f: Callable) -> Callable:
+def supports(
+    versions: List[int],
+) -> Callable[
+    [Callable[Concatenate[Uniswap, P], T]], Callable[Concatenate[Uniswap, P], T]
+]:
+    def g(
+        f: Callable[Concatenate[Uniswap, P], T]
+    ) -> Callable[Concatenate[Uniswap, P], T]:
         if f.__doc__ is None:
             f.__doc__ = ""
         f.__doc__ += """\n\n
@@ -43,7 +56,7 @@ def supports(versions: List[int]) -> Callable:
         )
 
         @functools.wraps(f)
-        def check_version(self: "Uniswap", *args: List, **kwargs: Dict) -> Any:
+        def check_version(self: "Uniswap", *args: P.args, **kwargs: P.kwargs) -> T:
             if self.version not in versions:
                 raise Exception(
                     f"Function {f.__name__} does not support version {self.version} of Uniswap passed to constructor"
