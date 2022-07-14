@@ -1254,9 +1254,11 @@ class Uniswap:
     def get_raw_price(
         self, token_in: AddressLike, token_out: AddressLike, fee: int = 3000
     ) -> float:
-        """Returns current price for pair of tokens [token_in, token_out] regrading liquidity that is being locked in the pool"""
-        """Parameter `fee` is required for V3 only, can be omitted for V2"""
-        """Requires pair [token_in, token_out] having direct pool"""
+        """
+        Returns current price for pair of tokens [token_in, token_out] regrading liquidity that is being locked in the pool
+        Parameter `fee` is required for V3 only, can be omitted for V2
+        Requires pair [token_in, token_out] having direct pool
+        """
         if token_in == ETH_ADDRESS:
             token_in = self.get_weth_address()
         if token_out == ETH_ADDRESS:

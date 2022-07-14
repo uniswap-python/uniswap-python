@@ -185,18 +185,12 @@ class TestUniswap(object):
         r = client.get_price_output(token0, token1, qty, **kwargs)
         assert r
 
-    @pytest.mark.parametrize("token0,token1", [("UNI", "DAI")])
-    def test_get_raw_price(
-        self,
-        client: Uniswap,
-        tokens,
-        token0,
-        token1,
-    ):
+    @pytest.mark.parametrize("token0, token1, fee", [("DAI", "USDC", 500)])
+    def test_get_raw_price(self, client: Uniswap, tokens, token0, token1, fee):
         token0, token1 = tokens[token0], tokens[token1]
         if client.version == 1:
             pytest.skip("Only supported on Uniswap v2 and v3")
-        r = client.get_raw_price(token0, token1)
+        r = client.get_raw_price(token0, token1, fee=fee)
         assert r
 
     # ------ ERC20 Pool ----------------------------------------------------------------
