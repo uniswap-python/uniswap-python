@@ -1,7 +1,8 @@
 import functools
-from typing import Callable, Any, List, TYPE_CHECKING, TypeVar
+from typing import Callable, List, TYPE_CHECKING, TypeVar, Optional
 from typing_extensions import ParamSpec, Concatenate
 
+from .types import AddressLike
 from .constants import ETH_ADDRESS
 
 if TYPE_CHECKING:
@@ -13,15 +14,15 @@ P = ParamSpec("P")
 
 
 def check_approval(
-    method: Callable[Concatenate[Uniswap, P], T]
-) -> Callable[Concatenate[Uniswap, P], T]:
+    method: Callable[Concatenate["Uniswap", P], T]
+) -> Callable[Concatenate["Uniswap", P], T]:
     """Decorator to check if user is approved for a token. It approves them if they
     need to be approved."""
 
     @functools.wraps(method)
-    def approved(self: Any, *args: Any, **kwargs: Any) -> Any:
+    def approved(self: "Uniswap", *args: P.args, **kwargs: P.kwargs) -> T:
         # Check to see if the first token is actually ETH
-        token = args[0] if args[0] != ETH_ADDRESS else None
+        token: Optional[AddressLike] = args[0] if args[0] != ETH_ADDRESS else None  # type: ignore
         token_two = None
 
         # Check second token, if needed
@@ -42,11 +43,11 @@ def check_approval(
 def supports(
     versions: List[int],
 ) -> Callable[
-    [Callable[Concatenate[Uniswap, P], T]], Callable[Concatenate[Uniswap, P], T]
+    [Callable[Concatenate["Uniswap", P], T]], Callable[Concatenate["Uniswap", P], T]
 ]:
     def g(
-        f: Callable[Concatenate[Uniswap, P], T]
-    ) -> Callable[Concatenate[Uniswap, P], T]:
+        f: Callable[Concatenate["Uniswap", P], T]
+    ) -> Callable[Concatenate["Uniswap", P], T]:
         if f.__doc__ is None:
             f.__doc__ = ""
         f.__doc__ += """\n\n

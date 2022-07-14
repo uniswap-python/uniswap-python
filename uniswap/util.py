@@ -5,8 +5,9 @@ from typing import Union, List, Tuple
 
 from web3 import Web3
 from web3.exceptions import NameNotFound
+from web3.contract import Contract
 
-from .types import AddressLike, Address, Contract
+from .types import AddressLike, Address
 
 
 def _str_to_addr(s: Union[AddressLike, str]) -> Address:
