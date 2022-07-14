@@ -2,24 +2,22 @@ import os
 import time
 import logging
 import functools
-from typing import List, Any, Optional, Union, Tuple, Dict, Iterable
+from typing import List, Any, Optional, Union, Tuple, Iterable
 
 from web3 import Web3
-from web3.eth import Contract
-from web3.contract import ContractFunction
+from web3.contract import Contract, ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
     TxParams,
     Wei,
-    Address,
-    ChecksumAddress,
     Nonce,
-    HexBytes,
 )
+from eth_typing.evm import Address, ChecksumAddress
+from hexbytes import HexBytes
 
 from .types import AddressLike
 from .token import ERC20Token
-from .tokens import tokens, tokens_rinkeby
+from .tokens import get_tokens
 from .exceptions import InvalidToken, InsufficientBalance
 from .util import (
     _str_to_addr,
@@ -1256,7 +1254,7 @@ class Uniswap:
             token_out = self.get_weth_address()
 
         if self.version == 2:
-            params: Iterable[Union[ChecksumAddress,Optional[int]]] = [
+            params: Iterable[Union[ChecksumAddress, Optional[int]]] = [
                 self.w3.toChecksumAddress(token_in),
                 self.w3.toChecksumAddress(token_out),
             ]
@@ -1363,20 +1361,6 @@ class Uniswap:
     def get_fee_taker(self) -> float:
         """Get the taker fee."""
         return 0.003
-
-    # ------ Test utilities ------------------------------------------------------------
-
-    def _get_token_addresses(self) -> Dict[str, ChecksumAddress]:
-        """
-        Returns a dict with addresses for tokens for the current net.
-        Used in testing.
-        """
-        if self.netname == "mainnet":
-            return tokens
-        elif self.netname == "rinkeby":
-            return tokens_rinkeby
-        else:
-            raise Exception(f"Unknown net '{self.netname}'")
 
     # ---- Old v1 utils ----
 
