@@ -169,11 +169,10 @@ class TestUniswap(object):
         "token0, token1, qty, kwargs",
         [
             ("ETH", "UNI", ONE_ETH, {}),
-            ("UNI", "ETH", ONE_ETH, {}),
+            ("UNI", "ETH", ONE_ETH // 100, {}),
             ("ETH", "DAI", ONE_ETH, {}),
             ("DAI", "ETH", ONE_ETH, {}),
             ("ETH", "UNI", 2 * ONE_ETH, {}),
-            ("UNI", "ETH", 2 * ONE_ETH, {}),
             ("WETH", "DAI", ONE_ETH, {}),
             ("DAI", "WETH", ONE_ETH, {}),
             ("DAI", "USDC", ONE_USDC, {"fee": 500}),

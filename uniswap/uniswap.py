@@ -1210,6 +1210,15 @@ class Uniswap:
         """
         # FIXME: This function should always return the same output for the same input
         #        and would therefore benefit from caching
+        if address == "0x0000000000000000000000000000000000000000":
+            # This isn't exactly right, but for all intents and purposes,
+            # ETH is treated as a ERC20 by Uniswap.
+            return ERC20Token(
+                address=address,
+                name="ETH",
+                symbol="ETH",
+                decimals=18,
+            )
         token_contract = _load_contract(self.w3, abi_name, address=address)
         try:
             _name = token_contract.functions.name().call()
@@ -1222,11 +1231,11 @@ class Uniswap:
             raise InvalidToken(address)
         try:
             name = _name.decode()
-        except:
+        except Exception:
             name = _name
         try:
             symbol = _symbol.decode()
-        except:
+        except Exception:
             symbol = _symbol
         return ERC20Token(symbol, address, name, decimals)
 
