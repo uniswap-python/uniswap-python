@@ -27,6 +27,7 @@ python = "^3.7.2"
 web3 = "^5.23.0"
 click = "^8.0.3"
 python-dotenv = "*"
+typing-extensions = "^4.3.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "*"
