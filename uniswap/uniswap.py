@@ -316,7 +316,7 @@ class Uniswap:
             route = [self.get_weth_address(), token]
             price = self.router.functions.getAmountsIn(qty, route).call()[0]
         elif self.version == 3:
-            if not fee:
+            if fee is None:
                 logger.warning("No fee set, assuming 0.3%")
                 fee = 3000
             price = Wei(
@@ -1256,17 +1256,24 @@ class Uniswap:
             address: ChecksumAddress = self.router.functions.WETH().call()
         elif self.version == 3:
             address = self.router.functions.WETH9().call()
+        else:
+            raise ValueError  # pragma: no cover
         return address
 
     @supports([2, 3])
     def get_raw_price(
-        self, token_in: AddressLike, token_out: AddressLike, fee: int = 3000
+        self, token_in: AddressLike, token_out: AddressLike, fee: int = None
     ) -> float:
         """
         Returns current price for pair of tokens [token_in, token_out] regrading liquidity that is being locked in the pool
         Parameter `fee` is required for V3 only, can be omitted for V2
         Requires pair [token_in, token_out] having direct pool
         """
+        if not fee:
+            fee = 3000
+            if self.version == 3:
+                logger.warning("No fee set, assuming 0.3%")
+
         if token_in == ETH_ADDRESS:
             token_in = self.get_weth_address()
         if token_out == ETH_ADDRESS:
