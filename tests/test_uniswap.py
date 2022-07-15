@@ -8,7 +8,6 @@ from typing import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from time import sleep
-from requests import get
 
 from web3 import Web3
 from web3.exceptions import NameNotFound
@@ -249,7 +248,7 @@ class TestUniswap(object):
             pool = client.get_pool_instance(token0, token1, fee)
 
         # Ensuring client has sufficient balance of both tokens
-        eth_to_dai = client.make_trade(ETH_ADDRESS, token0, qty, None)
+        eth_to_dai = client.make_trade(get_tokens('mainnet')['ETH'], token0, qty, None)
         eth_to_dai_tx = client.w3.eth.wait_for_transaction_receipt(eth_to_dai, timeout=RECEIPT_TIMEOUT)
 
         dai_to_usdc = client.make_trade(token0, token1, amount1, None)
@@ -264,7 +263,7 @@ class TestUniswap(object):
           tick_upper=max_tick,
           deadline=2**64  
         )
-        assert r.status == 1
+        assert r["status"]
 
         position_balance = client.nonFungiblePositionManager.functions.balanceOf(_addr_to_str(client.address)).call()
         assert position_balance > 0
@@ -282,7 +281,7 @@ class TestUniswap(object):
         position_array = client.get_liquidity_positions()
         tokenId = position_array[0]
         r = client.close_position(tokenId, deadline=deadline)
-        assert r.status == 1
+        assert r["status"]
         
     @pytest.mark.skip
     @pytest.mark.parametrize(

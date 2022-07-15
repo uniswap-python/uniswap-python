@@ -17,7 +17,7 @@ from web3.types import (
 from eth_typing.evm import Address, ChecksumAddress
 from hexbytes import HexBytes
 
-from .types import AddressLike, Contract
+from .types import AddressLike
 from .token import ERC20Token
 from .tokens import get_tokens
 from .exceptions import InvalidToken, InsufficientBalance
@@ -1181,11 +1181,11 @@ class Uniswap:
 
         return receipt
 
-    def get_token0_in_pool(liquidity: float, sqrtPrice: float, sqrtPriceLow: float, sqrtPriceHigh: float) ->  float:
+    def get_token0_in_pool(self, liquidity: float, sqrtPrice: float, sqrtPriceLow: float, sqrtPriceHigh: float) ->  float:
         sqrtPrice = max(min(sqrtPrice, sqrtPriceHigh), sqrtPriceLow)
         return liquidity * (sqrtPriceHigh - sqrtPrice) / (sqrtPrice * sqrtPriceHigh)
     
-    def get_token1_in_pool(liquidity: float, sqrtPrice: float, sqrtPriceLow: float, sqrtPriceHigh: float) -> float:
+    def get_token1_in_pool(self, liquidity: float, sqrtPrice: float, sqrtPriceLow: float, sqrtPriceHigh: float) -> float:
         sqrtPrice = max(min(sqrtPrice, sqrtPriceHigh), sqrtPriceLow)
         return liquidity * (sqrtPrice - sqrtPriceLow)
     
@@ -1195,9 +1195,9 @@ class Uniswap:
         fee = pool_immutables['fee']
         sqrtPrice = pool_state['sqrtPricex96'] / (1 << 96)
 
-        token0_liquidity = 0
-        token1_liquidity = 0
-        liquidity_total = 0
+        token0_liquidity = 0.0
+        token1_liquidity = 0.0
+        liquidity_total = 0.0
         TICK_SPACING = _tick_spacing[fee]
         for tick in range(MIN_TICK, MAX_TICK, TICK_SPACING):
             tick_liquidity = pool.functions.ticks(tick).call()
