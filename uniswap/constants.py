@@ -70,4 +70,7 @@ _tick_spacing = {
     10_000: 200
 }
 
-UNISWAP_GRAPH_URL = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3"
+UNISWAP_GRAPH_URL = {
+    "mainnet":"https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3",
+    "arbitrum":"https://api.thegraph.com/subgraphs/name/0xadsyst/uniswap-positions-arbitrum"
+    }
