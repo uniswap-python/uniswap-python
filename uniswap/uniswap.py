@@ -3,25 +3,23 @@ import os
 import time
 import logging
 import functools
-from typing import List, Any, Optional, Union, Tuple, Dict, Iterable
+from typing import List, Any, Optional, Union, Tuple, Iterable, Dict
 
 from web3 import Web3
-from web3.eth import Contract
-from web3.contract import ContractFunction
+from web3.contract import Contract, ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
     TxParams,
     TxReceipt,
     Wei,
-    Address,
-    ChecksumAddress,
     Nonce,
-    HexBytes,
 )
+from eth_typing.evm import Address, ChecksumAddress
+from hexbytes import HexBytes
 
 from .types import AddressLike, Contract
 from .token import ERC20Token
-from .tokens import tokens, tokens_rinkeby
+from .tokens import get_tokens
 from .exceptions import InvalidToken, InsufficientBalance
 from .util import (
     _str_to_addr,
@@ -97,6 +95,10 @@ class Uniswap:
         )
 
         self.version = version
+        if self.version not in [1, 2, 3]:
+            raise Exception(
+                f"Invalid version '{self.version}', only 1, 2 or 3 supported"
+            )  # pragma: no cover
 
         # TODO: Write tests for slippage
         self.default_slippage = default_slippage
@@ -115,7 +117,7 @@ class Uniswap:
         if self.netid in _netid_to_name:
             self.netname = _netid_to_name[self.netid]
         else:
-            raise Exception(f"Unknown netid: {self.netid}")
+            raise Exception(f"Unknown netid: {self.netid}")  # pragma: no cover
         logger.info(f"Using {self.w3} ('{self.netname}', netid: {self.netid})")
 
         self.last_nonce: Nonce = self.w3.eth.get_transaction_count(self.address)
@@ -249,6 +251,8 @@ class Uniswap:
             price = self._get_token_token_input_price(
                 self.get_weth_address(), token, qty, fee=fee
             )  # type: ignore
+        else:
+            raise ValueError  # pragma: no cover
         return price
 
     def _get_token_eth_input_price(
@@ -269,6 +273,8 @@ class Uniswap:
             price = self._get_token_token_input_price(
                 token, self.get_weth_address(), qty, fee=fee
             )
+        else:
+            raise ValueError  # pragma: no cover
         return price
 
     def _get_token_token_input_price(
@@ -327,7 +333,7 @@ class Uniswap:
             route = [self.get_weth_address(), token]
             price = self.router.functions.getAmountsIn(qty, route).call()[0]
         elif self.version == 3:
-            if not fee:
+            if fee is None:
                 logger.warning("No fee set, assuming 0.3%")
                 fee = 3000
             price = Wei(
@@ -335,6 +341,8 @@ class Uniswap:
                     self.get_weth_address(), token, qty, fee=fee
                 )
             )
+        else:
+            raise ValueError  # pragma: no cover
         return price
 
     def _get_token_eth_output_price(
@@ -354,8 +362,11 @@ class Uniswap:
             price = self._get_token_token_output_price(
                 token, self.get_weth_address(), qty, fee=fee
             )
+        else:
+            raise ValueError  # pragma: no cover
         return price
 
+    @supports([2, 3])
     def _get_token_token_output_price(
         self,
         token0: AddressLike,  # input token
@@ -400,7 +411,7 @@ class Uniswap:
                 token0, token1, fee, qty, sqrtPriceLimitX96
             ).call()
         else:
-            raise ValueError("function not supported for this version of Uniswap")
+            raise ValueError  # pragma: no cover
         return price
 
     # ------ Make Trade ----------------------------------------------------------------
@@ -564,7 +575,7 @@ class Uniswap:
                 self._get_tx_params(value=qty),
             )
         else:
-            raise ValueError
+            raise ValueError  # pragma: no cover
 
     def _token_to_eth_swap_input(
         self,
@@ -653,9 +664,8 @@ class Uniswap:
                 self.router.functions.multicall([swap_data, unwrap_data]),
                 self._get_tx_params(),
             )
-
         else:
-            raise ValueError
+            raise ValueError  # pragma: no cover
 
     def _token_to_token_swap_input(
         self,
@@ -750,7 +760,7 @@ class Uniswap:
                 self._get_tx_params(),
             )
         else:
-            raise ValueError
+            raise ValueError  # pragma: no cover
 
     def _eth_to_token_swap_output(
         self,
@@ -1245,11 +1255,11 @@ class Uniswap:
         """Build and send a transaction."""
         if not tx_params:
             tx_params = self._get_tx_params()
-        transaction = function.buildTransaction(tx_params)
+        transaction = function.build_transaction(tx_params)
 
         if "gas" not in tx_params:
             # `use_estimate_gas` needs to be True for networks like Arbitrum (can't assume 250000 gas),
-            # but it breaks tests for unknown reasons because estimateGas takes forever on some tx's.
+            # but it breaks tests for unknown reasons because estimate_gas takes forever on some tx's.
             # Maybe an issue with ganache? (got GC warnings once...)
             if self.use_estimate_gas:
                 # The Uniswap V3 UI uses 20% margin for transactions
@@ -1353,6 +1363,15 @@ class Uniswap:
         """
         # FIXME: This function should always return the same output for the same input
         #        and would therefore benefit from caching
+        if address == "0x0000000000000000000000000000000000000000":
+            # This isn't exactly right, but for all intents and purposes,
+            # ETH is treated as a ERC20 by Uniswap.
+            return ERC20Token(
+                address=address,
+                name="ETH",
+                symbol="ETH",
+                decimals=18,
+            )
         token_contract = _load_contract(self.w3, abi_name, address=address)
         try:
             _name = token_contract.functions.name().call()
@@ -1365,11 +1384,11 @@ class Uniswap:
             raise InvalidToken(address)
         try:
             name = _name.decode()
-        except:
+        except Exception:
             name = _name
         try:
             symbol = _symbol.decode()
-        except:
+        except Exception:
             symbol = _symbol
         return ERC20Token(symbol, address, name, decimals)
 
@@ -1382,6 +1401,8 @@ class Uniswap:
             address: ChecksumAddress = self.router.functions.WETH().call()
         elif self.version == 3:
             address = self.router.functions.WETH9().call()
+        else:
+            raise ValueError  # pragma: no cover
         return address
 
     @supports([3])
@@ -1485,18 +1506,25 @@ class Uniswap:
 
     @supports([2, 3])
     def get_raw_price(
-        self, token_in: AddressLike, token_out: AddressLike, fee: int = 3000
+        self, token_in: AddressLike, token_out: AddressLike, fee: int = None
     ) -> float:
-        """Returns current price for pair of tokens [token_in, token_out] regrading liquidity that is being locked in the pool"""
-        """Parameter `fee` is required for V3 only, can be omitted for V2"""
-        """Requires pair [token_in, token_out] having direct pool"""
+        """
+        Returns current price for pair of tokens [token_in, token_out] regrading liquidity that is being locked in the pool
+        Parameter `fee` is required for V3 only, can be omitted for V2
+        Requires pair [token_in, token_out] having direct pool
+        """
+        if not fee:
+            fee = 3000
+            if self.version == 3:
+                logger.warning("No fee set, assuming 0.3%")
+
         if token_in == ETH_ADDRESS:
             token_in = self.get_weth_address()
         if token_out == ETH_ADDRESS:
             token_out = self.get_weth_address()
 
         if self.version == 2:
-            params: Iterable[Union[ChecksumAddress,Optional[int]]] = [
+            params: Iterable[Union[ChecksumAddress, Optional[int]]] = [
                 self.w3.toChecksumAddress(token_in),
                 self.w3.toChecksumAddress(token_out),
             ]
@@ -1603,20 +1631,6 @@ class Uniswap:
     def get_fee_taker(self) -> float:
         """Get the taker fee."""
         return 0.003
-
-    # ------ Test utilities ------------------------------------------------------------
-
-    def _get_token_addresses(self) -> Dict[str, ChecksumAddress]:
-        """
-        Returns a dict with addresses for tokens for the current net.
-        Used in testing.
-        """
-        if self.netname == "mainnet":
-            return tokens
-        elif self.netname == "rinkeby":
-            return tokens_rinkeby
-        else:
-            raise Exception(f"Unknown net '{self.netname}'")
 
     # ---- Old v1 utils ----
 

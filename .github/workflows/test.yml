@@ -6,14 +6,33 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  # Public key for PRs, plz don't abuse
+  PROVIDER_MAINNET: ${{ secrets.MAINNET_PROVIDER || 'https://mainnet.infura.io/v3/42ffb4f2549c4a5fa3b5d6db70f6fad1' }}
+  PROVIDER_ARBITRUM: 'https://rpc.ankr.com/arbitrum'
+  PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
+
 jobs:
   test:
-    name: test (v${{ matrix.uniswap-version }})
+    name: test (v${{ matrix.uniswap-version }}, ${{ matrix.network }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         uniswap-version: [1, 2, 3]
+        network: ["mainnet"]
+        include:
+          - network: arbitrum
+            uniswap-version: 3
+        #include:
+        #  - network: xdai
+        #    uniswap-version: 3
+        #include:
+        #  - network: optimism
+        #    uniswap-version: 3
+        #include:
+        #  - network: polygon
+        #    uniswap-version: 3
 
     steps:
     - uses: actions/checkout@v2
@@ -35,12 +54,14 @@ jobs:
       run: |
         python -m pip install --upgrade pip poetry
         poetry config virtualenvs.in-project true
+
     - name: Set up cache
       uses: actions/cache@v2
       id: cache
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
+
     - name: Ensure cache is healthy
       if: steps.cache.outputs.cache-hit == 'true'
       run: timeout 10s poetry run pip --version || rm -rf .venv
@@ -48,13 +69,16 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install
-        npm install -g ganache@7.0.1
+        npm install -g ganache@7.3.2
+
     - name: Test
       env:
-        PROVIDER: ${{ secrets.MAINNET_PROVIDER }}
+        # Use the secret if available, otherwise fallback to the public key
+        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) }}
         UNISWAP_VERSION: ${{ matrix.uniswap-version }}
       run: |
         make test
+
     - name: "Upload coverage to Codecov"
       uses: codecov/codecov-action@v1
       with:
@@ -76,16 +100,19 @@ jobs:
       id: full-python-version
       run: |
         echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info[:3]))")
+
     - name: Set up poetry
       run: |
         python -m pip install --upgrade pip poetry
         poetry config virtualenvs.in-project true
+
     - name: Set up cache
       uses: actions/cache@v2
       id: cache
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
+
     - name: Ensure cache is healthy
       if: steps.cache.outputs.cache-hit == 'true'
       run: timeout 10s poetry run pip --version || rm -rf .venv
@@ -94,6 +121,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip poetry
         poetry install
+
     - name: Typecheck
       run: |
         make typecheck

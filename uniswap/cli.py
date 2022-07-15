@@ -4,17 +4,23 @@ import os
 import click
 from dotenv import load_dotenv
 from web3 import Web3
+from typing import Optional
 
 from .uniswap import Uniswap, AddressLike, _str_to_addr
 from .token import BaseToken
-from .tokens import tokens
+from .tokens import get_tokens
 from .constants import ETH_ADDRESS
 
 
 logger = logging.getLogger(__name__)
 
+# Global used in _coerce_to_checksum to look up tokens
+_uni: Optional[Uniswap] = None
+
 
 def _coerce_to_checksum(addr: str) -> str:
+    assert _uni
+    tokens = get_tokens(_uni.netname)
     if not addr.startswith("0x"):
         if addr.upper() in tokens:
             return tokens[addr.upper()]
@@ -33,7 +39,7 @@ def _coerce_to_checksum(addr: str) -> str:
 @click.option(
     "--version",
     type=click.Choice(["1", "2", "3"]),
-    default=os.getenv("UNISWAP_VERSION", "2"),
+    default=os.getenv("UNISWAP_VERSION", "3"),
 )
 @click.pass_context
 def main(ctx: click.Context, verbose: bool, version: str) -> None:
@@ -43,6 +49,8 @@ def main(ctx: click.Context, verbose: bool, version: str) -> None:
     ctx.ensure_object(dict)
     ctx.obj["VERBOSE"] = verbose
     ctx.obj["UNISWAP"] = Uniswap(None, None, version=int(version))
+    global _uni
+    _uni = ctx.obj["UNISWAP"]
 
 
 @main.command()
@@ -100,7 +108,7 @@ def token(ctx: click.Context, token: AddressLike) -> None:
 def tokendb(ctx: click.Context, metadata: bool) -> None:
     """List known token addresses"""
     uni: Uniswap = ctx.obj["UNISWAP"]
-    for symbol, addr in tokens.items():
+    for symbol, addr in get_tokens(uni.netname).items():
         if metadata and addr != "0x0000000000000000000000000000000000000000":
             data = uni.get_token(_str_to_addr(addr))
             assert data.symbol.lower() == symbol.lower()
