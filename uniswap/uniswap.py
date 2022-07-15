@@ -35,7 +35,9 @@ from .util import (
 )
 from .decorators import supports, check_approval
 from .constants import (
+    MAX_TICK,
     MAX_UINT_128,
+    MIN_TICK,
     WETH9_ADDRESS,
     _netid_to_name,
     _factory_contract_addresses_v1,
@@ -1168,6 +1170,33 @@ class Uniswap:
         receipt = self.w3.eth.wait_for_transaction_receipt(tx_burn)
 
         return receipt
+
+    def get_token0_in_pool(liquidity: float, sqrtPrice: float, sqrtPriceLow: float, sqrtPriceHigh: float) ->  float:
+        sqrtPrice = max(min(sqrtPrice, sqrtPriceHigh), sqrtPriceLow)
+        return liquidity * (sqrtPriceHigh - sqrtPrice) / (sqrtPrice * sqrtPriceHigh)
+    
+    def get_token1_in_pool(liquidity: float, sqrtPrice: float, sqrtPriceLow: float, sqrtPriceHigh: float) -> float:
+        sqrtPrice = max(min(sqrtPrice, sqrtPriceHigh), sqrtPriceLow)
+        return liquidity * (sqrtPrice - sqrtPriceLow)
+    
+    def get_tvl_in_pool(self, pool: Contract) -> Tuple[float,float]:
+        pool_immutables = self.get_pool_immutables(pool)
+        pool_state = self.get_pool_state(pool)
+        fee = pool_immutables['fee']
+        sqrtPrice = pool_state['sqrtPricex96'] / (1 << 96)
+
+        token0_liquidity = 0
+        token1_liquidity = 0
+        liquidity_total = 0
+        TICK_SPACING = _tick_spacing[fee]
+        for tick in range(MIN_TICK, MAX_TICK, TICK_SPACING):
+            tick_liquidity = pool.functions.ticks(tick).call()
+            liquidity_total += tick_liquidity.liquidityNet
+            sqrtPriceLow = 1.0001 ** (tick // 2)
+            sqrtPriceHigh = 1.0001 ** ((tick + TICK_SPACING) // 2)
+            token0_liquidity += self.get_token0_in_pool(liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh)
+            token1_liquidity += self.get_token1_in_pool(liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh)
+        return (token0_liquidity, token1_liquidity)
 
     # ------ Approval Utils ------------------------------------------------------------
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
