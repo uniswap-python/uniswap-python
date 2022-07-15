@@ -30,12 +30,14 @@ from .util import (
     encode_sqrt_ratioX96,
     is_same_address,
     nearest_tick,
+    run_query,
 )
 from .decorators import supports, check_approval
 from .constants import (
     MAX_TICK,
     MAX_UINT_128,
     MIN_TICK,
+    UNISWAP_GRAPH_URL,
     WETH9_ADDRESS,
     _netid_to_name,
     _factory_contract_addresses_v1,
@@ -1191,11 +1193,16 @@ class Uniswap:
         sqrtPrice = max(min(sqrtPrice, sqrtPriceHigh), sqrtPriceLow)
         return liquidity * (sqrtPrice - sqrtPriceLow)
     
-    def get_tvl_in_pool(self, pool: Contract) -> Tuple[float,float]:
+    # NOTE: this takes a while to run. 
+    # Likely due to having to wait for contract function call to return on each iteration.
+    def get_tvl_in_pool_on_chain(self, pool: Contract) -> Tuple[float,float]:
+        """
+        Iterate through each tick in a pool and calculate the TVL on-chain
+        """
         pool_immutables = self.get_pool_immutables(pool)
         pool_state = self.get_pool_state(pool)
         fee = pool_immutables['fee']
-        sqrtPrice = pool_state['sqrtPricex96'] / (1 << 96)
+        sqrtPrice = pool_state['sqrtPriceX96'] / (1 << 96)
 
         token0_liquidity = 0.0
         token1_liquidity = 0.0
@@ -1203,12 +1210,33 @@ class Uniswap:
         TICK_SPACING = _tick_spacing[fee]
         for tick in range(MIN_TICK, MAX_TICK, TICK_SPACING):
             tick_liquidity = pool.functions.ticks(tick).call()
-            liquidity_total += tick_liquidity.liquidityNet
+            liquidity_total += tick_liquidity[1] # liquidityNet
             sqrtPriceLow = 1.0001 ** (tick // 2)
             sqrtPriceHigh = 1.0001 ** ((tick + TICK_SPACING) // 2)
             token0_liquidity += self.get_token0_in_pool(liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh)
             token1_liquidity += self.get_token1_in_pool(liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh)
         return (token0_liquidity, token1_liquidity)
+    
+    def get_tvl_in_pool_graph(self, pool: Contract) -> Any:
+        """
+        Make request to Uniswap V3 SubGraph endpoint to fetch TVL values
+        """
+        pool_address = pool.address.lower() # for some reason subgraph queries don't like checksum addresses
+        query = f"""
+            {{
+                pool(id: "{pool_address}") {{
+                    totalValueLockedToken0
+                    totalValueLockedToken1
+                }}
+
+            }}
+        """
+
+        response = run_query(query, UNISWAP_GRAPH_URL)
+        assert response['data']['pool'] is not None, 'Error retrieving pool data'
+        amount0 = response['data']['pool']['totalValueLockedToken0']
+        amount1 = response['data']['pool']['totalValueLockedToken1']
+        return amount0, amount1
 
     # ------ Approval Utils ------------------------------------------------------------
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:

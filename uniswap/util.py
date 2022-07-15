@@ -2,7 +2,8 @@ import os
 import json
 import math
 import functools
-from typing import Union, List, Tuple
+from typing import Any, Dict, Union, List, Tuple
+import requests
 
 from web3 import Web3
 from web3.exceptions import NameNotFound
@@ -102,3 +103,13 @@ def nearest_tick(tick: int, fee: int) -> int:
         return rounded_tick_spacing - tick_spacing
     else:
         return rounded_tick_spacing
+
+# Make requests to theGraph endpoint
+def run_query(query: str, graph_url: str) -> Any:
+    request = requests.post(graph_url, json={'query':query})
+
+    if request.status_code == 200:
+        return request.json()
+    else:
+        raise Exception(f'Query returned code: {request.status_code}')
+
