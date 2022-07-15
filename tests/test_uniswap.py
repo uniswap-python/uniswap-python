@@ -251,7 +251,7 @@ class TestUniswap(object):
         eth_to_dai = client.make_trade(get_tokens('mainnet')['ETH'], token0, qty, None)
         eth_to_dai_tx = client.w3.eth.wait_for_transaction_receipt(eth_to_dai, timeout=RECEIPT_TIMEOUT)
 
-        dai_to_usdc = client.make_trade(token0, token1, amount1, None)
+        dai_to_usdc = client.make_trade(token0, token1, amount1*2, None)
         dai_to_usdc_tx = client.w3.eth.wait_for_transaction_receipt(dai_to_usdc, timeout=RECEIPT_TIMEOUT)
 
         min_tick, max_tick = default_tick_range(fee)
@@ -323,7 +323,7 @@ class TestUniswap(object):
             # Token -> Token
             ("DAI", "USDC", ONE_ETH, None, does_not_raise),
             # Token -> ETH
-            ("USDC", "ETH", 100 * ONE_USDC, None, does_not_raise),
+            ("USDC", "ETH", ONE_USDC, None, does_not_raise),
             # ("ETH", "UNI", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # ("UNI", "ETH", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # ("DAI", "UNI", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
@@ -362,11 +362,11 @@ class TestUniswap(object):
         "input_token, output_token, qty, recipient, expectation",
         [
             # ETH -> Token
-            ("ETH", "DAI", 10 ** 18, None, does_not_raise),
+            ("ETH", "DAI", ONE_ETH, None, does_not_raise),
             # Token -> Token
             ("DAI", "USDC", ONE_USDC, None, does_not_raise),
             # Token -> ETH
-            ("DAI", "ETH", 10 ** 16, None, does_not_raise),
+            ("DAI", "ETH", 100 * ONE_USDC, None, does_not_raise),
             # FIXME: These should probably be uncommented eventually
             # ("ETH", "UNI", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # ("UNI", "ETH", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
@@ -374,7 +374,7 @@ class TestUniswap(object):
             (
                 "DAI",
                 "ETH",
-                10 * 10 ** 18,
+                10 * ONE_ETH,
                 None,
                 lambda: pytest.raises(InsufficientBalance),
             ),
