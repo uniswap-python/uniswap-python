@@ -1231,7 +1231,7 @@ class Uniswap:
 
             }}
         """
-        chain = self.w3.eth.cahin_id
+        chain = self.w3.eth.chain_id
         network = _netid_to_name[chain]
         response = run_query(query, UNISWAP_GRAPH_URL[network])
         assert response['data']['pool'] is not None, 'Error retrieving pool data'
