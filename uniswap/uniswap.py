@@ -1094,10 +1094,9 @@ class Uniswap:
         """
         add liquidity to pool and mint position nft
         """
-        address = _addr_to_str(self.address)
+        
         token_0 = pool.functions.token0().call()
         token_1 = pool.functions.token1().call()
-
         token_0_instance = _load_contract(
             self.w3, abi_name="erc20", address=token_0
         )
@@ -1105,8 +1104,11 @@ class Uniswap:
             self.w3, abi_name="erc20", address=token_1
         )
 
-        assert token_0_instance.functions.balanceOf(address).call() > amount_0
-        assert token_1_instance.functions.balanceOf(address).call() > amount_1
+        balance_0 = self.get_token_balance(token_0)
+        balance_1 = self.get_token_balance(token_1)
+
+        assert balance_0 > amount_0, f'Have {balance_0}, need {amount_0}: {token_0}'
+        assert balance_1 > amount_1, f'Have {balance_1}, need {amount_1}: {token_1}'
 
         fee = pool.functions.fee().call()
         tick_lower = nearest_tick(tick_lower, fee)
@@ -1117,11 +1119,11 @@ class Uniswap:
         # If pool is not initialized, init pool w/ sqrt_price_x96 encoded from amount_0 & amount_1
         if isInit is False:
             sqrt_pricex96 = encode_sqrt_ratioX96(amount_0, amount_1)
-            pool.functions.initialize(sqrt_pricex96).transact({'from':address})
+            pool.functions.initialize(sqrt_pricex96).transact({'from':_addr_to_str(self.address)})
         
         nft_manager = self.nonFungiblePositionManager
-        token_0_instance.functions.approve(nft_manager.address, amount_0).transact({'from':address})
-        token_1_instance.functions.approve(nft_manager.address, amount_1).transact({'from':address})
+        token_0_instance.functions.approve(nft_manager.address, amount_0).transact({'from':_addr_to_str(self.address)})
+        token_1_instance.functions.approve(nft_manager.address, amount_1).transact({'from':_addr_to_str(self.address)})
 
         # TODO: add slippage param
         tx_hash = nft_manager.functions.mint(
@@ -1138,7 +1140,7 @@ class Uniswap:
                 self.address,
                 deadline
             )
-        ).transact({'from':address})
+        ).transact({'from':_addr_to_str(self.address)})
         receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
         return receipt
     
