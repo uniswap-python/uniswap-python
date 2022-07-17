@@ -308,6 +308,7 @@ class TestUniswap(object):
         assert amount0
         assert amount1
 
+    @pytest.mark.skip
     @pytest.mark.parametrize(
         "token0, token1",
         [("DAI","USDC")]
