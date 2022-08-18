@@ -2,7 +2,7 @@ import os
 import json
 import math
 import functools
-from typing import Any, Dict, Iterable, Sequence, Union, List, Tuple
+from typing import Any, Dict, Generator, Iterable, Sequence, Union, List, Tuple
 
 from web3 import Web3
 from web3.exceptions import NameNotFound
@@ -103,6 +103,6 @@ def nearest_tick(tick: int, fee: int) -> int:
     else:
         return rounded_tick_spacing
 
-def chunks(arr: Iterable[any], n: int):
+def chunks(arr: Sequence[Any], n: int) -> Generator:
     for i in range(0, len(arr), n):
         yield arr[i:i+n]

@@ -40,7 +40,6 @@ from .constants import (
     MAX_TICK,
     MAX_UINT_128,
     MIN_TICK,
-    UNISWAP_GRAPH_URL,
     WETH9_ADDRESS,
     _netid_to_name,
     _factory_contract_addresses_v1,
@@ -187,7 +186,10 @@ class Uniswap:
             self.nonFungiblePositionManager = _load_contract(
                 self.w3, abi_name="uniswap-v3/nonFungiblePositionManager", address=self.positionManager_addr
             )
-            multicall2_addr = _str_to_addr("0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696")
+            if self.netname == 'arbitrum':
+                multicall2_addr = _str_to_addr("0x50075F151ABC5B6B448b1272A0a1cFb5CFA25828")
+            else:    
+                multicall2_addr = _str_to_addr("0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696")
             self.multicall2 = _load_contract(
                 self.w3, abi_name="uniswap-v3/multicall", address=multicall2_addr
             )
@@ -1204,7 +1206,7 @@ class Uniswap:
 
 
     #  Find maximum tick of the word at the largest index (wordPos) in the tickBitmap that contains an initialized tick
-    def get_max_tick_from_wordpos(self, wordPos, bitmap, tick_spacing, fee):
+    def get_max_tick_from_wordpos(self, wordPos: int, bitmap: str, tick_spacing: int, fee: int) -> int:
         compressed_tick = wordPos << 8
         _tick = compressed_tick * tick_spacing
         min_tick_in_word = nearest_tick(_tick, fee)
@@ -1212,14 +1214,14 @@ class Uniswap:
         return max_tick_in_word
 
     # Find minimum tick of word at the smallest index (wordPos) in the tickBitmap that contains an initialized tick
-    def get_min_tick_from_wordpos(self, wordPos, tick_spacing, fee):
+    def get_min_tick_from_wordpos(self, wordPos: int, tick_spacing: int, fee: int) ->  int:
         compressed_tick = wordPos << 8
         _tick = compressed_tick * tick_spacing
         min_tick_in_word = nearest_tick(_tick, fee)
         return min_tick_in_word
 
     # Find min or max tick in initialized tick range using the tickBitmap
-    def find_tick_from_bitmap(self, bitmap_spacing, pool, tick_spacing, fee, left=True):
+    def find_tick_from_bitmap(self, bitmap_spacing: Tuple[int, int], pool: Contract, tick_spacing: int, fee: int, left: bool = True) -> Union[int, bool]:
         # searching to the left (finding max tick)
         if left:
             min_wordPos = bitmap_spacing[1]
@@ -1251,6 +1253,7 @@ class Uniswap:
                     else:
                         _min_tick = self.get_min_tick_from_wordpos(wordPos, tick_spacing, fee)
                         return _min_tick
+        return False
 
     def get_tvl_in_pool(self, pool: Contract) -> Tuple[float,float]:
         """
@@ -1290,6 +1293,8 @@ class Uniswap:
 
         _max_tick = self.find_tick_from_bitmap(BITMAP_SPACING, pool, TICK_SPACING, fee, True)
         _min_tick = self.find_tick_from_bitmap(BITMAP_SPACING, pool, TICK_SPACING, fee, False)
+        assert _max_tick != False, "Error finding max tick"
+        assert _min_tick != False, "Error finding min tick"
 
         Batch = namedtuple("Batch", "ticks batchResults")
         ticks = []
@@ -1476,7 +1481,7 @@ class Uniswap:
         self, 
         encoded_functions:Sequence[Tuple[ChecksumAddress, bytes]],
         output_types: Sequence[str]
-        ) -> Tuple[int, List[Optional[Any]]]:
+        ) -> List[Any]:
         """
         Calls aggregate() on Uniswap Multicall2 contract
 

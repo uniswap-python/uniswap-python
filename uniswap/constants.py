@@ -75,8 +75,3 @@ _tick_bitmap_range = {
     3_000: (-58, 57),
     10_000: (-18, 17)
 }
-
-UNISWAP_GRAPH_URL = {
-    "mainnet":"https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3",
-    "arbitrum":"https://api.thegraph.com/subgraphs/name/0xadsyst/uniswap-positions-arbitrum"
-    }

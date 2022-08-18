@@ -293,7 +293,6 @@ class TestUniswap(object):
         r = client.close_position(tokenId, deadline=deadline)
         assert r["status"]
 
-    # @pytest.mark.skip
     @pytest.mark.parametrize(
         "token0, token1",
         [("DAI", "USDC")]
@@ -303,8 +302,9 @@ class TestUniswap(object):
             pytest.skip("Not supported in this version of Uniswap")
 
         pool = client.get_pool_instance(tokens[token0], tokens[token1])
-        resp = client.get_tvl_in_pool(pool)
-        assert resp
+        tvl_0, tvl_1 = client.get_tvl_in_pool(pool)
+        assert tvl_0 > 0
+        assert tvl_1 > 0
         
     @pytest.mark.skip
     @pytest.mark.parametrize(
