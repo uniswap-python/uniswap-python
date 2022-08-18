@@ -4,7 +4,6 @@ import time
 import logging
 import functools
 from typing import List, Any, Optional, Sequence, Union, Tuple, Iterable, Dict
-from xml.etree.ElementPath import find
 
 from web3 import Web3
 from web3._utils.abi import map_abi_data
@@ -35,8 +34,6 @@ from .util import (
     get_max_tick,
     is_same_address,
     nearest_tick,
-    run_query,
-    nextInitializedTickWithinOneWord,
 )
 from .decorators import supports, check_approval
 from .constants import (
