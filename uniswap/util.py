@@ -2,7 +2,7 @@ import os
 import json
 import math
 import functools
-from typing import Any, Dict, Union, List, Tuple
+from typing import Any, Dict, Iterable, Sequence, Union, List, Tuple
 import requests
 
 from web3 import Web3
@@ -104,8 +104,8 @@ def nearest_tick(tick: int, fee: int) -> int:
     else:
         return rounded_tick_spacing
 
-# Make requests to theGraph endpoint
-def run_query(query: str, graph_url: str) -> Any:
+# Make requests to graphql endpoint
+def run_query(query: str, graph_url: str = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3") -> Any:
     request = requests.post(graph_url, json={'query':query})
 
     if request.status_code == 200:
@@ -113,3 +113,91 @@ def run_query(query: str, graph_url: str) -> Any:
     else:
         raise Exception(f'Query returned code: {request.status_code}')
 
+def binary_search_ticks(ticks:List[int], tick:int) -> int:
+    """
+    Find largest tick in tick array that is less than or equal to tick. 
+    Returns index of found tick.
+    """
+    assert tick > ticks[0], "BELOW_SMALLEST_TICK"
+
+    l = 0
+    r = len(ticks)-1
+    while True:
+        i = math.floor((l+r)/2)
+
+        if ticks[i] <= tick and (i == len(ticks)-1 or ticks[i+1] > tick):
+            return i
+        
+        if ticks[i] < tick:
+            l = i+1
+        else:
+            r = i -1
+
+def nextInitializedTick(
+    ticks: List[int],
+    tick: int,
+    lte:bool
+    ) -> int:
+
+    if lte:
+        assert tick > ticks[0], "BELOW_SMALLEST_TICK"
+        if tick >= ticks[-1]:
+            return ticks[-1]
+        index = binary_search_ticks(ticks, tick)
+        return ticks[index]
+    else:
+        assert tick <= ticks[-1], "AT_OR_ABOVE_LARGEST_TICK"
+        if tick < ticks[0]:
+            return ticks[0]
+        index = binary_search_ticks(ticks, tick)
+        return ticks[index+1]
+
+def getWordPos(tick: int) -> Tuple[int, int]:
+    wordPos = tick >> 8
+    bitPos = tick % 256
+    return (wordPos, bitPos)
+
+def nextInitializedTickWithinOneWord(
+    ticks: List[int],
+    tick: int,
+    lte: bool,
+    tickSpacing:int
+    ) -> Tuple[int, bool]:
+    
+    compressed = math.floor(tick/tickSpacing)
+
+    wordPos, bitPos = getWordPos(tick)
+    # all 1 bits at or to the left of current bit position
+    mask = (1 << bitPos) - 1 + (1 << bitPos)
+    masked = ticks[wordPos] and mask
+
+    init = masked != 0
+
+    if init:
+        next = (compressed - ())
+
+    # if lte :
+    #     wordPos = compressed >> 8
+    #     minimum = (wordPos << 8) * tickSpacing
+
+    #     if tick < ticks[0]:
+    #         return (minimum, False)
+        
+    #     index = nextInitializedTick(ticks, tick, lte)
+    #     nextInitTick = max(minimum, index)
+    #     return (nextInitTick, nextInitTick == index)
+
+    # else:
+    #     wordPos = (compressed + 1) >> 8
+    #     maximum = (((wordPos +1) << 8) - 1) * tickSpacing
+
+    #     if tick >= ticks[-1]:
+    #         return (maximum, False)
+        
+    #     index = nextInitializedTick(ticks, tick, lte)
+    #     nextInitTick = min(maximum, index)
+    #     return (nextInitTick, nextInitTick == index)
+
+def chunks(arr: Iterable[any], n: int):
+    for i in range(0, len(arr), n):
+        yield arr[i:i+n]

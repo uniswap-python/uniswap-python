@@ -1,11 +1,14 @@
-from multiprocessing import pool
+from collections import namedtuple
 import os
 import time
 import logging
 import functools
-from typing import List, Any, Optional, Union, Tuple, Iterable, Dict
+from typing import List, Any, Optional, Sequence, Union, Tuple, Iterable, Dict
+from xml.etree.ElementPath import find
 
 from web3 import Web3
+from web3._utils.abi import map_abi_data
+from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
 from web3.contract import Contract, ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
@@ -27,10 +30,13 @@ from .util import (
     _validate_address,
     _load_contract,
     _load_contract_erc20,
+    chunks,
     encode_sqrt_ratioX96,
+    get_max_tick,
     is_same_address,
     nearest_tick,
     run_query,
+    nextInitializedTickWithinOneWord,
 )
 from .decorators import supports, check_approval
 from .constants import (
@@ -44,6 +50,7 @@ from .constants import (
     _factory_contract_addresses_v2,
     _router_contract_addresses_v2,
     _tick_spacing,
+    _tick_bitmap_range,
     ETH_ADDRESS,
 )
 
@@ -182,6 +189,10 @@ class Uniswap:
             self.positionManager_addr = _str_to_addr("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
             self.nonFungiblePositionManager = _load_contract(
                 self.w3, abi_name="uniswap-v3/nonFungiblePositionManager", address=self.positionManager_addr
+            )
+            multicall2_addr = _str_to_addr("0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696")
+            self.multicall2 = _load_contract(
+                self.w3, abi_name="uniswap-v3/multicall", address=multicall2_addr
             )
         else:
             raise Exception(
@@ -1185,6 +1196,7 @@ class Uniswap:
 
         return receipt
 
+    # Below two functions derived from: https://stackoverflow.com/questions/71814845/how-to-calculate-uniswap-v3-pools-total-value-locked-tvl-on-chain
     def get_token0_in_pool(self, liquidity: float, sqrtPrice: float, sqrtPriceLow: float, sqrtPriceHigh: float) ->  float:
         sqrtPrice = max(min(sqrtPrice, sqrtPriceHigh), sqrtPriceLow)
         return liquidity * (sqrtPriceHigh - sqrtPrice) / (sqrtPrice * sqrtPriceHigh)
@@ -1192,13 +1204,80 @@ class Uniswap:
     def get_token1_in_pool(self, liquidity: float, sqrtPrice: float, sqrtPriceLow: float, sqrtPriceHigh: float) -> float:
         sqrtPrice = max(min(sqrtPrice, sqrtPriceHigh), sqrtPriceLow)
         return liquidity * (sqrtPrice - sqrtPriceLow)
-    
-    # NOTE: this takes a while to run. 
-    # Likely due to having to wait for contract function call to return on each iteration.
-    def get_tvl_in_pool_on_chain(self, pool: Contract) -> Tuple[float,float]:
+
+
+    #  Find maximum tick of the word at the largest index (wordPos) in the tickBitmap that contains an initialized tick
+    def get_max_tick_from_wordpos(self, wordPos, bitmap, tick_spacing, fee):
+        compressed_tick = wordPos << 8
+        _tick = compressed_tick * tick_spacing
+        min_tick_in_word = nearest_tick(_tick, fee)
+        max_tick_in_word = min_tick_in_word + (len(bitmap) * tick_spacing)
+        return max_tick_in_word
+
+    # Find minimum tick of word at the smallest index (wordPos) in the tickBitmap that contains an initialized tick
+    def get_min_tick_from_wordpos(self, wordPos, tick_spacing, fee):
+        compressed_tick = wordPos << 8
+        _tick = compressed_tick * tick_spacing
+        min_tick_in_word = nearest_tick(_tick, fee)
+        return min_tick_in_word
+
+    # Find min or max tick in initialized tick range using the tickBitmap
+    def find_tick_from_bitmap(self, bitmap_spacing, pool, tick_spacing, fee, left=True):
+        # searching to the left (finding max tick)
+        if left:
+            min_wordPos = bitmap_spacing[1]
+            max_wordPos = bitmap_spacing[0]
+            step = -1
+        # searching to the right (finding min tick)
+        else:
+            min_wordPos = bitmap_spacing[0]
+            max_wordPos = bitmap_spacing[1]
+            step = 1
+
+        # Some fun tickBitmap hacks below.
+        # Iterate thru each possible wordPos (based on tick_spacing), get the bitmap "word" (basically a sub-array of the full bitmap), 
+        # check if there is an initialized tick, derive largest (or smallest) tick in this word
+        # 
+        # Since wordPos (int16 index of tickBitmap mapping) are calculated by (tick/tickspacing) >> 8, deriving tick from wordPos
+        # is done by (wordPos << 8)*tickSpacing. This however does not find the precise tick (only a possible tick that could map to that bitmap sub-array, or word),
+        # thus we must calculate the nearest viable tick depending on the tick_spacing of the pool using nearest_tick().
+        # If searching for the maximum tick, we must then add-back len(bitmap)*tick_spacing as each bit in the bitmap should correspond to a tick.
+
+        for wordPos in range(min_wordPos, max_wordPos, step):
+            word = pool.functions.tickBitmap(wordPos).call()
+            bitmap = bin(word)
+            for bit in bitmap[3:]:
+                if int(bit) == 1:
+                    if left:
+                        _max_tick = self.get_max_tick_from_wordpos(wordPos, bitmap, tick_spacing, fee)
+                        return _max_tick
+                    else:
+                        _min_tick = self.get_min_tick_from_wordpos(wordPos, tick_spacing, fee)
+                        return _min_tick
+
+    def get_tvl_in_pool(self, pool: Contract) -> Tuple[float,float]:
         """
         Iterate through each tick in a pool and calculate the TVL on-chain
+
+        Note: the output of this function may differ from what is returned by the
+        UniswapV3 subgraph api (https://github.com/Uniswap/v3-subgraph/issues/74)
+
+        Params
+        ------
+        pool: Contract
+            pool contract instance to find TVL
         """
+        pool_tick_output_types = (
+            'uint128', 
+            'int128', 
+            'uint256', 
+            'uint256', 
+            'int56',
+            'uint160',
+            'uint32',
+            'bool'
+            )
+
         pool_immutables = self.get_pool_immutables(pool)
         pool_state = self.get_pool_state(pool)
         fee = pool_immutables['fee']
@@ -1207,36 +1286,44 @@ class Uniswap:
         token0_liquidity = 0.0
         token1_liquidity = 0.0
         liquidity_total = 0.0
+        
         TICK_SPACING = _tick_spacing[fee]
-        for tick in range(MIN_TICK, MAX_TICK, TICK_SPACING):
-            tick_liquidity = pool.functions.ticks(tick).call()
-            liquidity_total += tick_liquidity[1] # liquidityNet
-            sqrtPriceLow = 1.0001 ** (tick // 2)
-            sqrtPriceHigh = 1.0001 ** ((tick + TICK_SPACING) // 2)
-            token0_liquidity += self.get_token0_in_pool(liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh)
-            token1_liquidity += self.get_token1_in_pool(liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh)
-        return (token0_liquidity, token1_liquidity)
-    
-    def get_tvl_in_pool_graph(self, pool: Contract) -> Any:
-        """
-        Make request to Uniswap V3 SubGraph endpoint to fetch TVL values
-        """
-        pool_address = pool.address.lower() # for some reason subgraph queries don't like checksum addresses
-        query = f"""
-            {{
-                pool(id: "{pool_address}") {{
-                    totalValueLockedToken0
-                    totalValueLockedToken1
-                }}
 
-            }}
-        """
-       
-        response = run_query(query, UNISWAP_GRAPH_URL[self.netname])
-        assert response['data']['pool'] is not None, 'Error retrieving pool data'
-        amount0 = response['data']['pool']['totalValueLockedToken0']
-        amount1 = response['data']['pool']['totalValueLockedToken1']
-        return amount0, amount1
+        BITMAP_SPACING = _tick_bitmap_range[fee]
+
+        _max_tick = self.find_tick_from_bitmap(BITMAP_SPACING, pool, TICK_SPACING, fee, True)
+        _min_tick = self.find_tick_from_bitmap(BITMAP_SPACING, pool, TICK_SPACING, fee, False)
+
+        Batch = namedtuple("Batch", "ticks batchResults")
+        ticks = []
+        # Batching pool.functions.tick() calls as these are the major bottleneck to performance
+        for batch in list(chunks(range(_min_tick, _max_tick, TICK_SPACING), 100)):
+            _batch = []
+            _ticks = []
+            for tick in batch:
+                _batch.append((pool.address, HexBytes(pool.functions.ticks(tick)._encode_transaction_data())))
+                _ticks.append(tick)
+            ticks.append(Batch(_ticks, self.multicall(_batch, pool_tick_output_types)))
+
+        for tickBatch in ticks:
+            tick_arr = tickBatch.ticks
+            for i in range(len(tick_arr)):
+                tick = tick_arr[i]
+                tickData = tickBatch.batchResults[i]
+                # source: https://stackoverflow.com/questions/71814845/how-to-calculate-uniswap-v3-pools-total-value-locked-tvl-on-chain
+                liquidityNet = tickData[1]
+                liquidity_total += liquidityNet
+                sqrtPriceLow = 1.0001 ** (tick // 2)
+                sqrtPriceHigh = 1.0001 ** ((tick + TICK_SPACING) // 2)
+                token0_liquidity += self.get_token0_in_pool(liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh)
+                token1_liquidity += self.get_token1_in_pool(liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh)
+
+        # Correcting for each token's respective decimals
+        token0_decimals = _load_contract_erc20(self.w3, pool_immutables['token0']).functions.decimals().call()
+        token1_decimals = _load_contract_erc20(self.w3, pool_immutables['token1']).functions.decimals().call()
+        token0_liquidity = token0_liquidity // (10 ** token0_decimals) 
+        token1_liquidity = token1_liquidity // (10**token1_decimals)
+        return (token0_liquidity, token1_liquidity)
 
     # ------ Approval Utils ------------------------------------------------------------
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
@@ -1386,6 +1473,33 @@ class Uniswap:
         return int(outputAmountB), int(1.2 * outputAmountA)
 
     # ------ Helpers ------------------------------------------------------------
+
+    # Batch contract function calls to speed up large on-chain data queries
+    def multicall(
+        self, 
+        encoded_functions:Sequence[Tuple[ChecksumAddress, bytes]],
+        output_types: Sequence[str]
+        ) -> Tuple[int, List[Optional[Any]]]:
+        """
+        Calls aggregate() on Uniswap Multicall2 contract
+
+        Params
+        ------
+        encoded_functions : Sequence[Tuple[ChecksumAddress, bytes]]
+            array of tuples containing address of contract and byte-encoded transaction data
+        
+        output_types: Sequence[str]
+            array of solidity output types for decoding (e.g. uint256, bool, etc.)
+        
+        returns decoded results
+        """
+        params = [{"target":target, "callData":callData} for target,callData in encoded_functions]
+        _, results = self.multicall2.functions.aggregate(params).call(block_identifier="latest")
+        decoded_results = [self.w3.codec.decode_abi(output_types, multicall_result) for multicall_result in results]
+        normalized_results =[ map_abi_data(
+            BASE_RETURN_NORMALIZERS, output_types, decoded_result
+        ) for  decoded_result in decoded_results]
+        return normalized_results
 
     def get_token(self, address: AddressLike, abi_name: str = "erc20") -> ERC20Token:
         """

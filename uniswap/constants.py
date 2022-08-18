@@ -70,6 +70,12 @@ _tick_spacing = {
     10_000: 200
 }
 
+_tick_bitmap_range = {
+    500: (-347, 346),
+    3_000: (-58, 57),
+    10_000: (-18, 17)
+}
+
 UNISWAP_GRAPH_URL = {
     "mainnet":"https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3",
     "arbitrum":"https://api.thegraph.com/subgraphs/name/0xadsyst/uniswap-positions-arbitrum"
