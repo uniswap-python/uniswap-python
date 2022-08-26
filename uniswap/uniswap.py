@@ -1637,16 +1637,19 @@ class Uniswap:
         return pool_state
     
     @supports([3])
-    def get_liquidity_positions(self) -> List[int]:
+    def get_liquidity_positions(self, address: Optional[AddressLike] = None) -> List[int]:
         """
         Enumerates liquidity position tokens owned by address.
         Returns array of token IDs.
         """
+        if address is None:
+            address = self.address
+            
         positions: List[int] = []
-        number_of_positions = self.nonFungiblePositionManager.functions.balanceOf(_addr_to_str(self.address)).call()
+        number_of_positions = self.nonFungiblePositionManager.functions.balanceOf(_addr_to_str(address)).call()
         if number_of_positions > 0:
             for idx in range(number_of_positions):
-                position = self.nonFungiblePositionManager.functions.tokenOfOwnerByIndex(_addr_to_str(self.address), idx).call()
+                position = self.nonFungiblePositionManager.functions.tokenOfOwnerByIndex(_addr_to_str(address), idx).call()
                 positions.append(position)
         return positions
 
