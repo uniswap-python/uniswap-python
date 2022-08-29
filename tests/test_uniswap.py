@@ -16,7 +16,12 @@ from uniswap import Uniswap, token
 from uniswap.constants import ETH_ADDRESS, WETH9_ADDRESS
 from uniswap.exceptions import InsufficientBalance
 from uniswap.tokens import get_tokens
-from uniswap.util import _str_to_addr, default_tick_range, _addr_to_str, _load_contract_erc20
+from uniswap.util import (
+    _str_to_addr,
+    default_tick_range,
+    _addr_to_str,
+    _load_contract_erc20,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -197,10 +202,11 @@ class TestUniswap(object):
     @pytest.mark.parametrize(
         "token0, token1, kwargs",
         [
-            (weth, dai, {"fee": 500}),
-        ]
+            ("WETH", "DAI", {"fee": 500}),
+        ],
     )
-    def test_get_pool_instance(self, client, token0, token1, kwargs):
+    def test_get_pool_instance(self, client, tokens, token0, token1, kwargs):
+        token0, token1 = tokens[token0], tokens[token1]
         if client.version != 3:
             pytest.skip("Not supported in this version of Uniswap")
         r = client.get_pool_instance(token0, token1, **kwargs)
@@ -209,10 +215,11 @@ class TestUniswap(object):
     @pytest.mark.parametrize(
         "token0, token1, kwargs",
         [
-            (weth, dai, {"fee": 500}),
-        ]
+            ("WETH", "DAI", {"fee": 500}),
+        ],
     )
-    def test_get_pool_immutables(self, client, token0, token1, kwargs):
+    def test_get_pool_immutables(self, client, tokens, token0, token1, kwargs):
+        token0, token1 = tokens[token0], tokens[token1]
         if client.version != 3:
             pytest.skip("Not supported in this version of Uniswap")
         pool = client.get_pool_instance(token0, token1, **kwargs)
@@ -223,10 +230,11 @@ class TestUniswap(object):
     @pytest.mark.parametrize(
         "token0, token1, kwargs",
         [
-            (weth, dai, {"fee": 500}),
-        ]
+            ("WETH", "DAI", {"fee": 500}),
+        ],
     )
-    def test_get_pool_state(self, client, token0, token1, kwargs):
+    def test_get_pool_state(self, client, tokens, token0, token1, kwargs):
+        token0, token1 = tokens[token0], tokens[token1]
         if client.version != 3:
             pytest.skip("Not supported in this version of Uniswap")
         pool = client.get_pool_instance(token0, token1, **kwargs)
@@ -237,10 +245,13 @@ class TestUniswap(object):
     @pytest.mark.parametrize(
         "amount0, amount1, token0, token1, kwargs",
         [
-            (1, 10, weth, dai, {"fee":500}),
-        ]
+            (1, 10, "WETH", "DAI", {"fee": 500}),
+        ],
     )
-    def test_mint_position(self, client, amount0, amount1, token0, token1, kwargs):
+    def test_mint_position(
+        self, client, tokens, amount0, amount1, token0, token1, kwargs
+    ):
+        token0, token1 = tokens[token0], tokens[token1]
         if client.version != 3:
             pytest.skip("Not supported in this version of Uniswap")
         pool = client.get_pool_instance(token0, token1, **kwargs)
@@ -289,10 +300,12 @@ class TestUniswap(object):
     @pytest.mark.parametrize(
         "token0, token1, amount0, amount1, qty, fee",
         [
-            ('DAI', 'USDC', ONE_ETH, ONE_USDC, ONE_ETH, 3000),
-        ]
+            ("DAI", "USDC", ONE_ETH, ONE_USDC, ONE_ETH, 3000),
+        ],
     )
-    def test_v3_deploy_pool_with_liquidity(self, client: Uniswap, tokens, token0, token1, amount0, amount1, qty, fee):
+    def test_v3_deploy_pool_with_liquidity(
+        self, client: Uniswap, tokens, token0, token1, amount0, amount1, qty, fee
+    ):
         if client.version != 3:
             pytest.skip("Not supported in this version of Uniswap")
 
@@ -303,41 +316,49 @@ class TestUniswap(object):
 
         print(pool.address)
         # Ensuring client has sufficient balance of both tokens
-        eth_to_dai = client.make_trade(tokens['ETH'], tokens[token0], qty, client.address)
-        eth_to_dai_tx = client.w3.eth.wait_for_transaction_receipt(eth_to_dai, timeout=RECEIPT_TIMEOUT)
+        eth_to_dai = client.make_trade(
+            tokens["ETH"], tokens[token0], qty, client.address
+        )
+        eth_to_dai_tx = client.w3.eth.wait_for_transaction_receipt(
+            eth_to_dai, timeout=RECEIPT_TIMEOUT
+        )
         assert eth_to_dai_tx["status"]
-        dai_to_usdc = client.make_trade(tokens[token0], tokens[token1], qty*10, client.address)
-        dai_to_usdc_tx = client.w3.eth.wait_for_transaction_receipt(dai_to_usdc, timeout=RECEIPT_TIMEOUT)
+        dai_to_usdc = client.make_trade(
+            tokens[token0], tokens[token1], qty * 10, client.address
+        )
+        dai_to_usdc_tx = client.w3.eth.wait_for_transaction_receipt(
+            dai_to_usdc, timeout=RECEIPT_TIMEOUT
+        )
         assert dai_to_usdc_tx["status"]
 
         balance_0 = client.get_token_balance(tokens[token0])
         balance_1 = client.get_token_balance(tokens[token1])
 
-        assert balance_0 > amount0, f'Have: {balance_0} need {amount0}'
-        assert balance_1 > amount1, f'Have: {balance_1} need {amount1}'
-
+        assert balance_0 > amount0, f"Have: {balance_0} need {amount0}"
+        assert balance_1 > amount1, f"Have: {balance_1} need {amount1}"
 
         min_tick, max_tick = default_tick_range(fee)
         r = client.mint_liquidity(
-          pool,
-          amount0,
-          amount1,
-          tick_lower=min_tick,
-          tick_upper=max_tick,
-          deadline=2**64
+            pool,
+            amount0,
+            amount1,
+            tick_lower=min_tick,
+            tick_upper=max_tick,
+            deadline=2 ** 64,
         )
         assert r["status"]
 
-        position_balance = client.nonFungiblePositionManager.functions.balanceOf(_addr_to_str(client.address)).call()
+        position_balance = client.nonFungiblePositionManager.functions.balanceOf(
+            _addr_to_str(client.address)
+        ).call()
         assert position_balance > 0
 
         position_array = client.get_liquidity_positions()
         assert len(position_array) > 0
 
-
     @pytest.mark.parametrize(
         "deadline",
-        [(2**64)],
+        [(2 ** 64)],
     )
     def test_close_position(self, client: Uniswap, deadline):
         if client.version != 3:
@@ -347,10 +368,7 @@ class TestUniswap(object):
         r = client.close_position(tokenId, deadline=deadline)
         assert r["status"]
 
-    @pytest.mark.parametrize(
-        "token0, token1",
-        [("DAI", "USDC")]
-    )
+    @pytest.mark.parametrize("token0, token1", [("DAI", "USDC")])
     def test_get_tvl_in_pool_on_chain(self, client: Uniswap, tokens, token0, token1):
         if client.version != 3:
             pytest.skip("Not supported in this version of Uniswap")
