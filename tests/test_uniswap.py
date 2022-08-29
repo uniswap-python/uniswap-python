@@ -15,8 +15,8 @@ from web3.exceptions import NameNotFound
 from uniswap import Uniswap, token
 from uniswap.constants import ETH_ADDRESS, WETH9_ADDRESS
 from uniswap.exceptions import InsufficientBalance
-from uniswap.util import _str_to_addr, default_tick_range, _addr_to_str, _load_contract_erc20
 from uniswap.tokens import get_tokens
+from uniswap.util import _str_to_addr, default_tick_range, _addr_to_str, _load_contract_erc20
 
 
 logger = logging.getLogger(__name__)
@@ -194,6 +194,60 @@ class TestUniswap(object):
         r = client.get_raw_price(token0, token1, fee=fee)
         assert r
 
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            (weth, dai, {"fee": 500}),
+        ]
+    )
+    def test_get_pool_instance(self, client, token0, token1, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        r = client.get_pool_instance(token0, token1, **kwargs)
+        assert r
+
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            (weth, dai, {"fee": 500}),
+        ]
+    )
+    def test_get_pool_immutables(self, client, token0, token1, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = client.get_pool_instance(token0, token1, **kwargs)
+        r = client.get_pool_immutables(pool)
+        print(r)
+        assert r
+
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            (weth, dai, {"fee": 500}),
+        ]
+    )
+    def test_get_pool_state(self, client, token0, token1, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = client.get_pool_instance(token0, token1, **kwargs)
+        r = client.get_pool_state(pool)
+        print(r)
+        assert r
+
+    @pytest.mark.parametrize(
+        "amount0, amount1, token0, token1, kwargs",
+        [
+            (1, 10, weth, dai, {"fee":500}),
+        ]
+    )
+    def test_mint_position(self, client, amount0, amount1, token0, token1, kwargs):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = client.get_pool_instance(token0, token1, **kwargs)
+        r = client.mint_position(pool, amount0, amount1)
+        print(r)
+        assert r
+
     # ------ ERC20 Pool ----------------------------------------------------------------
     @pytest.mark.parametrize("token", [("UNI"), ("DAI")])
     def test_get_ex_eth_balance(
@@ -246,7 +300,7 @@ class TestUniswap(object):
             pool = client.create_pool_instance(tokens[token0], tokens[token1], fee)
         except Exception:
             pool = client.get_pool_instance(tokens[token0], tokens[token1], fee)
-        
+
         print(pool.address)
         # Ensuring client has sufficient balance of both tokens
         eth_to_dai = client.make_trade(tokens['ETH'], tokens[token0], qty, client.address)
@@ -261,7 +315,7 @@ class TestUniswap(object):
 
         assert balance_0 > amount0, f'Have: {balance_0} need {amount0}'
         assert balance_1 > amount1, f'Have: {balance_1} need {amount1}'
-        
+
 
         min_tick, max_tick = default_tick_range(fee)
         r = client.mint_liquidity(
@@ -270,7 +324,7 @@ class TestUniswap(object):
           amount1,
           tick_lower=min_tick,
           tick_upper=max_tick,
-          deadline=2**64  
+          deadline=2**64
         )
         assert r["status"]
 
@@ -305,7 +359,7 @@ class TestUniswap(object):
         tvl_0, tvl_1 = client.get_tvl_in_pool(pool)
         assert tvl_0 > 0
         assert tvl_1 > 0
-        
+
     @pytest.mark.skip
     @pytest.mark.parametrize(
         "token, max_eth",

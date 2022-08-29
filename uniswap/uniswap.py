@@ -182,14 +182,22 @@ class Uniswap:
             self.router = _load_contract(
                 self.w3, abi_name="uniswap-v3/router", address=self.router_address
             )
-            self.positionManager_addr = _str_to_addr("0xC36442b4a4522E871399CD717aBDD847Ab11FE88")
-            self.nonFungiblePositionManager = _load_contract(
-                self.w3, abi_name="uniswap-v3/nonFungiblePositionManager", address=self.positionManager_addr
+            self.positionManager_addr = _str_to_addr(
+                "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
             )
-            if self.netname == 'arbitrum':
-                multicall2_addr = _str_to_addr("0x50075F151ABC5B6B448b1272A0a1cFb5CFA25828")
-            else:    
-                multicall2_addr = _str_to_addr("0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696")
+            self.nonFungiblePositionManager = _load_contract(
+                self.w3,
+                abi_name="uniswap-v3/nonFungiblePositionManager",
+                address=self.positionManager_addr,
+            )
+            if self.netname == "arbitrum":
+                multicall2_addr = _str_to_addr(
+                    "0x50075F151ABC5B6B448b1272A0a1cFb5CFA25828"
+                )
+            else:
+                multicall2_addr = _str_to_addr(
+                    "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
+                )
             self.multicall2 = _load_contract(
                 self.w3, abi_name="uniswap-v3/multicall", address=multicall2_addr
             )
@@ -1100,26 +1108,22 @@ class Uniswap:
         amount_1: int,
         tick_lower: int,
         tick_upper: int,
-        deadline: int = 2**64
+        deadline: int = 2**64,
     ) -> TxReceipt:
         """
         add liquidity to pool and mint position nft
         """
-        
+
         token_0 = pool.functions.token0().call()
         token_1 = pool.functions.token1().call()
-        token_0_instance = _load_contract(
-            self.w3, abi_name="erc20", address=token_0
-        )
-        token_1_instance = _load_contract(
-            self.w3, abi_name="erc20", address=token_1
-        )
+        token_0_instance = _load_contract(self.w3, abi_name="erc20", address=token_0)
+        token_1_instance = _load_contract(self.w3, abi_name="erc20", address=token_1)
 
         balance_0 = self.get_token_balance(token_0)
         balance_1 = self.get_token_balance(token_1)
 
-        assert balance_0 > amount_0, f'Have {balance_0}, need {amount_0}: {token_0}'
-        assert balance_1 > amount_1, f'Have {balance_1}, need {amount_1}: {token_1}'
+        assert balance_0 > amount_0, f"Have {balance_0}, need {amount_0}: {token_0}"
+        assert balance_1 > amount_1, f"Have {balance_1}, need {amount_1}: {token_1}"
 
         fee = pool.functions.fee().call()
         tick_lower = nearest_tick(tick_lower, fee)
@@ -1130,18 +1134,24 @@ class Uniswap:
         # If pool is not initialized, init pool w/ sqrt_price_x96 encoded from amount_0 & amount_1
         if isInit is False:
             sqrt_pricex96 = encode_sqrt_ratioX96(amount_0, amount_1)
-            pool.functions.initialize(sqrt_pricex96).transact({'from':_addr_to_str(self.address)})
-        
+            pool.functions.initialize(sqrt_pricex96).transact(
+                {"from": _addr_to_str(self.address)}
+            )
+
         nft_manager = self.nonFungiblePositionManager
-        token_0_instance.functions.approve(nft_manager.address, amount_0).transact({'from':_addr_to_str(self.address)})
-        token_1_instance.functions.approve(nft_manager.address, amount_1).transact({'from':_addr_to_str(self.address)})
+        token_0_instance.functions.approve(nft_manager.address, amount_0).transact(
+            {"from": _addr_to_str(self.address)}
+        )
+        token_1_instance.functions.approve(nft_manager.address, amount_1).transact(
+            {"from": _addr_to_str(self.address)}
+        )
 
         # TODO: add slippage param
         tx_hash = nft_manager.functions.mint(
             (
                 token_0,
                 token_1,
-                fee, 
+                fee,
                 tick_lower,
                 tick_upper,
                 amount_0,
@@ -1149,63 +1159,81 @@ class Uniswap:
                 0,
                 0,
                 self.address,
-                deadline
+                deadline,
             )
-        ).transact({'from':_addr_to_str(self.address)})
+        ).transact({"from": _addr_to_str(self.address)})
         receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
         return receipt
-    
+
     # TODO: should this be multiple functions?
     @supports([3])
     def close_position(
-        self, 
-        tokenId: int, 
-        amount0Min: int = 0, 
-        amount1Min: int = 0, 
-        deadline: int = None
-        ) -> TxReceipt:
+        self,
+        tokenId: int,
+        amount0Min: int = 0,
+        amount1Min: int = 0,
+        deadline: int = None,
+    ) -> TxReceipt:
         """
         remove all liquidity from the position associated w/ tokenId, collect fees, and burn token.
         """
         position = self.nonFungiblePositionManager.functions.positions(tokenId).call()
-        
+
         if deadline is None:
             deadline = self._deadline()
 
         # If collecting fees in ETH, fees must be precomputed to protect against reentrancy
         # source: https://docs.uniswap.org/sdk/guides/liquidity/removing
+
         if position[2] == WETH9_ADDRESS or position[3] == WETH9_ADDRESS:
-            amount0Min, amount1Min = self.nonFungiblePositionManager.functions.collect((
-                tokenId,_addr_to_str(self.address),MAX_UINT_128,MAX_UINT_128
-            )).call()
-        
-        tx_remove_liquidity = self.nonFungiblePositionManager.functions.decreaseLiquidity((
-            tokenId, position[7], amount0Min, amount1Min, deadline
-        )).transact({"from":_addr_to_str(self.address)})
+            amount0Min, amount1Min = self.nonFungiblePositionManager.functions.collect(
+                (tokenId, _addr_to_str(self.address), MAX_UINT_128, MAX_UINT_128)
+            ).call()
+
+        tx_remove_liquidity = (
+            self.nonFungiblePositionManager.functions.decreaseLiquidity(
+                (tokenId, position[7], amount0Min, amount1Min, deadline)
+            ).transact({"from": _addr_to_str(self.address)})
+        )
         self.w3.eth.wait_for_transaction_receipt(tx_remove_liquidity)
-        
-        tx_collect_fees = self.nonFungiblePositionManager.functions.collect((
-                tokenId,_addr_to_str(self.address),MAX_UINT_128,MAX_UINT_128
-            )).transact({"from":_addr_to_str(self.address)})
+
+        tx_collect_fees = self.nonFungiblePositionManager.functions.collect(
+            (tokenId, _addr_to_str(self.address), MAX_UINT_128, MAX_UINT_128)
+        ).transact({"from": _addr_to_str(self.address)})
         self.w3.eth.wait_for_transaction_receipt(tx_collect_fees)
 
-        tx_burn = self.nonFungiblePositionManager.functions.burn(tokenId).transact({"from":_addr_to_str(self.address)})
+        tx_burn = self.nonFungiblePositionManager.functions.burn(tokenId).transact(
+            {"from": _addr_to_str(self.address)}
+        )
         receipt = self.w3.eth.wait_for_transaction_receipt(tx_burn)
 
         return receipt
 
     # Below two functions derived from: https://stackoverflow.com/questions/71814845/how-to-calculate-uniswap-v3-pools-total-value-locked-tvl-on-chain
-    def get_token0_in_pool(self, liquidity: float, sqrtPrice: float, sqrtPriceLow: float, sqrtPriceHigh: float) ->  float:
+    def get_token0_in_pool(
+        self,
+        liquidity: float,
+        sqrtPrice: float,
+        sqrtPriceLow: float,
+        sqrtPriceHigh: float,
+    ) -> float:
         sqrtPrice = max(min(sqrtPrice, sqrtPriceHigh), sqrtPriceLow)
         return liquidity * (sqrtPriceHigh - sqrtPrice) / (sqrtPrice * sqrtPriceHigh)
-    
-    def get_token1_in_pool(self, liquidity: float, sqrtPrice: float, sqrtPriceLow: float, sqrtPriceHigh: float) -> float:
+
+    def get_token1_in_pool(
+        self,
+        liquidity: float,
+        sqrtPrice: float,
+        sqrtPriceLow: float,
+        sqrtPriceHigh: float,
+    ) -> float:
         sqrtPrice = max(min(sqrtPrice, sqrtPriceHigh), sqrtPriceLow)
         return liquidity * (sqrtPrice - sqrtPriceLow)
 
-
     #  Find maximum tick of the word at the largest index (wordPos) in the tickBitmap that contains an initialized tick
-    def get_max_tick_from_wordpos(self, wordPos: int, bitmap: str, tick_spacing: int, fee: int) -> int:
+    def get_max_tick_from_wordpos(
+        self, wordPos: int, bitmap: str, tick_spacing: int, fee: int
+    ) -> int:
         compressed_tick = wordPos << 8
         _tick = compressed_tick * tick_spacing
         min_tick_in_word = nearest_tick(_tick, fee)
@@ -1213,14 +1241,23 @@ class Uniswap:
         return max_tick_in_word
 
     # Find minimum tick of word at the smallest index (wordPos) in the tickBitmap that contains an initialized tick
-    def get_min_tick_from_wordpos(self, wordPos: int, tick_spacing: int, fee: int) ->  int:
+    def get_min_tick_from_wordpos(
+        self, wordPos: int, tick_spacing: int, fee: int
+    ) -> int:
         compressed_tick = wordPos << 8
         _tick = compressed_tick * tick_spacing
         min_tick_in_word = nearest_tick(_tick, fee)
         return min_tick_in_word
 
     # Find min or max tick in initialized tick range using the tickBitmap
-    def find_tick_from_bitmap(self, bitmap_spacing: Tuple[int, int], pool: Contract, tick_spacing: int, fee: int, left: bool = True) -> Union[int, bool]:
+    def find_tick_from_bitmap(
+        self,
+        bitmap_spacing: Tuple[int, int],
+        pool: Contract,
+        tick_spacing: int,
+        fee: int,
+        left: bool = True,
+    ) -> Union[int, bool]:
         # searching to the left (finding max tick)
         if left:
             min_wordPos = bitmap_spacing[1]
@@ -1233,9 +1270,9 @@ class Uniswap:
             step = 1
 
         # Some fun tickBitmap hacks below.
-        # Iterate thru each possible wordPos (based on tick_spacing), get the bitmap "word" (basically a sub-array of the full bitmap), 
+        # Iterate thru each possible wordPos (based on tick_spacing), get the bitmap "word" (basically a sub-array of the full bitmap),
         # check if there is an initialized tick, derive largest (or smallest) tick in this word
-        # 
+        #
         # Since wordPos (int16 index of tickBitmap mapping) are calculated by (tick/tickspacing) >> 8, deriving tick from wordPos
         # is done by (wordPos << 8)*tickSpacing. This however does not find the precise tick (only a possible tick that could map to that bitmap sub-array, or word),
         # thus we must calculate the nearest viable tick depending on the tick_spacing of the pool using nearest_tick().
@@ -1247,14 +1284,18 @@ class Uniswap:
             for bit in bitmap[3:]:
                 if int(bit) == 1:
                     if left:
-                        _max_tick = self.get_max_tick_from_wordpos(wordPos, bitmap, tick_spacing, fee)
+                        _max_tick = self.get_max_tick_from_wordpos(
+                            wordPos, bitmap, tick_spacing, fee
+                        )
                         return _max_tick
                     else:
-                        _min_tick = self.get_min_tick_from_wordpos(wordPos, tick_spacing, fee)
+                        _min_tick = self.get_min_tick_from_wordpos(
+                            wordPos, tick_spacing, fee
+                        )
                         return _min_tick
         return False
 
-    def get_tvl_in_pool(self, pool: Contract) -> Tuple[float,float]:
+    def get_tvl_in_pool(self, pool: Contract) -> Tuple[float, float]:
         """
         Iterate through each tick in a pool and calculate the TVL on-chain
 
@@ -1267,31 +1308,34 @@ class Uniswap:
             pool contract instance to find TVL
         """
         pool_tick_output_types = (
-            'uint128', 
-            'int128', 
-            'uint256', 
-            'uint256', 
-            'int56',
-            'uint160',
-            'uint32',
-            'bool'
-            )
+            "uint128",
+            "int128",
+            "uint256",
+            "uint256",
+            "int56",
+            "uint160",
+            "uint32",
+            "bool",
+        )
 
         pool_immutables = self.get_pool_immutables(pool)
         pool_state = self.get_pool_state(pool)
-        fee = pool_immutables['fee']
-        sqrtPrice = pool_state['sqrtPriceX96'] / (1 << 96)
+        fee = pool_immutables["fee"]
+        sqrtPrice = pool_state["sqrtPriceX96"] / (1 << 96)
 
         token0_liquidity = 0.0
         token1_liquidity = 0.0
         liquidity_total = 0.0
-        
-        TICK_SPACING = _tick_spacing[fee]
 
+        TICK_SPACING = _tick_spacing[fee]
         BITMAP_SPACING = _tick_bitmap_range[fee]
 
-        _max_tick = self.find_tick_from_bitmap(BITMAP_SPACING, pool, TICK_SPACING, fee, True)
-        _min_tick = self.find_tick_from_bitmap(BITMAP_SPACING, pool, TICK_SPACING, fee, False)
+        _max_tick = self.find_tick_from_bitmap(
+            BITMAP_SPACING, pool, TICK_SPACING, fee, True
+        )
+        _min_tick = self.find_tick_from_bitmap(
+            BITMAP_SPACING, pool, TICK_SPACING, fee, False
+        )
         assert _max_tick != False, "Error finding max tick"
         assert _min_tick != False, "Error finding min tick"
 
@@ -1302,7 +1346,12 @@ class Uniswap:
             _batch = []
             _ticks = []
             for tick in batch:
-                _batch.append((pool.address, HexBytes(pool.functions.ticks(tick)._encode_transaction_data())))
+                _batch.append(
+                    (
+                        pool.address,
+                        HexBytes(pool.functions.ticks(tick)._encode_transaction_data()),
+                    )
+                )
                 _ticks.append(tick)
             ticks.append(Batch(_ticks, self.multicall(_batch, pool_tick_output_types)))
 
@@ -1316,13 +1365,25 @@ class Uniswap:
                 liquidity_total += liquidityNet
                 sqrtPriceLow = 1.0001 ** (tick // 2)
                 sqrtPriceHigh = 1.0001 ** ((tick + TICK_SPACING) // 2)
-                token0_liquidity += self.get_token0_in_pool(liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh)
-                token1_liquidity += self.get_token1_in_pool(liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh)
+                token0_liquidity += self.get_token0_in_pool(
+                    liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh
+                )
+                token1_liquidity += self.get_token1_in_pool(
+                    liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh
+                )
 
         # Correcting for each token's respective decimals
-        token0_decimals = _load_contract_erc20(self.w3, pool_immutables['token0']).functions.decimals().call()
-        token1_decimals = _load_contract_erc20(self.w3, pool_immutables['token1']).functions.decimals().call()
-        token0_liquidity = token0_liquidity // (10 ** token0_decimals) 
+        token0_decimals = (
+            _load_contract_erc20(self.w3, pool_immutables["token0"])
+            .functions.decimals()
+            .call()
+        )
+        token1_decimals = (
+            _load_contract_erc20(self.w3, pool_immutables["token1"])
+            .functions.decimals()
+            .call()
+        )
+        token0_liquidity = token0_liquidity // (10**token0_decimals)
         token1_liquidity = token1_liquidity // (10**token1_decimals)
         return (token0_liquidity, token1_liquidity)
 
@@ -1477,10 +1538,10 @@ class Uniswap:
 
     # Batch contract function calls to speed up large on-chain data queries
     def multicall(
-        self, 
-        encoded_functions:Sequence[Tuple[ChecksumAddress, bytes]],
-        output_types: Sequence[str]
-        ) -> List[Any]:
+        self,
+        encoded_functions: Sequence[Tuple[ChecksumAddress, bytes]],
+        output_types: Sequence[str],
+    ) -> List[Any]:
         """
         Calls aggregate() on Uniswap Multicall2 contract
 
@@ -1488,18 +1549,27 @@ class Uniswap:
         ------
         encoded_functions : Sequence[Tuple[ChecksumAddress, bytes]]
             array of tuples containing address of contract and byte-encoded transaction data
-        
+
         output_types: Sequence[str]
             array of solidity output types for decoding (e.g. uint256, bool, etc.)
-        
+
         returns decoded results
         """
-        params = [{"target":target, "callData":callData} for target,callData in encoded_functions]
-        _, results = self.multicall2.functions.aggregate(params).call(block_identifier="latest")
-        decoded_results = [self.w3.codec.decode_abi(output_types, multicall_result) for multicall_result in results]
-        normalized_results =[ map_abi_data(
-            BASE_RETURN_NORMALIZERS, output_types, decoded_result
-        ) for  decoded_result in decoded_results]
+        params = [
+            {"target": target, "callData": callData}
+            for target, callData in encoded_functions
+        ]
+        _, results = self.multicall2.functions.aggregate(params).call(
+            block_identifier="latest"
+        )
+        decoded_results = [
+            self.w3.codec.decode_abi(output_types, multicall_result)
+            for multicall_result in results
+        ]
+        normalized_results = [
+            map_abi_data(BASE_RETURN_NORMALIZERS, output_types, decoded_result)
+            for decoded_result in decoded_results
+        ]
         return normalized_results
 
     def get_token(self, address: AddressLike, abi_name: str = "erc20") -> ERC20Token:
@@ -1558,13 +1628,16 @@ class Uniswap:
         Returns an instance of a pool contract for a given token pair and fee.
         Requires pair [token_in, token_out, fee] has a direct pool.
         Will return 0x0 address if pool does not exist.
-
         """
 
         assert token_0 != token_1, "Token addresses cannot be the same"
-        assert fee in list(_tick_spacing.keys()), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
+        assert fee in list(
+            _tick_spacing.keys()
+        ), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
 
-        pool_address = self.factory_contract.functions.getPool(token_0, token_1, fee).call()
+        pool_address = self.factory_contract.functions.getPool(
+            token_0, token_1, fee
+        ).call()
         assert pool_address != ETH_ADDRESS, "0 address returned. Pool does not exist"
         pool_instance = _load_contract(
             self.w3, abi_name="uniswap-v3/pool", address=pool_address
@@ -1578,79 +1651,156 @@ class Uniswap:
     ) -> Contract:
         """
         Creates and returns UniswapV3 Pool instance. Requires that fee is valid and no similar pool already exists.
-
         """
         address = _addr_to_str(self.address)
         assert token_0 != token_1, "Token addresses cannot be the same"
-        assert fee in list(_tick_spacing.keys()), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
+        assert fee in list(
+            _tick_spacing.keys()
+        ), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
 
-        tx = self.factory_contract.functions.createPool(token_0, token_1, fee).transact({'from':address})
+        tx = self.factory_contract.functions.createPool(token_0, token_1, fee).transact(
+            {"from": address}
+        )
         receipt = self.w3.eth.wait_for_transaction_receipt(tx)
-        
+
         event_logs = self.factory_contract.events.PoolCreated().processReceipt(receipt)
-        pool_address = event_logs[0]['args']['pool']
+        pool_address = event_logs[0]["args"]["pool"]
         pool_instance = _load_contract(
             self.w3, abi_name="uniswap-v3/pool", address=pool_address
         )
 
         return pool_instance
-    
+
     @supports([3])
-    def get_pool_immutables(
-        self, pool: Contract
-    ) -> Dict:
+    def get_pool_immutables(self, pool: Contract) -> Dict:
         """
         Fetch on-chain pool data.
         """
         pool_immutables = {
-            'factory': pool.functions.factory().call(),
-            'token0': pool.functions.token0().call(),
-            'token1': pool.functions.token1().call(),
-            'fee': pool.functions.fee().call(),
-            'tickSpacing': pool.functions.tickSpacing().call(),
-            'maxLiquidityPerTick': pool.functions.maxLiquidityPerTick().call()
+            "factory": pool.functions.factory().call(),
+            "token0": pool.functions.token0().call(),
+            "token1": pool.functions.token1().call(),
+            "fee": pool.functions.fee().call(),
+            "tickSpacing": pool.functions.tickSpacing().call(),
+            "maxLiquidityPerTick": pool.functions.maxLiquidityPerTick().call(),
         }
 
         return pool_immutables
 
     @supports([3])
-    def get_pool_state(
-        self, pool: Contract
-    ) -> Dict:
+    def get_pool_state(self, pool: Contract) -> Dict:
         """
         Fetch on-chain pool state.
         """
         liquidity = pool.functions.liquidity().call()
         slot = pool.functions.slot0().call()
         pool_state = {
-            'liquidity':liquidity,
-            'sqrtPriceX96': slot[0],
-            'tick': slot[1],
-            'observationIndex': slot[2],
-            'observationCardinality': slot[3],
-            'observationCardinalityNext': slot[4],
-            'feeProtocol': slot[5],
-            'unlocked': slot[6]
+            "liquidity": liquidity,
+            "sqrtPriceX96": slot[0],
+            "tick": slot[1],
+            "observationIndex": slot[2],
+            "observationCardinality": slot[3],
+            "observationCardinalityNext": slot[4],
+            "feeProtocol": slot[5],
+            "unlocked": slot[6],
         }
 
         return pool_state
-    
+
     @supports([3])
-    def get_liquidity_positions(self, address: Optional[AddressLike] = None) -> List[int]:
+    def get_liquidity_positions(self) -> List[int]:
         """
         Enumerates liquidity position tokens owned by address.
         Returns array of token IDs.
         """
-        if address is None:
-            address = self.address
-            
         positions: List[int] = []
-        number_of_positions = self.nonFungiblePositionManager.functions.balanceOf(_addr_to_str(address)).call()
+        number_of_positions = self.nonFungiblePositionManager.functions.balanceOf(
+            _addr_to_str(self.address)
+        ).call()
         if number_of_positions > 0:
             for idx in range(number_of_positions):
-                position = self.nonFungiblePositionManager.functions.tokenOfOwnerByIndex(_addr_to_str(address), idx).call()
+                position = (
+                    self.nonFungiblePositionManager.functions.tokenOfOwnerByIndex(
+                        _addr_to_str(self.address), idx
+                    ).call()
+                )
                 positions.append(position)
         return positions
+
+    # FIXME: mint call reverting - likely to do w/ passing struct args to contract function call
+    # FIXME: mint call reverting - likely due to handling of token amounts
+
+    @supports([3])
+    def mint_position(self, pool: Contract, amount0: int, amount1: int) -> None:
+
+        # TODO: add to constants.py
+        MIN_TICK = -887272
+        MAX_TICK = -MIN_TICK
+
+        pool_sate = self.get_pool_state(pool)
+        pool_immutables = self.get_pool_immutables(pool)
+
+        token0 = pool_immutables["token0"]
+        token1 = pool_immutables["token1"]
+        fee = pool_immutables["fee"]
+
+        positionManager = self.nonFungiblePositionManager
+
+        approve0 = _load_contract_erc20(self.w3, token0).functions.approve(
+            self.positionManager_addr, amount0
+        )
+        logger.warning(f"Approving {_addr_to_str(token0)}...")
+        tx0 = self._build_and_send_tx(approve0)
+        self.w3.eth.wait_for_transaction_receipt(tx0, timeout=6000)
+
+        approve1 = _load_contract_erc20(self.w3, token1).functions.approve(
+            self.positionManager_addr, amount1 * 1000
+        )
+        logger.warning(f"Approving {_addr_to_str(token1)}...")
+        tx1 = self._build_and_send_tx(approve1)
+        self.w3.eth.wait_for_transaction_receipt(tx1, timeout=6000)
+
+        # tx_mint = pool.functions.mint(self.address, MIN_TICK, MAX_TICK, amount0,'').transact();
+
+        position = positionManager.encodeABI(
+            fn_name="mint",
+            args=[
+                {
+                    "token0": token0,
+                    "token1": token1,
+                    "fee": fee,
+                    "tickLower": MIN_TICK,
+                    "tickUpper": MAX_TICK,
+                    "amount0Desired": amount0,
+                    "amount1Desired": amount1,
+                    "amount0Min": 0,
+                    "amount1Min": 0,
+                    "recipient": _addr_to_str(self.address),
+                    "deadline": self._deadline(),
+                }
+            ],
+        )
+        print(position)
+
+        multicall = positionManager.functions.multicall([position]).transact(
+            {"from": _addr_to_str(self.address), "gas": 417918}
+        )
+
+        print(multicall)
+        # mint_position = positionManager.functions.mint({'token0':token0,'token1':token1,'fee':fee,'tickLower':MIN_TICK,'tickUpper':MAX_TICK,
+        # 'amount0Desired':amount0,'amount1Desired':amount1,'amount0Min':0,'amount1Min':0,'recipient':_addr_to_str(self.address),'deadline':self._deadline()
+        # })
+
+        # mint_tx = self._build_and_send_tx(mint_position)
+        # self.w3.eth.wait_for_transaction_receipt(mint_tx, timeout=6000)
+        #
+        # tx2 = self._build_and_send_tx(multicall,)
+        # self.w3.eth.wait_for_transaction_receipt(tx2, timeout=6000)
+
+        # position = positionManager.functions.mint().buildTransaction()
+        # print(position['data'])
+
+        return multicall
 
     @supports([2, 3])
     def get_raw_price(
@@ -1686,7 +1836,7 @@ class Uniswap:
                 ).call()
             )
             token_in_decimals = self.get_token(token_in).decimals
-            token_in_balance = token_in_balance / (10 ** token_in_decimals)
+            token_in_balance = token_in_balance / (10**token_in_decimals)
 
             token_out_erc20 = _load_contract_erc20(
                 self.w3, self.w3.toChecksumAddress(token_out)
@@ -1697,7 +1847,7 @@ class Uniswap:
                 ).call()
             )
             token_out_decimals = self.get_token(token_out).decimals
-            token_out_balance = token_out_balance / (10 ** token_out_decimals)
+            token_out_balance = token_out_balance / (10**token_out_decimals)
 
             raw_price = token_out_balance / token_in_balance
         else:
@@ -1719,8 +1869,8 @@ class Uniswap:
                 den0 = self.get_token(token_out).decimals
                 den1 = self.get_token(token_in).decimals
             sqrtPriceX96 = pool_contract.functions.slot0().call()[0]
-            raw_price = (sqrtPriceX96 * sqrtPriceX96 * 10 ** den1 >> (96 * 2)) / (
-                10 ** den0
+            raw_price = (sqrtPriceX96 * sqrtPriceX96 * 10**den1 >> (96 * 2)) / (
+                10**den0
             )
             if t1.lower() == token_in.lower():
                 raw_price = 1 / raw_price
