@@ -459,7 +459,6 @@ class Uniswap:
                 input_token, qty, recipient, fee, slippage, fee_on_transfer
             )
         else:
-            print(input_token)
             return self._token_to_token_swap_input(
                 input_token,
                 output_token,
