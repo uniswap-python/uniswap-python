@@ -195,30 +195,6 @@
   <a class="reference internal nav-link" href="#usage">
    Usage
   </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#unipy">
-     unipy
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#unipy-price">
-       price
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#unipy-token">
-       token
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#unipy-tokendb">
-       tokendb
-      </a>
-     </li>
-    </ul>
-   </li>
-  </ul>
  </li>
 </ul>
 
@@ -264,89 +240,6 @@ $ unipy tokendb --metadata
 </div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="unipy">
-<h3>unipy<a class="headerlink" href="#unipy" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>unipy <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
-</pre></div>
-</div>
-<p class="rubric">Options</p>
-<dl class="std option">
-<dt id="cmdoption-unipy-v">
-<span id="cmdoption-unipy-verbose"></span><code class="sig-name descname"><span class="pre">-v</span></code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname"><span class="pre">,</span> </code><code class="sig-name descname"><span class="pre">--verbose</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-unipy-v" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="std option">
-<dt id="cmdoption-unipy-version">
-<code class="sig-name descname"><span class="pre">--version</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;version&gt;</span></code><a class="headerlink" href="#cmdoption-unipy-version" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Options</dt>
-<dd class="field-odd"><p>1 | 2 | 3</p>
-</dd>
-</dl>
-</dd></dl>
-
-<div class="section" id="unipy-price">
-<h4>price<a class="headerlink" href="#unipy-price" title="Permalink to this headline">¶</a></h4>
-<p>Returns the price of <code class="docutils literal notranslate"><span class="pre">quantity</span></code> tokens of <code class="docutils literal notranslate"><span class="pre">token_in</span></code> quoted in <code class="docutils literal notranslate"><span class="pre">token_out</span></code>.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>unipy price <span class="o">[</span>OPTIONS<span class="o">]</span> TOKEN_IN TOKEN_OUT
-</pre></div>
-</div>
-<p class="rubric">Options</p>
-<dl class="std option">
-<dt id="cmdoption-unipy-price-raw">
-<code class="sig-name descname"><span class="pre">--raw</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-unipy-price-raw" title="Permalink to this definition">¶</a></dt>
-<dd><p>Don’t normalize the quoted price to the output token’s decimals</p>
-</dd></dl>
-
-<dl class="std option">
-<dt id="cmdoption-unipy-price-quantity">
-<code class="sig-name descname"><span class="pre">--quantity</span></code><code class="sig-prename descclassname"> <span class="pre">&lt;quantity&gt;</span></code><a class="headerlink" href="#cmdoption-unipy-price-quantity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Quantity of output tokens to get price of. Falls back to one full unit of the input token by default (10**18 for WETH, for example).</p>
-</dd></dl>
-
-<p class="rubric">Arguments</p>
-<dl class="std option">
-<dt id="cmdoption-unipy-price-arg-TOKEN_IN">
-<span id="cmdoption-unipy-price-arg-token-in"></span><code class="sig-name descname"><span class="pre">TOKEN_IN</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-unipy-price-arg-TOKEN_IN" title="Permalink to this definition">¶</a></dt>
-<dd><p>Required argument</p>
-</dd></dl>
-
-<dl class="std option">
-<dt id="cmdoption-unipy-price-arg-TOKEN_OUT">
-<span id="cmdoption-unipy-price-arg-token-out"></span><code class="sig-name descname"><span class="pre">TOKEN_OUT</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-unipy-price-arg-TOKEN_OUT" title="Permalink to this definition">¶</a></dt>
-<dd><p>Required argument</p>
-</dd></dl>
-
-</div>
-<div class="section" id="unipy-token">
-<h4>token<a class="headerlink" href="#unipy-token" title="Permalink to this headline">¶</a></h4>
-<p>Show metadata for token</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>unipy token <span class="o">[</span>OPTIONS<span class="o">]</span> TOKEN
-</pre></div>
-</div>
-<p class="rubric">Arguments</p>
-<dl class="std option">
-<dt id="cmdoption-unipy-token-arg-TOKEN">
-<span id="cmdoption-unipy-token-arg-token"></span><code class="sig-name descname"><span class="pre">TOKEN</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-unipy-token-arg-TOKEN" title="Permalink to this definition">¶</a></dt>
-<dd><p>Required argument</p>
-</dd></dl>
-
-</div>
-<div class="section" id="unipy-tokendb">
-<h4>tokendb<a class="headerlink" href="#unipy-tokendb" title="Permalink to this headline">¶</a></h4>
-<p>List known token addresses</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>unipy tokendb <span class="o">[</span>OPTIONS<span class="o">]</span>
-</pre></div>
-</div>
-<p class="rubric">Options</p>
-<dl class="std option">
-<dt id="cmdoption-unipy-tokendb-metadata">
-<code class="sig-name descname"><span class="pre">--metadata</span></code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-unipy-tokendb-metadata" title="Permalink to this definition">¶</a></dt>
-<dd><p>Also get metadata for tokens</p>
-</dd></dl>
-
-</div>
-</div>
 </div>
 </div>
 
