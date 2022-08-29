@@ -2,7 +2,7 @@ import os
 import json
 import math
 import functools
-from typing import Any, Dict, Generator, Iterable, Sequence, Union, List, Tuple
+from typing import Any, Generator, Sequence, Union, List, Tuple
 
 from web3 import Web3
 from web3.exceptions import NameNotFound
@@ -10,6 +10,7 @@ from web3.contract import Contract
 
 from .constants import MIN_TICK, MAX_TICK, _tick_spacing
 from .types import AddressLike, Address, Contract
+
 
 
 def _str_to_addr(s: Union[AddressLike, str]) -> Address:

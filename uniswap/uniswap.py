@@ -21,7 +21,6 @@ from hexbytes import HexBytes
 
 from .types import AddressLike
 from .token import ERC20Token
-from .tokens import get_tokens
 from .exceptions import InvalidToken, InsufficientBalance
 from .util import (
     _str_to_addr,
@@ -31,15 +30,12 @@ from .util import (
     _load_contract_erc20,
     chunks,
     encode_sqrt_ratioX96,
-    get_max_tick,
     is_same_address,
     nearest_tick,
 )
 from .decorators import supports, check_approval
 from .constants import (
-    MAX_TICK,
     MAX_UINT_128,
-    MIN_TICK,
     WETH9_ADDRESS,
     _netid_to_name,
     _factory_contract_addresses_v1,
@@ -1737,7 +1733,6 @@ class Uniswap:
         MIN_TICK = -887272
         MAX_TICK = -MIN_TICK
 
-        pool_sate = self.get_pool_state(pool)
         pool_immutables = self.get_pool_immutables(pool)
 
         token0 = pool_immutables["token0"]
