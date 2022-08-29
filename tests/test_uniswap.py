@@ -1,4 +1,3 @@
-from async_timeout import timeout
 import pytest
 import os
 import subprocess

@@ -36,6 +36,8 @@ from .util import (
 from .decorators import supports, check_approval
 from .constants import (
     MAX_UINT_128,
+    MAX_TICK,
+    MIN_TICK,
     WETH9_ADDRESS,
     _netid_to_name,
     _factory_contract_addresses_v1,
@@ -1727,12 +1729,7 @@ class Uniswap:
     # FIXME: mint call reverting - likely due to handling of token amounts
 
     @supports([3])
-    def mint_position(self, pool: Contract, amount0: int, amount1: int) -> None:
-
-        # TODO: add to constants.py
-        MIN_TICK = -887272
-        MAX_TICK = -MIN_TICK
-
+    def mint_position(self, pool: Contract, amount0: int, amount1: int) -> HexBytes:
         pool_immutables = self.get_pool_immutables(pool)
 
         token0 = pool_immutables["token0"]
@@ -1778,7 +1775,7 @@ class Uniswap:
         print(position)
 
         multicall = positionManager.functions.multicall([position]).transact(
-            {"from": _addr_to_str(self.address), "gas": 417918}
+            {"from": _addr_to_str(self.address), "gas": Wei(417918)}
         )
 
         print(multicall)
