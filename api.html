@@ -4,11 +4,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
     <title>API Reference &#8212; uniswap-python</title>
     
-  <link href="_static/css/theme.css" rel="stylesheet" />
-  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 
     
   <link rel="stylesheet"
@@ -18,30 +20,44 @@
   <link rel="preload" as="font" type="font/woff2" crossorigin
     href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
     
-      
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
 
-    
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/sphinx-book-theme.e8f53015daec13862f6db5e763c41738.css" type="text/css" />
-    
-  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
-
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
     <link rel="shortcut icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Command line interface" href="cli.html" />
     <link rel="prev" title="Getting started" href="getting-started.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="en" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
+<!-- Checkboxes to toggle the left sidebar -->
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
+<label class="overlay overlay-navbar" for="__navigation">
+    <div class="visually-hidden">Toggle navigation sidebar</div>
+</label>
+<!-- Checkboxes to toggle the in-page toc -->
+<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
+<label class="overlay overlay-pagetoc" for="__page-toc">
+    <div class="visually-hidden">Toggle in-page Table of Contents</div>
+</label>
+<!-- Headers at the top -->
+<div class="announcement header-item noprint"></div>
+<div class="header header-item noprint"></div>
+
     
     <div class="container-fluid" id="banner"></div>
 
@@ -50,10 +66,15 @@
     <div class="container-xl">
       <div class="row">
           
-<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
-    
-        <div class="navbar-brand-box">
+<!-- Sidebar -->
+<div class="bd-sidebar noprint" id="site-navigation">
+    <div class="bd-sidebar__content">
+        <div class="bd-sidebar__top"><div class="navbar-brand-box">
     <a class="navbar-brand text-wrap" href="index.html">
+      
+        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+        
+      
       
       <img src="_static/logo.png" class="logo" alt="logo">
       
@@ -66,7 +87,7 @@
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
-        <p class="caption">
+        <p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Contents:
  </span>
@@ -100,92 +121,183 @@
 </ul>
 
     </div>
-</nav> <!-- To handle the deprecated key -->
-
-<div class="navbar_extra_footer">
-  
+</nav></div>
+        <div class="bd-sidebar__bottom">
+             <!-- To handle the deprecated key -->
+            
+            <div class="navbar_extra_footer">
+            
     <p>
         Back to <a href="https://github.com/shanefontaine/uniswap-python">GitHub</a>
     </p>
-</div>
-
-</div>
-
-
-          
-
-
-          
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
-    
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            
-            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
-                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
-                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
-                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
-                <i class="fas fa-bars"></i>
-                <i class="fas fa-arrow-left"></i>
-                <i class="fas fa-arrow-up"></i>
-            </button>
-            
-            
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
-            class="fas fa-download"></i></button>
-
-    <div class="dropdown-buttons">
-        <!-- ipynb file if we had a myst markdown file -->
-        
-        <!-- Download raw file -->
-        <a class="dropdown-buttons" href="_sources/api.rst.txt"><button type="button"
-                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
-                data-placement="left">.rst</button></a>
-        <!-- Download PDF via print -->
-        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
-            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
-    </div>
-</div>
-
-            <!-- Source interaction buttons -->
-
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/shanefontaine/uniswap-python"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        
-        <a class="edit-button" href="https://github.com/shanefontaine/uniswap-python/edit/master/docs/api.rst"><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Edit this page"><i class="fas fa-pencil-alt"></i>suggest edit</button></a>
-    </div>
-</div>
-
-            <!-- Full screen (wrap in <a> to have style consistency -->
-
-<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
-        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
-        title="Fullscreen mode"><i
-            class="fas fa-expand"></i></button></a>
-
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show">
-            
-            <div class="tocsection onthispage pt-5 pb-3">
-                <i class="fas fa-list"></i> Contents
             </div>
-            <nav id="bd-toc-nav" aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
+            
+        </div>
+    </div>
+    <div id="rtd-footer-container"></div>
+</div>
+
+
+          
+
+
+          
+<!-- A tiny helper pixel to detect if we've scrolled -->
+<div class="sbt-scroll-pixel-helper"></div>
+<!-- Main content -->
+<div class="col py-0 content-container">
+    
+    <div class="header-article row sticky-top noprint">
+        
+
+
+
+<div class="col py-1 d-flex header-article-main">
+    <div class="header-article__left">
+        
+        <label for="__navigation"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="right"
+title="Toggle navigation"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-bars"></i>
+  </span>
+
+</label>
+
+        
+    </div>
+    <div class="header-article__right">
+<button onclick="toggleFullScreen()"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="bottom"
+title="Fullscreen mode"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+<div class="menu-dropdown menu-dropdown-repository-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Source repositories">
+      <i class="fab fa-github"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="https://github.com/shanefontaine/uniswap-python"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Source repository"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="headerbtn__text-container">repository</span>
+</a>
+
+      </li>
+      
+      <li>
+        <a href="https://github.com/shanefontaine/uniswap-python/edit/master/docs/api.rst"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Edit this page"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="headerbtn__text-container">suggest edit</span>
+</a>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+
+<div class="menu-dropdown menu-dropdown-download-buttons">
+  <button class="headerbtn menu-dropdown__trigger"
+      aria-label="Download this page">
+      <i class="fas fa-download"></i>
+  </button>
+  <div class="menu-dropdown__content">
+    <ul>
+      <li>
+        <a href="_sources/api.rst.txt"
+   class="headerbtn"
+   data-toggle="tooltip"
+data-placement="left"
+title="Download source file"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="headerbtn__text-container">.rst</span>
+</a>
+
+      </li>
+      
+      <li>
+        
+<button onclick="printPdf(this)"
+  class="headerbtn"
+  data-toggle="tooltip"
+data-placement="left"
+title="Print to PDF"
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="headerbtn__text-container">.pdf</span>
+</button>
+
+      </li>
+      
+    </ul>
+  </div>
+</div>
+<label for="__page-toc"
+  class="headerbtn headerbtn-page-toc"
+  
+>
+  
+
+<span class="headerbtn__icon-container">
+  <i class="fas fa-list"></i>
+  </span>
+
+</label>
+
+    </div>
+</div>
+
+<!-- Table of contents -->
+<div class="col-md-3 bd-toc show noprint">
+    <div class="tocsection onthispage pt-5 pb-3">
+        <i class="fas fa-list"></i> Contents
+    </div>
+    <nav id="bd-toc-nav" aria-label="Page">
+        <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
   <a class="reference internal nav-link" href="#uniswap-class">
    Uniswap class
@@ -203,22 +315,55 @@
  </li>
 </ul>
 
-            </nav>
-        </div>
-    </div>
+    </nav>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
-        
+    </div>
+    <div class="article row">
+        <div class="col pl-md-3 pl-lg-5 content-container">
+            <!-- Table of contents that is only displayed when printing the page -->
+            <div id="jb-print-docs-body" class="onlyprint">
+                <h1>API Reference</h1>
+                <!-- Table of contents -->
+                <div id="print-main-content">
+                    <div id="jb-print-toc">
+                        
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#uniswap-class">
+   Uniswap class
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-uniswap.token">
+   Token class
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#module-uniswap.exceptions">
+   Exceptions
+  </a>
+ </li>
+</ul>
+
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <main id="main-content" role="main">
+                
               <div>
                 
-  <div class="section" id="module-uniswap">
-<span id="api-reference"></span><h1>API Reference<a class="headerlink" href="#module-uniswap" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="uniswap-class">
-<h2>Uniswap class<a class="headerlink" href="#uniswap-class" title="Permalink to this headline">¶</a></h2>
+  <section id="module-uniswap">
+<span id="api-reference"></span><h1>API Reference<a class="headerlink" href="#module-uniswap" title="Permalink to this headline">#</a></h1>
+<section id="uniswap-class">
+<h2>Uniswap class<a class="headerlink" href="#uniswap-class" title="Permalink to this headline">#</a></h2>
 <dl class="py class">
-<dt id="uniswap.Uniswap">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">uniswap.</span></code><code class="sig-name descname"><span class="pre">Uniswap</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">private_key</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">web3</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">web3.main.Web3</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_slippage</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_estimate_gas</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factory_contract_addr</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">router_contract_addr</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uniswap.Uniswap" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">uniswap.</span></span><span class="sig-name descname"><span class="pre">Uniswap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">private_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">web3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">web3.main.Web3</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_slippage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_estimate_gas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factory_contract_addr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">router_contract_addr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uniswap.Uniswap" title="Permalink to this definition">#</a></dt>
 <dd><p>Wrapper around Uniswap contracts.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -235,100 +380,100 @@
 </dd>
 </dl>
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_price_input">
-<code class="sig-name descname"><span class="pre">get_price_input</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token0</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token1</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#uniswap.Uniswap.get_price_input" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_price_input">
+<span class="sig-name descname"><span class="pre">get_price_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_price_input" title="Permalink to this definition">#</a></dt>
 <dd><p>Given <cite>qty</cite> amount of the input <cite>token0</cite>, returns the maximum output amount of output <cite>token1</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_price_output">
-<code class="sig-name descname"><span class="pre">get_price_output</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token0</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token1</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#uniswap.Uniswap.get_price_output" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_price_output">
+<span class="sig-name descname"><span class="pre">get_price_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_price_output" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the minimum amount of <cite>token0</cite> required to buy <cite>qty</cite> amount of <cite>token1</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.make_trade">
-<code class="sig-name descname"><span class="pre">make_trade</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">Wei</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recipient</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slippage</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee_on_transfer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">hexbytes.main.HexBytes</span><a class="headerlink" href="#uniswap.Uniswap.make_trade" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.make_trade">
+<span class="sig-name descname"><span class="pre">make_trade</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Wei</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recipient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slippage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee_on_transfer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">hexbytes.main.HexBytes</span></span></span><a class="headerlink" href="#uniswap.Uniswap.make_trade" title="Permalink to this definition">#</a></dt>
 <dd><p>Make a trade by defining the qty of the input token.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.make_trade_output">
-<code class="sig-name descname"><span class="pre">make_trade_output</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">Wei</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recipient</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slippage</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">hexbytes.main.HexBytes</span><a class="headerlink" href="#uniswap.Uniswap.make_trade_output" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.make_trade_output">
+<span class="sig-name descname"><span class="pre">make_trade_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Wei</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recipient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slippage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">hexbytes.main.HexBytes</span></span></span><a class="headerlink" href="#uniswap.Uniswap.make_trade_output" title="Permalink to this definition">#</a></dt>
 <dd><p>Make a trade by defining the qty of the output token.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_eth_balance">
-<code class="sig-name descname"><span class="pre">get_eth_balance</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">Wei</span><a class="headerlink" href="#uniswap.Uniswap.get_eth_balance" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_eth_balance">
+<span class="sig-name descname"><span class="pre">get_eth_balance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Wei</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_eth_balance" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the balance of ETH for your address.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_token_balance">
-<code class="sig-name descname"><span class="pre">get_token_balance</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#uniswap.Uniswap.get_token_balance" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_token_balance">
+<span class="sig-name descname"><span class="pre">get_token_balance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_token_balance" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the balance of a token for your address.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_ex_eth_balance">
-<code class="sig-name descname"><span class="pre">get_ex_eth_balance</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#uniswap.Uniswap.get_ex_eth_balance" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_ex_eth_balance">
+<span class="sig-name descname"><span class="pre">get_ex_eth_balance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_ex_eth_balance" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the balance of ETH in an exchange contract.</p>
 <p>Supports Uniswap
 v1</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_ex_token_balance">
-<code class="sig-name descname"><span class="pre">get_ex_token_balance</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#uniswap.Uniswap.get_ex_token_balance" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_ex_token_balance">
+<span class="sig-name descname"><span class="pre">get_ex_token_balance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_ex_token_balance" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the balance of a token in an exchange contract.</p>
 <p>Supports Uniswap
 v1</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_exchange_rate">
-<code class="sig-name descname"><span class="pre">get_exchange_rate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">float</span><a class="headerlink" href="#uniswap.Uniswap.get_exchange_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_exchange_rate">
+<span class="sig-name descname"><span class="pre">get_exchange_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_exchange_rate" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the current ETH/token exchange rate of the token.</p>
 <p>Supports Uniswap
 v1</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.add_liquidity">
-<code class="sig-name descname"><span class="pre">add_liquidity</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_eth</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Wei</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_liquidity</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">hexbytes.main.HexBytes</span><a class="headerlink" href="#uniswap.Uniswap.add_liquidity" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.add_liquidity">
+<span class="sig-name descname"><span class="pre">add_liquidity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_eth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Wei</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_liquidity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">hexbytes.main.HexBytes</span></span></span><a class="headerlink" href="#uniswap.Uniswap.add_liquidity" title="Permalink to this definition">#</a></dt>
 <dd><p>Add liquidity to the pool.</p>
 <p>Supports Uniswap
 v1</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.remove_liquidity">
-<code class="sig-name descname"><span class="pre">remove_liquidity</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">hexbytes.main.HexBytes</span><a class="headerlink" href="#uniswap.Uniswap.remove_liquidity" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.remove_liquidity">
+<span class="sig-name descname"><span class="pre">remove_liquidity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">hexbytes.main.HexBytes</span></span></span><a class="headerlink" href="#uniswap.Uniswap.remove_liquidity" title="Permalink to this definition">#</a></dt>
 <dd><p>Remove liquidity from the pool.</p>
 <p>Supports Uniswap
 v1</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.mint_liquidity">
-<code class="sig-name descname"><span class="pre">mint_liquidity</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">web3.contract.Contract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_0</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_1</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_lower</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_upper</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deadline</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">18446744073709551616</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">web3.types.TxReceipt</span><a class="headerlink" href="#uniswap.Uniswap.mint_liquidity" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.mint_liquidity">
+<span class="sig-name descname"><span class="pre">mint_liquidity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">web3.contract.Contract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_lower</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tick_upper</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deadline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">18446744073709551616</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">web3.types.TxReceipt</span></span></span><a class="headerlink" href="#uniswap.Uniswap.mint_liquidity" title="Permalink to this definition">#</a></dt>
 <dd><p>add liquidity to pool and mint position nft</p>
 <p>Supports Uniswap
 v3</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.close_position">
-<code class="sig-name descname"><span class="pre">close_position</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenId</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount0Min</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount1Min</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deadline</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">web3.types.TxReceipt</span><a class="headerlink" href="#uniswap.Uniswap.close_position" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.close_position">
+<span class="sig-name descname"><span class="pre">close_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenId</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount0Min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount1Min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deadline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">web3.types.TxReceipt</span></span></span><a class="headerlink" href="#uniswap.Uniswap.close_position" title="Permalink to this definition">#</a></dt>
 <dd><p>remove all liquidity from the position associated w/ tokenId, collect fees, and burn token.</p>
 <p>Supports Uniswap
 v3</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_tvl_in_pool">
-<code class="sig-name descname"><span class="pre">get_tvl_in_pool</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">web3.contract.Contract</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#uniswap.Uniswap.get_tvl_in_pool" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_tvl_in_pool">
+<span class="sig-name descname"><span class="pre">get_tvl_in_pool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">web3.contract.Contract</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_tvl_in_pool" title="Permalink to this definition">#</a></dt>
 <dd><p>Iterate through each tick in a pool and calculate the TVL on-chain</p>
 <p>Note: the output of this function may differ from what is returned by the
 UniswapV3 subgraph api (<a class="reference external" href="https://github.com/Uniswap/v3-subgraph/issues/74">https://github.com/Uniswap/v3-subgraph/issues/74</a>)</p>
@@ -339,14 +484,14 @@ UniswapV3 subgraph api (<a class="reference external" href="https://github.com/U
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.approve">
-<code class="sig-name descname"><span class="pre">approve</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_approval</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">None</span><a class="headerlink" href="#uniswap.Uniswap.approve" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.approve">
+<span class="sig-name descname"><span class="pre">approve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_approval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#uniswap.Uniswap.approve" title="Permalink to this definition">#</a></dt>
 <dd><p>Give an exchange/router max approval of a token.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.multicall">
-<code class="sig-name descname"><span class="pre">multicall</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoded_functions</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_types</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#uniswap.Uniswap.multicall" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.multicall">
+<span class="sig-name descname"><span class="pre">multicall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoded_functions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#uniswap.Uniswap.multicall" title="Permalink to this definition">#</a></dt>
 <dd><p>Calls aggregate() on Uniswap Multicall2 contract</p>
 <dl class="simple">
 <dt>encoded_functions<span class="classifier">Sequence[Tuple[ChecksumAddress, bytes]]</span></dt><dd><p>array of tuples containing address of contract and byte-encoded transaction data</p>
@@ -358,22 +503,22 @@ UniswapV3 subgraph api (<a class="reference external" href="https://github.com/U
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_token">
-<code class="sig-name descname"><span class="pre">get_token</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abi_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'erc20'</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#uniswap.token.ERC20Token" title="uniswap.token.ERC20Token"><span class="pre">uniswap.token.ERC20Token</span></a><a class="headerlink" href="#uniswap.Uniswap.get_token" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_token">
+<span class="sig-name descname"><span class="pre">get_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abi_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'erc20'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#uniswap.token.ERC20Token" title="uniswap.token.ERC20Token"><span class="pre">uniswap.token.ERC20Token</span></a></span></span><a class="headerlink" href="#uniswap.Uniswap.get_token" title="Permalink to this definition">#</a></dt>
 <dd><p>Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_weth_address">
-<code class="sig-name descname"><span class="pre">get_weth_address</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">ChecksumAddress</span><a class="headerlink" href="#uniswap.Uniswap.get_weth_address" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_weth_address">
+<span class="sig-name descname"><span class="pre">get_weth_address</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ChecksumAddress</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_weth_address" title="Permalink to this definition">#</a></dt>
 <dd><p>Retrieves the WETH address from the contracts (which may vary between chains).</p>
 <p>Supports Uniswap
 v2, v3</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_pool_instance">
-<code class="sig-name descname"><span class="pre">get_pool_instance</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_0</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_1</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">3000</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">web3.contract.Contract</span><a class="headerlink" href="#uniswap.Uniswap.get_pool_instance" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_pool_instance">
+<span class="sig-name descname"><span class="pre">get_pool_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">web3.contract.Contract</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_pool_instance" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns an instance of a pool contract for a given token pair and fee.
 Requires pair [token_in, token_out, fee] has a direct pool.
 Will return 0x0 address if pool does not exist.</p>
@@ -382,32 +527,32 @@ v3</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.create_pool_instance">
-<code class="sig-name descname"><span class="pre">create_pool_instance</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_0</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_1</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">3000</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">web3.contract.Contract</span><a class="headerlink" href="#uniswap.Uniswap.create_pool_instance" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.create_pool_instance">
+<span class="sig-name descname"><span class="pre">create_pool_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">web3.contract.Contract</span></span></span><a class="headerlink" href="#uniswap.Uniswap.create_pool_instance" title="Permalink to this definition">#</a></dt>
 <dd><p>Creates and returns UniswapV3 Pool instance. Requires that fee is valid and no similar pool already exists.</p>
 <p>Supports Uniswap
 v3</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_pool_immutables">
-<code class="sig-name descname"><span class="pre">get_pool_immutables</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">web3.contract.Contract</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><a class="headerlink" href="#uniswap.Uniswap.get_pool_immutables" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_pool_immutables">
+<span class="sig-name descname"><span class="pre">get_pool_immutables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">web3.contract.Contract</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_pool_immutables" title="Permalink to this definition">#</a></dt>
 <dd><p>Fetch on-chain pool data.</p>
 <p>Supports Uniswap
 v3</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_pool_state">
-<code class="sig-name descname"><span class="pre">get_pool_state</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">web3.contract.Contract</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><a class="headerlink" href="#uniswap.Uniswap.get_pool_state" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_pool_state">
+<span class="sig-name descname"><span class="pre">get_pool_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">web3.contract.Contract</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_pool_state" title="Permalink to this definition">#</a></dt>
 <dd><p>Fetch on-chain pool state.</p>
 <p>Supports Uniswap
 v3</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_liquidity_positions">
-<code class="sig-name descname"><span class="pre">get_liquidity_positions</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#uniswap.Uniswap.get_liquidity_positions" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_liquidity_positions">
+<span class="sig-name descname"><span class="pre">get_liquidity_positions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_liquidity_positions" title="Permalink to this definition">#</a></dt>
 <dd><p>Enumerates liquidity position tokens owned by address.
 Returns array of token IDs.</p>
 <p>Supports Uniswap
@@ -415,15 +560,15 @@ v3</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.mint_position">
-<code class="sig-name descname"><span class="pre">mint_position</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">web3.contract.Contract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount0</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount1</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">hexbytes.main.HexBytes</span><a class="headerlink" href="#uniswap.Uniswap.mint_position" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.mint_position">
+<span class="sig-name descname"><span class="pre">mint_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">web3.contract.Contract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">hexbytes.main.HexBytes</span></span></span><a class="headerlink" href="#uniswap.Uniswap.mint_position" title="Permalink to this definition">#</a></dt>
 <dd><p>Supports Uniswap
 v3</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_raw_price">
-<code class="sig-name descname"><span class="pre">get_raw_price</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_in</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_out</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">float</span><a class="headerlink" href="#uniswap.Uniswap.get_raw_price" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_raw_price">
+<span class="sig-name descname"><span class="pre">get_raw_price</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_raw_price" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns current price for pair of tokens [token_in, token_out] regrading liquidity that is being locked in the pool
 Parameter <cite>fee</cite> is required for V3 only, can be omitted for V2
 Requires pair [token_in, token_out] having direct pool</p>
@@ -432,24 +577,24 @@ v2, v3</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.estimate_price_impact">
-<code class="sig-name descname"><span class="pre">estimate_price_impact</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_in</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_out</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_in</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">float</span><a class="headerlink" href="#uniswap.Uniswap.estimate_price_impact" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.estimate_price_impact">
+<span class="sig-name descname"><span class="pre">estimate_price_impact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_out</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fee</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#uniswap.Uniswap.estimate_price_impact" title="Permalink to this definition">#</a></dt>
 <dd><p>Returns the estimated price impact as a positive float (0.01 = 1%).</p>
 <p>NOTE: Work-in-progress.</p>
 <p>See <code class="docutils literal notranslate"><span class="pre">examples/price_impact.py</span></code> for an example which uses this.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_fee_maker">
-<code class="sig-name descname"><span class="pre">get_fee_maker</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">float</span><a class="headerlink" href="#uniswap.Uniswap.get_fee_maker" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_fee_maker">
+<span class="sig-name descname"><span class="pre">get_fee_maker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_fee_maker" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the maker fee.</p>
 <p>Supports Uniswap
 v1, v2</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="uniswap.Uniswap.get_fee_taker">
-<code class="sig-name descname"><span class="pre">get_fee_taker</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">float</span><a class="headerlink" href="#uniswap.Uniswap.get_fee_taker" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.Uniswap.get_fee_taker">
+<span class="sig-name descname"><span class="pre">get_fee_taker</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#uniswap.Uniswap.get_fee_taker" title="Permalink to this definition">#</a></dt>
 <dd><p>Get the taker fee.</p>
 <p>Supports Uniswap
 v1, v2</p>
@@ -457,126 +602,120 @@ v1, v2</p>
 
 </dd></dl>
 
-</div>
-<div class="section" id="module-uniswap.token">
-<span id="token-class"></span><h2>Token class<a class="headerlink" href="#module-uniswap.token" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-uniswap.token">
+<span id="token-class"></span><h2>Token class<a class="headerlink" href="#module-uniswap.token" title="Permalink to this headline">#</a></h2>
 <dl class="py class">
-<dt id="uniswap.token.BaseToken">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">uniswap.token.</span></code><code class="sig-name descname"><span class="pre">BaseToken</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uniswap.token.BaseToken" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.token.BaseToken">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">uniswap.token.</span></span><span class="sig-name descname"><span class="pre">BaseToken</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uniswap.token.BaseToken" title="Permalink to this definition">#</a></dt>
 <dd><p>Base for tokens of all kinds</p>
 <dl class="py attribute">
-<dt id="uniswap.token.BaseToken.symbol">
-<code class="sig-name descname"><span class="pre">symbol</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#uniswap.token.BaseToken.symbol" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.token.BaseToken.symbol">
+<span class="sig-name descname"><span class="pre">symbol</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#uniswap.token.BaseToken.symbol" title="Permalink to this definition">#</a></dt>
 <dd><p>Symbol such as ETH, DAI, etc.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="uniswap.token.BaseToken.address">
-<code class="sig-name descname"><span class="pre">address</span></code><em class="property"><span class="pre">:</span> <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#uniswap.token.BaseToken.address" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.token.BaseToken.address">
+<span class="sig-name descname"><span class="pre">address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#uniswap.token.BaseToken.address" title="Permalink to this definition">#</a></dt>
 <dd><p>Address of the token contract.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt id="uniswap.token.ERC20Token">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">uniswap.token.</span></code><code class="sig-name descname"><span class="pre">ERC20Token</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decimals</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uniswap.token.ERC20Token" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.token.ERC20Token">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">uniswap.token.</span></span><span class="sig-name descname"><span class="pre">ERC20Token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decimals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uniswap.token.ERC20Token" title="Permalink to this definition">#</a></dt>
 <dd><p>Represents an ERC20 token</p>
 <dl class="py attribute">
-<dt id="uniswap.token.ERC20Token.name">
-<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#uniswap.token.ERC20Token.name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.token.ERC20Token.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#uniswap.token.ERC20Token.name" title="Permalink to this definition">#</a></dt>
 <dd><p>Name of the token, as specified in the contract.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="uniswap.token.ERC20Token.symbol">
-<code class="sig-name descname"><span class="pre">symbol</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#uniswap.token.ERC20Token.symbol" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.token.ERC20Token.symbol">
+<span class="sig-name descname"><span class="pre">symbol</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#uniswap.token.ERC20Token.symbol" title="Permalink to this definition">#</a></dt>
 <dd><p>Symbol such as ETH, DAI, etc.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="uniswap.token.ERC20Token.address">
-<code class="sig-name descname"><span class="pre">address</span></code><em class="property"><span class="pre">:</span> <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#uniswap.token.ERC20Token.address" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.token.ERC20Token.address">
+<span class="sig-name descname"><span class="pre">address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Address</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ChecksumAddress</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#uniswap.token.ERC20Token.address" title="Permalink to this definition">#</a></dt>
 <dd><p>Address of the token contract.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="uniswap.token.ERC20Token.decimals">
-<code class="sig-name descname"><span class="pre">decimals</span></code><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><a class="headerlink" href="#uniswap.token.ERC20Token.decimals" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.token.ERC20Token.decimals">
+<span class="sig-name descname"><span class="pre">decimals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#uniswap.token.ERC20Token.decimals" title="Permalink to this definition">#</a></dt>
 <dd><p>Decimals used to denominate the token.</p>
 </dd></dl>
 
 </dd></dl>
 
-</div>
-<div class="section" id="module-uniswap.exceptions">
-<span id="exceptions"></span><h2>Exceptions<a class="headerlink" href="#module-uniswap.exceptions" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-uniswap.exceptions">
+<span id="exceptions"></span><h2>Exceptions<a class="headerlink" href="#module-uniswap.exceptions" title="Permalink to this headline">#</a></h2>
 <dl class="py exception">
-<dt id="uniswap.exceptions.InvalidToken">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">uniswap.exceptions.</span></code><code class="sig-name descname"><span class="pre">InvalidToken</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uniswap.exceptions.InvalidToken" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.exceptions.InvalidToken">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">uniswap.exceptions.</span></span><span class="sig-name descname"><span class="pre">InvalidToken</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uniswap.exceptions.InvalidToken" title="Permalink to this definition">#</a></dt>
 <dd><p>Raised when an invalid token address is used.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="uniswap.exceptions.InsufficientBalance">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">uniswap.exceptions.</span></code><code class="sig-name descname"><span class="pre">InsufficientBalance</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">had</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">needed</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uniswap.exceptions.InsufficientBalance" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="uniswap.exceptions.InsufficientBalance">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">uniswap.exceptions.</span></span><span class="sig-name descname"><span class="pre">InsufficientBalance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">had</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">needed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#uniswap.exceptions.InsufficientBalance" title="Permalink to this definition">#</a></dt>
 <dd><p>Raised when the account has insufficient balance for a transaction.</p>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
               </div>
               
-        
-            
-
-
-
-<div class='prev-next-bottom'>
-    
-    <div id="prev">
-        <a class="left-prev" href="getting-started.html" title="previous page">
-            <i class="prevnext-label fas fa-angle-left"></i>
-            <div class="prevnext-info">
-                <p class="prevnext-label">previous</p>
-                <p class="prevnext-title">Getting started</p>
-            </div>
-        </a>
+            </main>
+            <footer class="footer-article noprint">
+                
+    <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="getting-started.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Getting started</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="cli.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Command line interface</p>
     </div>
-     <div id="next">
-        <a class="right-next" href="cli.html" title="next page">
-            <div class="prevnext-info">
-                <p class="prevnext-label">next</p>
-                <p class="prevnext-title">Command line interface</p>
-            </div>
-            <i class="prevnext-label fas fa-angle-right"></i>
-        </a>
-     </div>
-
+    <i class="fas fa-angle-right"></i>
+    </a>
 </div>
-        
+            </footer>
         </div>
     </div>
-    <footer class="footer mt-5 mt-md-0">
-    <div class="container">
-      <p>
-        
-          By Shane Fontaine, Erik Bjäreholt, and contributors<br/>
-        
-            &copy; Copyright 2021, Shane Fontaine, Erik Bjäreholt, and contributors.<br/>
-      </p>
+    <div class="footer-content row">
+        <footer class="col footer"><p>
+  
+    By Shane Fontaine, Erik Bjäreholt, and contributors<br/>
+  
+      &copy; Copyright 2021, Shane Fontaine, Erik Bjäreholt, and contributors.<br/>
+</p>
+        </footer>
     </div>
-  </footer>
-</main>
+    
+</div>
 
 
       </div>
     </div>
   
-  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
 
-  
+
   </body>
 </html>
