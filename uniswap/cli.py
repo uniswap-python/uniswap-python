@@ -80,7 +80,7 @@ def price(
             decimals = 18
         else:
             decimals = uni.get_token(token_in).decimals
-        quantity = 10 ** decimals
+        quantity = 10**decimals
     price = uni.get_price_input(token_in, token_out, qty=quantity)
     if raw:
         click.echo(price)
@@ -89,7 +89,7 @@ def price(
             decimals = 18
         else:
             decimals = uni.get_token(token_out).decimals
-        click.echo(price / 10 ** decimals)
+        click.echo(price / 10**decimals)
 
 
 @main.command()
