@@ -8,6 +8,7 @@ from typing import List, Any, Optional, Sequence, Union, Tuple, Iterable, Dict
 from web3 import Web3
 from web3._utils.abi import map_abi_data
 from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
+from web3.middleware import simple_cache_middleware
 from web3.contract import Contract, ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
@@ -115,7 +116,7 @@ class Uniswap:
                 provider = os.environ["PROVIDER"]
             self.w3 = Web3(Web3.HTTPProvider(provider, request_kwargs={"timeout": 60}))
 
-        # Cache netid to avoid extra RPC calls
+        self.w3.middleware_onion.inject(simple_cache_middleware, layer=0)
         self.netid = int(self.w3.net.version)
         if self.netid in _netid_to_name:
             self.netname = _netid_to_name[self.netid]
