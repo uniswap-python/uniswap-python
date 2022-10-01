@@ -64,6 +64,7 @@ MIN_TICK = -887272
 MAX_TICK = -MIN_TICK
 
 # Source: https://github.com/Uniswap/v3-core/blob/v1.0.0/contracts/UniswapV3Factory.sol#L26-L31
-_tick_spacing = {500: 10, 3_000: 60, 10_000: 200}
+_tick_spacing = {100:1, 500: 10, 3_000: 60, 10_000: 200}
 
-_tick_bitmap_range = {500: (-347, 346), 3_000: (-58, 57), 10_000: (-18, 17)}
+# Derived from (MIN_TICK//tick_spacing) >> 8 and (MAX_TICK//tick_spacing) >> 8
+_tick_bitmap_range = {100:(-3466, 3465), 500: (-347, 346), 3_000: (-58, 57), 10_000: (-18, 17)}
