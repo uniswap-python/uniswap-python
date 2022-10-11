@@ -1385,6 +1385,101 @@ class Uniswap:
         token1_liquidity = token1_liquidity // (10**token1_decimals)
         return (token0_liquidity, token1_liquidity)
 
+    def get_asset_locked_per_tick_in_pool(self, pool: Contract) -> Dict:
+        """
+        Iterate through each tick in a pool and calculate the amount of asset
+        locked on-chain per tick
+
+        Note: the output of this function may differ from what is returned by the
+        UniswapV3 subgraph api (https://github.com/Uniswap/v3-subgraph/issues/74)
+
+        Params
+        ------
+        pool: Contract
+            pool contract instance to find TVL
+        """
+        pool_tick_output_types = (
+            "uint128",
+            "int128",
+            "uint256",
+            "uint256",
+            "int56",
+            "uint160",
+            "uint32",
+            "bool",
+        )
+
+        pool_immutables = self.get_pool_immutables(pool)
+        pool_state = self.get_pool_state(pool)
+        fee = pool_immutables["fee"]
+        sqrtPrice = pool_state["sqrtPriceX96"] / (1 << 96)
+
+        TICK_SPACING = _tick_spacing[fee]
+        BITMAP_SPACING = _tick_bitmap_range[fee]
+
+        _max_tick = self.find_tick_from_bitmap(BITMAP_SPACING, pool, TICK_SPACING, fee, True)
+        _min_tick = self.find_tick_from_bitmap(BITMAP_SPACING, pool, TICK_SPACING, fee, False)
+
+        assert _max_tick != False, "Error finding max tick"
+        assert _min_tick != False, "Error finding min tick"
+
+        # # Correcting for each token's respective decimals
+        token0_decimals = (
+            _load_contract_erc20(self.w3, pool_immutables["token0"])
+            .functions.decimals()
+            .call()
+        )
+        token1_decimals = (
+            _load_contract_erc20(self.w3, pool_immutables["token1"])
+            .functions.decimals()
+            .call()
+        )
+        Batch = namedtuple("Batch", "ticks batchResults")
+        ticks = []
+        # Batching pool.functions.tick() calls as these are the major bottleneck to performance
+        for batch in list(chunks(range(_min_tick, _max_tick, TICK_SPACING), 1000)):
+            _batch = []
+            _ticks = []
+            for tick in batch:
+                _batch.append(
+                    (
+                        pool.address,
+                        HexBytes(pool.functions.ticks(tick)._encode_transaction_data()),
+                    )
+                )
+                _ticks.append(tick)
+            ticks.append(Batch(_ticks, self.multicall(_batch, pool_tick_output_types)))
+
+        liquidity_total = 0
+        liquidity_per_tick_dict = {
+            'ticks': [],
+            'token0': [],
+            'token1': []
+        }
+        for tickBatch in ticks:
+            tick_arr = tickBatch.ticks
+            for i in range(len(tick_arr)):
+                tick = tick_arr[i]
+                tickData = tickBatch.batchResults[i]
+                # source: https://stackoverflow.com/questions/71814845/how-to-calculate-uniswap-v3-pools-total-value-locked-tvl-on-chain
+                liquidityNet = tickData[1]
+                liquidity_total += liquidityNet
+                sqrtPriceLow = 1.0001 ** (tick // 2)
+                sqrtPriceHigh = 1.0001 ** ((tick + TICK_SPACING) // 2)
+                token0_liquidity = self.get_token0_in_pool(
+                    liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh
+                )
+                token1_liquidity = self.get_token1_in_pool(
+                    liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh
+                )
+                token0_liquidity = token0_liquidity // (10**token0_decimals)
+                token1_liquidity = token1_liquidity // (10**token1_decimals)
+                liquidity_per_tick_dict['ticks'].append(tick)
+                liquidity_per_tick_dict['token0'].append(token0_liquidity)
+                liquidity_per_tick_dict['token1'].append(token1_liquidity)
+
+        return liquidity_per_tick_dict
+
     # ------ Approval Utils ------------------------------------------------------------
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
         """Give an exchange/router max approval of a token."""

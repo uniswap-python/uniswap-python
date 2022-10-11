@@ -377,6 +377,31 @@ class TestUniswap(object):
         assert tvl_0 > 0
         assert tvl_1 > 0
 
+    @pytest.mark.parametrize("token0, token1", [("DAI", "USDC")])
+    def test_asset_locked_per_tick_sums_to_tvl(self, client: Uniswap, token0, token1):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+
+        pool = client.get_pool_instance(tokens[token0], tokens[token1])
+        asset_locked_per_tick_dict = client.get_asset_locked_per_tick_in_pool(pool)
+
+        # check TVL adds up correctly
+        token0_total = 0
+        token1_total = 0
+        ticks = asset_locked_per_tick_dict['ticks']
+        token0_arr = asset_locked_per_tick_dict['token0']
+        token1_arr = asset_locked_per_tick_dict['token1']
+
+        for i, tick in enumerate(ticks):
+            token0_total += token0_arr[i]
+            token1_total += token1_arr[i]
+
+        tvl_0, tvl_1 = client.get_tvl_in_pool(pool)
+
+        self.assertAlmostEqual(tvl_0, token0_total)
+        self.assertAlmostEqual(tvl_1, token1_total)
+        self.assertAlmostEqual(tvl_0 + tvl_1, token0_total + token1_total)
+
     @pytest.mark.skip
     @pytest.mark.parametrize(
         "token, max_eth",
