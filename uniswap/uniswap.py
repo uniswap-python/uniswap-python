@@ -23,6 +23,7 @@ from .types import AddressLike
 from .token import ERC20Token
 from .exceptions import InvalidToken, InsufficientBalance
 from .util import (
+    _get_eth_simple_cache_middleware,
     _str_to_addr,
     _addr_to_str,
     _validate_address,
@@ -78,6 +79,7 @@ class Uniswap:
         # use_eip1559: bool = True,
         factory_contract_addr: str = None,
         router_contract_addr: str = None,
+        enable_caching: bool = False,
     ) -> None:
         """
         :param address: The public address of the ETH wallet to use.
@@ -88,6 +90,7 @@ class Uniswap:
         :param default_slippage: Default slippage for a trade, as a float (0.01 is 1%). WARNING: slippage is untested.
         :param factory_contract_addr: Can be optionally set to override the address of the factory contract.
         :param router_contract_addr: Can be optionally set to override the address of the router contract (v2 only).
+        :param enable_caching: Optionally enables middleware caching RPC method calls.
         """
         self.address = _str_to_addr(
             address or "0x0000000000000000000000000000000000000000"
@@ -115,7 +118,9 @@ class Uniswap:
                 provider = os.environ["PROVIDER"]
             self.w3 = Web3(Web3.HTTPProvider(provider, request_kwargs={"timeout": 60}))
 
-        # Cache netid to avoid extra RPC calls
+        if enable_caching:
+            self.w3.middleware_onion.inject(_get_eth_simple_cache_middleware(), layer=0)
+
         self.netid = int(self.w3.net.version)
         if self.netid in _netid_to_name:
             self.netname = _netid_to_name[self.netid]
