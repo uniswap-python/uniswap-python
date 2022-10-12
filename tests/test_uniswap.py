@@ -398,9 +398,9 @@ class TestUniswap(object):
 
         tvl_0, tvl_1 = client.get_tvl_in_pool(pool)
 
-        self.assertAlmostEqual(tvl_0, token0_total)
-        self.assertAlmostEqual(tvl_1, token1_total)
-        self.assertAlmostEqual(tvl_0 + tvl_1, token0_total + token1_total)
+        assert tvl_0 == token0_total
+        assert tvl_1 == token1_total
+        assert tvl_0 + tvl_1 == token0_total + token1_total
 
     @pytest.mark.skip
     @pytest.mark.parametrize(
