@@ -118,7 +118,7 @@ class Uniswap:
                 provider = os.environ["PROVIDER"]
             self.w3 = Web3(Web3.HTTPProvider(provider, request_kwargs={"timeout": 60}))
 
-        if enable_caching == True:
+        if enable_caching:
             self.w3.middleware_onion.inject(_get_eth_simple_cache_middleware(), layer=0)
 
         self.netid = int(self.w3.net.version)
