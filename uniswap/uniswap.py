@@ -1451,7 +1451,7 @@ class Uniswap:
             ticks.append(Batch(_ticks, self.multicall(_batch, pool_tick_output_types)))
 
         liquidity_total = 0
-        liquidity_per_tick_dict = {
+        liquidity_per_tick_dict: Dict = {
             'ticks': [],
             'token0': [],
             'token1': []
