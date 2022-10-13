@@ -378,7 +378,7 @@ class TestUniswap(object):
         assert tvl_1 > 0
 
     @pytest.mark.parametrize("token0, token1", [("DAI", "USDC")])
-    def test_asset_locked_per_tick_sums_to_tvl(self, client: Uniswap, token0, token1):
+    def test_asset_locked_per_tick_sums_to_tvl(self, client: Uniswap, tokens, token0, token1):
         if client.version != 3:
             pytest.skip("Not supported in this version of Uniswap")
 
