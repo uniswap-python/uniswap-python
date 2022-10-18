@@ -450,6 +450,9 @@ class Uniswap:
         fee_on_transfer: bool = False,
     ) -> HexBytes:
         """Make a trade by defining the qty of the input token."""
+        if not isinstance(qty, int):
+            raise TypeError("swapped quantity must be an integer")
+
         if fee is None:
             fee = 3000
             if self.version == 3:
