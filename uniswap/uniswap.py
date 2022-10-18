@@ -1193,41 +1193,26 @@ class Uniswap:
                 (tokenId, _addr_to_str(self.address), MAX_UINT_128, MAX_UINT_128)
             ).call()
 
-        # ------ Run through transactions --------------------------------------------------
         # Build remove liquidity tx
         tx_remove_liquidity = (
             self.nonFungiblePositionManager.functions.decreaseLiquidity(
                 (tokenId, position[7], amount0Min, amount1Min, deadline)
-            )#.transact({"from": _addr_to_str(self.address)})
+            )
         )
-
-        # Sign tx
         tx_remove_liquidity_create = self._build_and_send_tx(tx_remove_liquidity)
-
-        # Get receipt
         self.w3.eth.wait_for_transaction_receipt(tx_remove_liquidity_create)
 
-        #-----------------------------------------------------------------------------------
         # Build collect fees tx
         tx_collect_fees = self.nonFungiblePositionManager.functions.collect(
             (tokenId, _addr_to_str(self.address), MAX_UINT_128, MAX_UINT_128)
-        )#.transact({"from": _addr_to_str(self.address)})
-
-        # Sign tx
+        )
         tx_collect_fees_create = self._build_and_send_tx(tx_collect_fees)
+        self.w3.eth.wait_for_transaction_receipt(tx_collect_fees_create)
 
-        # Get receipt
-        self.w3.eth.wait_for_transaction_receipt(tx_collect_fees)
-
-        #-----------------------------------------------------------------------------------
         # Build burn tx
-        tx_burn = self.nonFungiblePositionManager.functions.burn(tokenId)#.transact({"from": _addr_to_str(self.address)})
-
-        # Sign tx
+        tx_burn = self.nonFungiblePositionManager.functions.burn(tokenId)
         tx_burn_create = self._build_and_send_tx(tx_burn)
-
-        # Get receipt
-        receipt = self.w3.eth.wait_for_transaction_receipt(tx_burn)
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx_burn_create)
 
         return receipt
 
