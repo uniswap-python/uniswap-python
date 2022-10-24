@@ -11,6 +11,7 @@
 [![PyPI](https://img.shields.io/pypi/v/uniswap-python)](https://pypi.org/project/uniswap-python/)
 [![Typechecking: Mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![GitPOAP Badge](https://public-api.gitpoap.io/v1/repo/uniswap-python/uniswap-python/badge)](https://www.gitpoap.io/gh/uniswap-python/uniswap-python)
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/uniswap-python/uniswap-python?style=social)](https://github.com/uniswap-python/uniswap-python/stargazers)
 [![Twitter Follow](https://img.shields.io/twitter/follow/UniswapPython?label=Follow&style=social)](https://twitter.com/UniswapPython)
@@ -68,6 +69,12 @@ You can support us on [Gitcoin Grants](https://gitcoin.co/grants/2631/uniswap-py
 * ...and [others](https://github.com/uniswap-python/uniswap-python/graphs/contributors)
 
 *Want to help out with development? We have funding to those that do! See [#181](https://github.com/uniswap-python/uniswap-python/discussions/181)*
+
+Contributors also earn this beautiful [GitPOAP](https://gitpoap.notion.site/What-s-a-GitPOAP-5b085daac4b4429994b5231be028b3d9) for their contributions!
+
+<a href="https://www.gitpoap.io/gh/uniswap-python/uniswap-python">
+  <img src="https://assets.poap.xyz/gitpoap-2022-uniswap-python-contributor-2022-logo-1664825191444.png" width="256px">
+</a>
 
 ## Changelog
 
