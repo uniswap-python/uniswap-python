@@ -472,6 +472,7 @@ class TestUniswap(object):
                 None,
                 lambda: pytest.raises(InsufficientBalance),
             ),
+            ("DAI", "DAI", ONE_USDC, None, lambda: pytest.raises(ValueError)),
         ],
     )
     def test_make_trade_output(
