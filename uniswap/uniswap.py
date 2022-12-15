@@ -137,7 +137,7 @@ class Uniswap:
         # with each trade.
         max_approval_hex = f"0x{64 * 'f'}"
         self.max_approval_int = int(max_approval_hex, 16)
-        max_approval_check_hex = f"0x{15 * '0'}{49 * 'f'}"
+        max_approval_check_hex = f"0x{40 * '0'}{20 * 'f'}"
         self.max_approval_check_int = int(max_approval_check_hex, 16)
 
         if self.version == 1:
