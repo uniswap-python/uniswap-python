@@ -507,7 +507,7 @@ class Uniswap:
 
         if input_token == ETH_ADDRESS:
             balance = self.get_eth_balance()
-            need = self._get_eth_token_output_price(output_token, qty)
+            need = self._get_eth_token_output_price(output_token, qty, fee)
             if balance < need:
                 raise InsufficientBalance(balance, need)
             return self._eth_to_token_swap_output(
