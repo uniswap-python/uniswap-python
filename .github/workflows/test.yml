@@ -69,7 +69,7 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install
-        npm install -g ganache@7.3.2
+        npm install -g ganache@7.5.0
 
     - name: Test
       env:
