@@ -28,10 +28,10 @@ def _coerce_to_checksum(addr: str) -> str:
             raise ValueError(
                 "token was not an address, and a shorthand was not found in the token db"
             )
-    if Web3.isChecksumAddress(addr):
+    if Web3.is_checksum_address(addr):
         return addr
     else:
-        return Web3.toChecksumAddress(addr)
+        return Web3.to_checksum_address(addr)
 
 
 @click.group()

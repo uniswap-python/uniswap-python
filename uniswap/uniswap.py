@@ -8,7 +8,8 @@ from typing import List, Any, Optional, Sequence, Union, Tuple, Iterable, Dict
 from web3 import Web3
 from web3._utils.abi import map_abi_data
 from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
-from web3.contract import Contract, ContractFunction
+from web3.contract import Contract
+from web3.contract.base_contract import BaseContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
     TxParams,
@@ -18,7 +19,6 @@ from web3.types import (
 )
 from eth_typing.evm import Address, ChecksumAddress
 from hexbytes import HexBytes
-
 from .types import AddressLike
 from .token import ERC20Token
 from .exceptions import InvalidToken, InsufficientBalance
@@ -1435,12 +1435,12 @@ class Uniswap:
         return int(time.time()) + 10 * 60
 
     def _build_and_send_tx(
-        self, function: ContractFunction, tx_params: Optional[TxParams] = None
+        self, function: BaseContractFunction, tx_params: Optional[TxParams] = None
     ) -> HexBytes:
         """Build and send a transaction."""
         if not tx_params:
             tx_params = self._get_tx_params()
-        transaction = function.build_transaction(tx_params)
+        transaction = function._build_transaction(tx_params)
 
         if "gas" not in tx_params:
             # `use_estimate_gas` needs to be True for networks like Arbitrum (can't assume 250000 gas),
@@ -1465,7 +1465,9 @@ class Uniswap:
             logger.debug(f"nonce: {tx_params['nonce']}")
             self.last_nonce = Nonce(tx_params["nonce"] + 1)
 
-    def _get_tx_params(self, value: Wei = Wei(0), gas: Optional[Wei] = None) -> TxParams:
+    def _get_tx_params(
+        self, value: Wei = Wei(0), gas: Optional[Wei] = None
+    ) -> TxParams:
         """Get generic transaction parameters."""
         params: TxParams = {
             "from": _addr_to_str(self.address),
@@ -1569,7 +1571,7 @@ class Uniswap:
             block_identifier="latest"
         )
         decoded_results = [
-            self.w3.codec.decode_abi(output_types, multicall_result)
+            self.w3.codec.decode(output_types, multicall_result)
             for multicall_result in results
         ]
         normalized_results = [
@@ -1669,7 +1671,7 @@ class Uniswap:
         )
         receipt = self.w3.eth.wait_for_transaction_receipt(tx)
 
-        event_logs = self.factory_contract.events.PoolCreated().processReceipt(receipt)
+        event_logs = self.factory_contract.events.PoolCreated().process_receipt(receipt)
         pool_address = event_logs[0]["args"]["pool"]
         pool_instance = _load_contract(
             self.w3, abi_name="uniswap-v3/pool", address=pool_address
@@ -1823,27 +1825,27 @@ class Uniswap:
 
         if self.version == 2:
             params: Iterable[Union[ChecksumAddress, Optional[int]]] = [
-                self.w3.toChecksumAddress(token_in),
-                self.w3.toChecksumAddress(token_out),
+                self.w3.to_checksum_address(token_in),
+                self.w3.to_checksum_address(token_out),
             ]
             pair_token = self.factory_contract.functions.getPair(*params).call()
             token_in_erc20 = _load_contract_erc20(
-                self.w3, self.w3.toChecksumAddress(token_in)
+                self.w3, self.w3.to_checksum_address(token_in)
             )
             token_in_balance = int(
                 token_in_erc20.functions.balanceOf(
-                    self.w3.toChecksumAddress(pair_token)
+                    self.w3.to_checksum_address(pair_token)
                 ).call()
             )
             token_in_decimals = self.get_token(token_in).decimals
             token_in_balance = token_in_balance / (10**token_in_decimals)
 
             token_out_erc20 = _load_contract_erc20(
-                self.w3, self.w3.toChecksumAddress(token_out)
+                self.w3, self.w3.to_checksum_address(token_out)
             )
             token_out_balance = int(
                 token_out_erc20.functions.balanceOf(
-                    self.w3.toChecksumAddress(pair_token)
+                    self.w3.to_checksum_address(pair_token)
                 ).call()
             )
             token_out_decimals = self.get_token(token_out).decimals
@@ -1852,15 +1854,15 @@ class Uniswap:
             raw_price = token_out_balance / token_in_balance
         else:
             params = [
-                self.w3.toChecksumAddress(token_in),
-                self.w3.toChecksumAddress(token_out),
+                self.w3.to_checksum_address(token_in),
+                self.w3.to_checksum_address(token_out),
                 fee,
             ]
             pool_address = self.factory_contract.functions.getPool(*params).call()
             pool_contract = _load_contract(
                 self.w3, abi_name="uniswap-v3/pool", address=pool_address
             )
-            t0 = pool_contract.functions.token0().call()
+            # t0 = pool_contract.functions.token0().call()
             t1 = pool_contract.functions.token1().call()
             if t1.lower() == token_in.lower():
                 den0 = self.get_token(token_in).decimals
@@ -1953,7 +1955,9 @@ class Uniswap:
     @functools.lru_cache()
     @supports([1])
     def _exchange_contract(
-        self, token_addr: Optional[AddressLike] = None, ex_addr: Optional[AddressLike] = None
+        self,
+        token_addr: Optional[AddressLike] = None,
+        ex_addr: Optional[AddressLike] = None,
     ) -> Contract:
         if not ex_addr and token_addr:
             ex_addr = self._exchange_address_from_token(token_addr)
