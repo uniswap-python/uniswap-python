@@ -71,14 +71,14 @@ class Uniswap:
         self,
         address: Union[AddressLike, str, None],
         private_key: Optional[str],
-        provider: str = None,
-        web3: Web3 = None,
+        provider: Optional[str] = None,
+        web3: Optional[Web3] = None,
         version: int = 1,
         default_slippage: float = 0.01,
         use_estimate_gas: bool = True,
         # use_eip1559: bool = True,
-        factory_contract_addr: str = None,
-        router_contract_addr: str = None,
+        factory_contract_addr: Optional[str] = None,
+        router_contract_addr: Optional[str] = None,
         enable_caching: bool = False,
     ) -> None:
         """
@@ -219,7 +219,7 @@ class Uniswap:
         token0: AddressLike,  # input token
         token1: AddressLike,  # output token
         qty: int,
-        fee: int = None,
+        fee: Optional[int] = None,
         route: Optional[List[AddressLike]] = None,
     ) -> int:
         """Given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`."""
@@ -240,7 +240,7 @@ class Uniswap:
         token0: AddressLike,
         token1: AddressLike,
         qty: int,
-        fee: int = None,
+        fee: Optional[int] = None,
         route: Optional[List[AddressLike]] = None,
     ) -> int:
         """Returns the minimum amount of `token0` required to buy `qty` amount of `token1`."""
@@ -346,7 +346,7 @@ class Uniswap:
         self,
         token: AddressLike,  # output token
         qty: int,
-        fee: int = None,
+        fee: Optional[int] = None,
     ) -> Wei:
         """Public price (i.e. amount of ETH needed) for ETH to token trades with an exact output."""
         if self.version == 1:
@@ -369,7 +369,7 @@ class Uniswap:
         return price
 
     def _get_token_eth_output_price(
-        self, token: AddressLike, qty: Wei, fee: int = None  # input token
+        self, token: AddressLike, qty: Wei, fee: Optional[int] = None  # input token
     ) -> int:
         """Public price (i.e. amount of input token needed) for token to ETH trades with an exact output."""
         if self.version == 1:
@@ -395,7 +395,7 @@ class Uniswap:
         token0: AddressLike,  # input token
         token1: AddressLike,  # output token
         qty: int,
-        fee: int = None,
+        fee: Optional[int] = None,
         route: Optional[List[AddressLike]] = None,
     ) -> int:
         """
@@ -444,9 +444,9 @@ class Uniswap:
         input_token: AddressLike,
         output_token: AddressLike,
         qty: Union[int, Wei],
-        recipient: AddressLike = None,
-        fee: int = None,
-        slippage: float = None,
+        recipient: Optional[AddressLike] = None,
+        fee: Optional[int] = None,
+        slippage: Optional[float] = None,
         fee_on_transfer: bool = False,
     ) -> HexBytes:
         """Make a trade by defining the qty of the input token."""
@@ -489,9 +489,9 @@ class Uniswap:
         input_token: AddressLike,
         output_token: AddressLike,
         qty: Union[int, Wei],
-        recipient: AddressLike = None,
-        fee: int = None,
-        slippage: float = None,
+        recipient: Optional[AddressLike] = None,
+        fee: Optional[int] = None,
+        slippage: Optional[float] = None,
     ) -> HexBytes:
         """Make a trade by defining the qty of the output token."""
         if fee is None:
@@ -1178,7 +1178,7 @@ class Uniswap:
         tokenId: int,
         amount0Min: int = 0,
         amount1Min: int = 0,
-        deadline: int = None,
+        deadline: Optional[int] = None,
     ) -> TxReceipt:
         """
         remove all liquidity from the position associated w/ tokenId, collect fees, and burn token.
@@ -1465,7 +1465,7 @@ class Uniswap:
             logger.debug(f"nonce: {tx_params['nonce']}")
             self.last_nonce = Nonce(tx_params["nonce"] + 1)
 
-    def _get_tx_params(self, value: Wei = Wei(0), gas: Wei = None) -> TxParams:
+    def _get_tx_params(self, value: Wei = Wei(0), gas: Optional[Wei] = None) -> TxParams:
         """Get generic transaction parameters."""
         params: TxParams = {
             "from": _addr_to_str(self.address),
@@ -1804,7 +1804,7 @@ class Uniswap:
 
     @supports([2, 3])
     def get_raw_price(
-        self, token_in: AddressLike, token_out: AddressLike, fee: int = None
+        self, token_in: AddressLike, token_out: AddressLike, fee: Optional[int] = None
     ) -> float:
         """
         Returns current price for pair of tokens [token_in, token_out] regrading liquidity that is being locked in the pool
@@ -1881,7 +1881,7 @@ class Uniswap:
         token_in: AddressLike,
         token_out: AddressLike,
         amount_in: int,
-        fee: int = None,
+        fee: Optional[int] = None,
         route: Optional[List[AddressLike]] = None,
     ) -> float:
         """
@@ -1953,7 +1953,7 @@ class Uniswap:
     @functools.lru_cache()
     @supports([1])
     def _exchange_contract(
-        self, token_addr: AddressLike = None, ex_addr: AddressLike = None
+        self, token_addr: Optional[AddressLike] = None, ex_addr: Optional[AddressLike] = None
     ) -> Contract:
         if not ex_addr and token_addr:
             ex_addr = self._exchange_address_from_token(token_addr)

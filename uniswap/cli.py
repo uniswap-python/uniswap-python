@@ -71,7 +71,7 @@ def price(
     token_in: AddressLike,
     token_out: AddressLike,
     raw: bool,
-    quantity: int = None,
+    quantity: Optional[int] = None,
 ) -> None:
     """Returns the price of ``quantity`` tokens of ``token_in`` quoted in ``token_out``."""
     uni: Uniswap = ctx.obj["UNISWAP"]
