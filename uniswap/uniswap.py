@@ -8,7 +8,8 @@ from typing import List, Any, Optional, Sequence, Union, Tuple, Iterable, Dict
 from web3 import Web3
 from web3._utils.abi import map_abi_data
 from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
-from web3.contract import Contract, ContractFunction
+from web3.contract import Contract
+from web3.contract.base_contract import BaseContractFunction as ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
     TxParams,
