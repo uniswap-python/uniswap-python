@@ -1342,8 +1342,8 @@ class Uniswap:
         _min_tick = self.find_tick_from_bitmap(
             BITMAP_SPACING, pool, TICK_SPACING, fee, False
         )
-        assert _max_tick != False, "Error finding max tick"
-        assert _min_tick != False, "Error finding min tick"
+        assert _max_tick is not False, "Error finding max tick"
+        assert _min_tick is not False, "Error finding min tick"
 
         Batch = namedtuple("Batch", "ticks batchResults")
         ticks = []
@@ -1488,8 +1488,12 @@ class Uniswap:
         # if gasPrice still not set, use maxFeePerGas and maxPriorityFeePerGas
         # TODO: Don't hard-code
         if "gasPrice" not in params:
-            params["maxFeePerGas"] = Wei(1000000000)
-            params["maxPriorityFeePerGas"] = Wei(1000000000)
+            params["maxFeePerGas"] = Wei(200 * 1_000_000_000)  # 200 gwei
+            params["maxPriorityFeePerGas"] = Wei(self.w3.eth.max_priority_fee)
+
+        # Set chainId if not set
+        if "chainId" not in params:
+            params["chainId"] = self.netid
 
         return params
 
@@ -1639,6 +1643,11 @@ class Uniswap:
             address = self.router.functions.WETH9().call()
         else:
             raise ValueError  # pragma: no cover
+
+        # Mainnet WETH9 address
+        # WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        # assert address == WETH9_ADDRESS, "WETH address mismatch"
+
         return address
 
     @supports([3])
