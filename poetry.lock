@@ -1604,14 +1604,14 @@ files = [
 
 [[package]]
 name = "pydata-sphinx-theme"
-version = "0.13.2"
+version = "0.13.1"
 description = "Bootstrap-based Sphinx theme from the PyData community"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pydata_sphinx_theme-0.13.2-py3-none-any.whl", hash = "sha256:8d420511cedef56afd78dce86a743614219799dc217885b2dc66a0b52877b425"},
-    {file = "pydata_sphinx_theme-0.13.2.tar.gz", hash = "sha256:feb726f03791567b4eedc8d309ca7924e3794c7635c4c762edf1d293e46a8858"},
+    {file = "pydata_sphinx_theme-0.13.1-py3-none-any.whl", hash = "sha256:ce29c1de7961d616dfa25f4c3a9619818d4bb2d4a9985ed078367af294fbccc2"},
+    {file = "pydata_sphinx_theme-0.13.1.tar.gz", hash = "sha256:a37d967207c2d787cfe5cf74abfc6b3bcaf0606cac6b283a3876e603d67d6a71"},
 ]
 
 [package.dependencies]
@@ -2461,4 +2461,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.2"
-content-hash = "0e45ef05ca94cc9f8d9d5ab9df19abcc1ca841f0fb894a4af548c17f55c467e4"
+content-hash = "0e5bb71e0861603803a32aca6a07dce646eb40c639e755664e7c7c7dc07f0e93"

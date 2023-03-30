@@ -39,6 +39,7 @@ flake8 = "*"
 Sphinx = "*"
 sphinx-book-theme = "*"
 sphinx-click = "*"
+pydata-sphinx-theme = "0.13.1"  # due to: https://github.com/executablebooks/sphinx-book-theme/issues/711
 
 [tool.pytest.ini_options]
 log_cli = false  # to print logs during tests, set to true
