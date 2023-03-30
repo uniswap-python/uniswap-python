@@ -1480,21 +1480,6 @@ class Uniswap:
         if gas:
             params["gas"] = gas
 
-        if "gasPrice" not in params:
-            gasPrice = self.w3.eth.generate_gas_price()
-            if gasPrice is not None:
-                params["gasPrice"] = gasPrice
-
-        # if gasPrice still not set, use maxFeePerGas and maxPriorityFeePerGas
-        # TODO: Don't hard-code
-        if "gasPrice" not in params:
-            params["maxFeePerGas"] = Wei(200 * 1_000_000_000)  # 200 gwei
-            params["maxPriorityFeePerGas"] = Wei(self.w3.eth.max_priority_fee)
-
-        # Set chainId if not set
-        if "chainId" not in params:
-            params["chainId"] = self.netid
-
         return params
 
     # ------ Price Calculation Utils ---------------------------------------------------
