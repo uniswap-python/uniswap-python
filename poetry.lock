@@ -1604,14 +1604,14 @@ files = [
 
 [[package]]
 name = "pydata-sphinx-theme"
-version = "0.13.1"
+version = "0.13.2"
 description = "Bootstrap-based Sphinx theme from the PyData community"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pydata_sphinx_theme-0.13.1-py3-none-any.whl", hash = "sha256:ce29c1de7961d616dfa25f4c3a9619818d4bb2d4a9985ed078367af294fbccc2"},
-    {file = "pydata_sphinx_theme-0.13.1.tar.gz", hash = "sha256:a37d967207c2d787cfe5cf74abfc6b3bcaf0606cac6b283a3876e603d67d6a71"},
+    {file = "pydata_sphinx_theme-0.13.2-py3-none-any.whl", hash = "sha256:8d420511cedef56afd78dce86a743614219799dc217885b2dc66a0b52877b425"},
+    {file = "pydata_sphinx_theme-0.13.2.tar.gz", hash = "sha256:feb726f03791567b4eedc8d309ca7924e3794c7635c4c762edf1d293e46a8858"},
 ]
 
 [package.dependencies]
