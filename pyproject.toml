@@ -24,7 +24,7 @@ unipy = "uniswap:main"
 
 [tool.poetry.dependencies]
 python = "^3.7.2"
-web3 = { version = ">5.23.0,<7.0", allow-prereleases = true }
+web3 = { version = "^6.0", allow-prereleases = true }
 click = "^8.0.3"
 python-dotenv = "*"
 typing-extensions = "*"
