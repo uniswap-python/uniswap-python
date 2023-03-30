@@ -1,505 +1,374 @@
 
+
 <!DOCTYPE html>
 
-<html>
+
+<html lang="en" >
+
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Getting started &#8212; uniswap-python</title>
-    
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <link href="_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
 
-    
-  <link rel="stylesheet"
-    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=5115cc725059bd94278eecd172e13a965bf8f5a9" type="text/css" />
-    
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+  
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/scripts/sphinx-book-theme.js?digest=9c920249402e914e316237a7dbc6769907cce411"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'getting-started';</script>
     <link rel="shortcut icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="API Reference" href="api.html" />
     <link rel="prev" title="Welcome to uniswap-python’s documentation!" href="index.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay overlay-navbar" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<!-- Checkboxes to toggle the in-page toc -->
-<input type="checkbox" class="sidebar-toggle" name="__page-toc" id="__page-toc" aria-label="Toggle in-page Table of Contents">
-<label class="overlay overlay-pagetoc" for="__page-toc">
-    <div class="visually-hidden">Toggle in-page Table of Contents</div>
-</label>
-<!-- Headers at the top -->
-<div class="announcement header-item noprint"></div>
-<div class="header header-item noprint"></div>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
-    
-    <div class="container-fluid" id="banner"></div>
-
-    
-
-    <div class="container-xl">
-      <div class="row">
-          
-<!-- Sidebar -->
-<div class="bd-sidebar noprint" id="site-navigation">
-    <div class="bd-sidebar__content">
-        <div class="bd-sidebar__top"><div class="navbar-brand-box">
-    <a class="navbar-brand text-wrap" href="index.html">
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
       
-        <!-- `logo` is deprecated in Sphinx 4.0, so remove this when we stop supporting 3 -->
+      <div class="bd-sidebar-primary bd-sidebar">
         
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+    
+    
       
-      
-      <img src="_static/logo.png" class="logo" alt="logo">
-      
-      
-      <h1 class="site-logo" id="site-title">uniswap-python</h1>
-      
-    </a>
-</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
-    <div class="bd-toc-item active">
-        <p aria-level="2" class="caption" role="heading">
- <span class="caption-text">
-  Contents:
- </span>
-</p>
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="_static/logo.png" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current nav bd-sidenav">
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   Getting started
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="api.html">
-   API Reference
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="cli.html">
-   Command line interface
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="examples.html">
-   Examples
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="supported-deployments.html">
-   Supported deployments
-  </a>
- </li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command line interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="supported-deployments.html">Supported deployments</a></li>
 </ul>
 
     </div>
 </nav></div>
-        <div class="bd-sidebar__bottom">
-             <!-- To handle the deprecated key -->
-            
-            <div class="navbar_extra_footer">
-            
-    <p>
-        Back to <a href="https://github.com/shanefontaine/uniswap-python">GitHub</a>
-    </p>
-            </div>
-            
-        </div>
     </div>
-    <div id="rtd-footer-container"></div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/shanefontaine/uniswap-python" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/shanefontaine/uniswap-python/edit/main/docs/getting-started.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+  </ul>
 </div>
 
 
-          
-
-
-          
-<!-- A tiny helper pixel to detect if we've scrolled -->
-<div class="sbt-scroll-pixel-helper"></div>
-<!-- Main content -->
-<div class="col py-0 content-container">
-    
-    <div class="header-article row sticky-top noprint">
-        
 
 
 
-<div class="col py-1 d-flex header-article-main">
-    <div class="header-article__left">
-        
-        <label for="__navigation"
-  class="headerbtn"
-  data-toggle="tooltip"
-data-placement="right"
-title="Toggle navigation"
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/getting-started.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
 >
   
 
-<span class="headerbtn__icon-container">
-  <i class="fas fa-bars"></i>
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
   </span>
-
-</label>
-
-        
-    </div>
-    <div class="header-article__right">
-<button onclick="toggleFullScreen()"
-  class="headerbtn"
-  data-toggle="tooltip"
-data-placement="bottom"
-title="Fullscreen mode"
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
 >
   
 
-<span class="headerbtn__icon-container">
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
   <i class="fas fa-expand"></i>
   </span>
 
 </button>
 
-<div class="menu-dropdown menu-dropdown-repository-buttons">
-  <button class="headerbtn menu-dropdown__trigger"
-      aria-label="Source repositories">
-      <i class="fab fa-github"></i>
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
   </button>
-  <div class="menu-dropdown__content">
-    <ul>
-      <li>
-        <a href="https://github.com/shanefontaine/uniswap-python"
-   class="headerbtn"
-   data-toggle="tooltip"
-data-placement="left"
-title="Source repository"
->
-  
+`);
+</script>
 
-<span class="headerbtn__icon-container">
-  <i class="fab fa-github"></i>
-  </span>
-<span class="headerbtn__text-container">repository</span>
-</a>
-
-      </li>
-      
-      <li>
-        <a href="https://github.com/shanefontaine/uniswap-python/edit/master/docs/getting-started.rst"
-   class="headerbtn"
-   data-toggle="tooltip"
-data-placement="left"
-title="Edit this page"
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-pencil-alt"></i>
-  </span>
-<span class="headerbtn__text-container">suggest edit</span>
-</a>
-
-      </li>
-      
-    </ul>
-  </div>
-</div>
-
-<div class="menu-dropdown menu-dropdown-download-buttons">
-  <button class="headerbtn menu-dropdown__trigger"
-      aria-label="Download this page">
-      <i class="fas fa-download"></i>
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
   </button>
-  <div class="menu-dropdown__content">
-    <ul>
-      <li>
-        <a href="_sources/getting-started.rst.txt"
-   class="headerbtn"
-   data-toggle="tooltip"
-data-placement="left"
-title="Download source file"
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-file"></i>
-  </span>
-<span class="headerbtn__text-container">.rst</span>
-</a>
-
-      </li>
-      
-      <li>
-        
-<button onclick="printPdf(this)"
-  class="headerbtn"
-  data-toggle="tooltip"
-data-placement="left"
-title="Print to PDF"
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-file-pdf"></i>
-  </span>
-<span class="headerbtn__text-container">.pdf</span>
-</button>
-
-      </li>
-      
-    </ul>
-  </div>
-</div>
-<label for="__page-toc"
-  class="headerbtn headerbtn-page-toc"
-  
->
-  
-
-<span class="headerbtn__icon-container">
-  <i class="fas fa-list"></i>
-  </span>
-
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
 </label>
-
+</div></div>
+      
     </div>
+  
 </div>
-
-<!-- Table of contents -->
-<div class="col-md-3 bd-toc show noprint">
-    <div class="tocsection onthispage pt-5 pb-3">
-        <i class="fas fa-list"></i> Contents
-    </div>
-    <nav id="bd-toc-nav" aria-label="Page">
-        <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#installation">
-   Installation
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#initializing-the-uniswap-class">
-   Initializing the Uniswap class
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#environment-variables">
-     Environment Variables
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#gas-pricing">
-     Gas pricing
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#quoting-prices">
-   Quoting prices
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#get-price-input">
-     <code class="xref py py-func docutils literal notranslate">
-      <span class="pre">
-       get_price_input()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#get-price-output">
-     <code class="xref py py-func docutils literal notranslate">
-      <span class="pre">
-       get_price_output()
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#making-trades">
-   Making trades
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#make-trade">
-     <code class="xref py py-func docutils literal notranslate">
-      <span class="pre">
-       make_trade()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#make-trade-output">
-     <code class="xref py py-func docutils literal notranslate">
-      <span class="pre">
-       make_trade_output()
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#pool-methods-v1-only">
-   Pool Methods (v1 only)
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#liquidity-methods-v1-only">
-   Liquidity Methods (v1 only)
-  </a>
- </li>
-</ul>
-
-    </nav>
 </div>
-    </div>
-    <div class="article row">
-        <div class="col pl-md-3 pl-lg-5 content-container">
-            <!-- Table of contents that is only displayed when printing the page -->
-            <div id="jb-print-docs-body" class="onlyprint">
-                <h1>Getting started</h1>
-                <!-- Table of contents -->
-                <div id="print-main-content">
-                    <div id="jb-print-toc">
-                        
-                        <div>
-                            <h2> Contents </h2>
-                        </div>
-                        <nav aria-label="Page">
-                            <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#installation">
-   Installation
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#initializing-the-uniswap-class">
-   Initializing the Uniswap class
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#environment-variables">
-     Environment Variables
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#gas-pricing">
-     Gas pricing
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#quoting-prices">
-   Quoting prices
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#get-price-input">
-     <code class="xref py py-func docutils literal notranslate">
-      <span class="pre">
-       get_price_input()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#get-price-output">
-     <code class="xref py py-func docutils literal notranslate">
-      <span class="pre">
-       get_price_output()
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#making-trades">
-   Making trades
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#make-trade">
-     <code class="xref py py-func docutils literal notranslate">
-      <span class="pre">
-       make_trade()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#make-trade-output">
-     <code class="xref py py-func docutils literal notranslate">
-      <span class="pre">
-       make_trade_output()
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#pool-methods-v1-only">
-   Pool Methods (v1 only)
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#liquidity-methods-v1-only">
-   Liquidity Methods (v1 only)
-  </a>
- </li>
-</ul>
+              
+              
 
-                        </nav>
-                    </div>
-                </div>
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Getting started</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
             </div>
-            <main id="main-content" role="main">
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#initializing-the-uniswap-class">Initializing the Uniswap class</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment Variables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gas-pricing">Gas pricing</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quoting-prices">Quoting prices</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-price-input"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_input()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-price-output"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_output()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#making-trades">Making trades</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#make-trade"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#make-trade-output"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade_output()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pool-methods-v1-only">Pool Methods (v1 only)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#liquidity-methods-v1-only">Liquidity Methods (v1 only)</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
                 
-              <div>
-                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
   <section id="getting-started">
-<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">#</a></h1>
+<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this heading">#</a></h1>
 <p>This library attempts to present a clean interface to Uniswap, but in order to use it to its full potential, you must familiarize yourself with the official Uniswap documentation:</p>
 <ul class="simple">
 <li><p>V1: <a class="reference external" href="https://uniswap.org/docs/v1/">https://uniswap.org/docs/v1/</a></p></li>
 <li><p>V2: <a class="reference external" href="https://uniswap.org/docs/v2/">https://uniswap.org/docs/v2/</a></p></li>
 <li><p>V3: <a class="reference external" href="https://docs.uniswap.org/">https://docs.uniswap.org/</a></p></li>
 </ul>
-<div class="contents local topic" id="table-of-contents">
+<nav class="contents local" id="table-of-contents">
 <p class="topic-title">Table of contents</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#installation" id="id1">Installation</a></p></li>
@@ -524,28 +393,28 @@ title="Print to PDF"
 <li><p><a class="reference internal" href="#pool-methods-v1-only" id="id11">Pool Methods (v1 only)</a></p></li>
 <li><p><a class="reference internal" href="#liquidity-methods-v1-only" id="id12">Liquidity Methods (v1 only)</a></p></li>
 </ul>
-</div>
+</nav>
 <section id="installation">
-<h2><a class="toc-backref" href="#id1">Installation</a><a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Installation</a><a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h2>
 <p>You can install the latest release from PyPI, or install the latest commit directly from git:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install the latest release from PyPI:</span>
 
-pip install uniswap-python
+pip<span class="w"> </span>install<span class="w"> </span>uniswap-python
 
 <span class="c1"># or install from git:</span>
 
-pip install git+git://github.com/uniswap-python/uniswap-python.git
+pip<span class="w"> </span>install<span class="w"> </span>git+git://github.com/uniswap-python/uniswap-python.git
 
 <span class="c1"># or clone and install with poetry:</span>
 
-git clone https://github.com/uniswap-python/uniswap-python.git
-<span class="nb">cd</span> uniswap-python
-poetry install
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/uniswap-python/uniswap-python.git
+<span class="nb">cd</span><span class="w"> </span>uniswap-python
+poetry<span class="w"> </span>install
 </pre></div>
 </div>
 </section>
 <section id="initializing-the-uniswap-class">
-<h2><a class="toc-backref" href="#id2">Initializing the Uniswap class</a><a class="headerlink" href="#initializing-the-uniswap-class" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Initializing the Uniswap class</a><a class="headerlink" href="#initializing-the-uniswap-class" title="Permalink to this heading">#</a></h2>
 <p>If you want to trade you need to provide your address and private key. If not, you can set them to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <p>In addition, the <a class="reference internal" href="api.html#uniswap.Uniswap" title="uniswap.Uniswap"><code class="xref py py-class docutils literal notranslate"><span class="pre">Uniswap</span></code></a> class takes several optional parameters, as documented in the <cite>API Reference</cite>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniswap</span> <span class="kn">import</span> <span class="n">Uniswap</span>
@@ -563,26 +432,26 @@ poetry install
 </pre></div>
 </div>
 <section id="environment-variables">
-<h3><a class="toc-backref" href="#id3">Environment Variables</a><a class="headerlink" href="#environment-variables" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Environment Variables</a><a class="headerlink" href="#environment-variables" title="Permalink to this heading">#</a></h3>
 <p>The program expects an environment variables to be set in order to run the program. You can use an Infura node, since the transactions are being signed locally and broadcast as a raw transaction. The environment variable is:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>PROVIDER  <span class="c1"># HTTP Provider for web3</span>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>PROVIDER<span class="w">  </span><span class="c1"># HTTP Provider for web3</span>
 </pre></div>
 </div>
 </section>
 <section id="gas-pricing">
-<h3><a class="toc-backref" href="#id4">Gas pricing</a><a class="headerlink" href="#gas-pricing" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Gas pricing</a><a class="headerlink" href="#gas-pricing" title="Permalink to this heading">#</a></h3>
 <p>To modify the gas pricing strategy you need to pass a custom <cite>Web3</cite> instance to the <a class="reference internal" href="api.html#uniswap.Uniswap" title="uniswap.Uniswap"><code class="xref py py-class docutils literal notranslate"><span class="pre">Uniswap</span></code></a> constructor. You can find details for how to configure Web3 gas strategies in their <a class="reference external" href="https://web3py.readthedocs.io/en/stable/gas_price.html">documentation</a>.</p>
 </section>
 </section>
 <section id="quoting-prices">
-<h2><a class="toc-backref" href="#id5">Quoting prices</a><a class="headerlink" href="#quoting-prices" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Quoting prices</a><a class="headerlink" href="#quoting-prices" title="Permalink to this heading">#</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>These methods assume a certain route for the swap to take, which may not be the optimal route. See <a class="reference external" href="https://github.com/shanefontaine/uniswap-python/issues/93">issue #93</a> for details.</p>
 </div>
 <p>There are two functions to retrieve the price for a given pair, one for specifying how much you get given a certain amount of the input token, and another for specifying how much you need to pay to receive a certain amount of the output token.</p>
 <section id="get-price-input">
-<h3><a class="toc-backref" href="#id6"><a class="reference internal" href="api.html#uniswap.Uniswap.get_price_input" title="uniswap.Uniswap.get_price_input"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_input()</span></code></a></a><a class="headerlink" href="#get-price-input" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id6" role="doc-backlink"><a class="reference internal" href="api.html#uniswap.Uniswap.get_price_input" title="uniswap.Uniswap.get_price_input"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_input()</span></code></a></a><a class="headerlink" href="#get-price-input" title="Permalink to this heading">#</a></h3>
 <p>Returns the amount of output tokens you get for a given amount of input tokens.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Returns the amount of DAI you get for 1 ETH (10^18 wei)</span>
 <span class="n">uniswap</span><span class="o">.</span><span class="n">get_price_input</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">dai</span><span class="p">,</span> <span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
@@ -590,7 +459,7 @@ poetry install
 </div>
 </section>
 <section id="get-price-output">
-<h3><a class="toc-backref" href="#id7"><a class="reference internal" href="api.html#uniswap.Uniswap.get_price_output" title="uniswap.Uniswap.get_price_output"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_output()</span></code></a></a><a class="headerlink" href="#get-price-output" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id7" role="doc-backlink"><a class="reference internal" href="api.html#uniswap.Uniswap.get_price_output" title="uniswap.Uniswap.get_price_output"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_output()</span></code></a></a><a class="headerlink" href="#get-price-output" title="Permalink to this heading">#</a></h3>
 <p>Returns the amount of input token you need for the given amount of output tokens.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Returns the amount of ETH you need to pay (in wei) to get 1000 DAI</span>
 <span class="n">uniswap</span><span class="o">.</span><span class="n">get_price_output</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">dai</span><span class="p">,</span> <span class="mi">1_000</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
@@ -610,7 +479,7 @@ poetry install
 </section>
 </section>
 <section id="making-trades">
-<h2><a class="toc-backref" href="#id8">Making trades</a><a class="headerlink" href="#making-trades" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Making trades</a><a class="headerlink" href="#making-trades" title="Permalink to this heading">#</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The same route assumptions and need for handling decimals apply here as those mentioned in the previous section.</p>
@@ -621,7 +490,7 @@ poetry install
 <p>Use the Uniswap version with the most liquidity for your route, and if using v3, make sure you set the <code class="docutils literal notranslate"><span class="pre">fee</span></code> parameter to use the best pool.</p>
 </div>
 <section id="make-trade">
-<h3><a class="toc-backref" href="#id9"><a class="reference internal" href="api.html#uniswap.Uniswap.make_trade" title="uniswap.Uniswap.make_trade"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade()</span></code></a></a><a class="headerlink" href="#make-trade" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id9" role="doc-backlink"><a class="reference internal" href="api.html#uniswap.Uniswap.make_trade" title="uniswap.Uniswap.make_trade"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade()</span></code></a></a><a class="headerlink" href="#make-trade" title="Permalink to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a trade by specifying the quantity of the input token you wish to sell</span>
 <span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>  <span class="c1"># sell 1 ETH for BAT</span>
 <span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">eth</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>  <span class="c1"># sell 1 BAT for ETH</span>
@@ -632,7 +501,7 @@ poetry install
 </div>
 </section>
 <section id="make-trade-output">
-<h3><a class="toc-backref" href="#id10"><a class="reference internal" href="api.html#uniswap.Uniswap.make_trade_output" title="uniswap.Uniswap.make_trade_output"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade_output()</span></code></a></a><a class="headerlink" href="#make-trade-output" title="Permalink to this headline">#</a></h3>
+<h3><a class="toc-backref" href="#id10" role="doc-backlink"><a class="reference internal" href="api.html#uniswap.Uniswap.make_trade_output" title="uniswap.Uniswap.make_trade_output"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade_output()</span></code></a></a><a class="headerlink" href="#make-trade-output" title="Permalink to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a trade by specifying the quantity of the output token you wish to buy</span>
 <span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade_output</span><span class="p">(</span><span class="n">eth</span><span class="p">,</span> <span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>  <span class="c1"># buy ETH for 1 BAT</span>
 <span class="n">uniswap</span><span class="o">.</span><span class="n">make_trade_output</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="n">eth</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>  <span class="c1"># buy BAT for 1 ETH</span>
@@ -643,7 +512,7 @@ poetry install
 </section>
 </section>
 <section id="pool-methods-v1-only">
-<h2><a class="toc-backref" href="#id11">Pool Methods (v1 only)</a><a class="headerlink" href="#pool-methods-v1-only" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Pool Methods (v1 only)</a><a class="headerlink" href="#pool-methods-v1-only" title="Permalink to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the balance of ETH in an exchange contract.</span>
 <span class="n">uniswap</span><span class="o">.</span><span class="n">get_ex_eth_balance</span><span class="p">(</span><span class="n">bat</span><span class="p">)</span>
 
@@ -656,7 +525,7 @@ poetry install
 </div>
 </section>
 <section id="liquidity-methods-v1-only">
-<h2><a class="toc-backref" href="#id12">Liquidity Methods (v1 only)</a><a class="headerlink" href="#liquidity-methods-v1-only" title="Permalink to this headline">#</a></h2>
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">Liquidity Methods (v1 only)</a><a class="headerlink" href="#liquidity-methods-v1-only" title="Permalink to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add liquidity to the pool.</span>
 <span class="n">uniswap</span><span class="o">.</span><span class="n">add_liquidity</span><span class="p">(</span><span class="n">bat</span><span class="p">,</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">)</span>
 
@@ -668,50 +537,116 @@ poetry install
 </section>
 
 
-              </div>
+                </article>
               
-            </main>
-            <footer class="footer-article noprint">
-                
-    <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="index.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Welcome to uniswap-python’s documentation!</p>
-        </div>
+
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Welcome to uniswap-python’s documentation!</p>
+      </div>
     </a>
-    <a class='right-next' id="next-link" href="api.html" title="next page">
-    <div class="prev-next-info">
+    <a class="right-next"
+       href="api.html"
+       title="next page">
+      <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
         <p class="prev-next-title">API Reference</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
-            </footer>
-        </div>
-    </div>
-    <div class="footer-content row">
-        <footer class="col footer"><p>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#initializing-the-uniswap-class">Initializing the Uniswap class</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#environment-variables">Environment Variables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gas-pricing">Gas pricing</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quoting-prices">Quoting prices</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-price-input"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_input()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-price-output"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_output()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#making-trades">Making trades</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#make-trade"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#make-trade-output"><code class="xref py py-func docutils literal notranslate"><span class="pre">make_trade_output()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pool-methods-v1-only">Pool Methods (v1 only)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#liquidity-methods-v1-only">Liquidity Methods (v1 only)</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner">
+<div class="bd-footer-content__inner container">
   
-    By Shane Fontaine, Erik Bjäreholt, and contributors<br/>
-  
-      &copy; Copyright 2021, Shane Fontaine, Erik Bjäreholt, and contributors.<br/>
-</p>
-        </footer>
-    </div>
+  <div class="footer-item">
     
-</div>
+<p class="component-author">
+By Shane Fontaine, Erik Bjäreholt, and contributors
+</p>
 
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2021, Shane Fontaine, Erik Bjäreholt, and contributors.
+      <br/>
+    
+  </p>
 
-      </div>
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div></div>
+          </footer>
+        
+
+      </main>
     </div>
+  </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <script src="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
 
-
+  <footer class="bd-footer">
+  </footer>
   </body>
 </html>
