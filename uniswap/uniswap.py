@@ -8,7 +8,8 @@ from typing import List, Any, Optional, Sequence, Union, Tuple, Iterable, Dict
 from web3 import Web3
 from web3._utils.abi import map_abi_data
 from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
-from web3.contract import Contract, ContractFunction
+from web3.contract import Contract
+from web3.contract.contract import ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
     TxParams,
@@ -18,7 +19,6 @@ from web3.types import (
 )
 from eth_typing.evm import Address, ChecksumAddress
 from hexbytes import HexBytes
-
 from .types import AddressLike
 from .token import ERC20Token
 from .exceptions import InvalidToken, InsufficientBalance
@@ -71,14 +71,14 @@ class Uniswap:
         self,
         address: Union[AddressLike, str, None],
         private_key: Optional[str],
-        provider: str = None,
-        web3: Web3 = None,
+        provider: Optional[str] = None,
+        web3: Optional[Web3] = None,
         version: int = 1,
         default_slippage: float = 0.01,
         use_estimate_gas: bool = True,
         # use_eip1559: bool = True,
-        factory_contract_addr: str = None,
-        router_contract_addr: str = None,
+        factory_contract_addr: Optional[str] = None,
+        router_contract_addr: Optional[str] = None,
         enable_caching: bool = False,
     ) -> None:
         """
@@ -219,7 +219,7 @@ class Uniswap:
         token0: AddressLike,  # input token
         token1: AddressLike,  # output token
         qty: int,
-        fee: int = None,
+        fee: Optional[int] = None,
         route: Optional[List[AddressLike]] = None,
     ) -> int:
         """Given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`."""
@@ -240,7 +240,7 @@ class Uniswap:
         token0: AddressLike,
         token1: AddressLike,
         qty: int,
-        fee: int = None,
+        fee: Optional[int] = None,
         route: Optional[List[AddressLike]] = None,
     ) -> int:
         """Returns the minimum amount of `token0` required to buy `qty` amount of `token1`."""
@@ -346,7 +346,7 @@ class Uniswap:
         self,
         token: AddressLike,  # output token
         qty: int,
-        fee: int = None,
+        fee: Optional[int] = None,
     ) -> Wei:
         """Public price (i.e. amount of ETH needed) for ETH to token trades with an exact output."""
         if self.version == 1:
@@ -369,7 +369,7 @@ class Uniswap:
         return price
 
     def _get_token_eth_output_price(
-        self, token: AddressLike, qty: Wei, fee: int = None  # input token
+        self, token: AddressLike, qty: Wei, fee: Optional[int] = None  # input token
     ) -> int:
         """Public price (i.e. amount of input token needed) for token to ETH trades with an exact output."""
         if self.version == 1:
@@ -395,7 +395,7 @@ class Uniswap:
         token0: AddressLike,  # input token
         token1: AddressLike,  # output token
         qty: int,
-        fee: int = None,
+        fee: Optional[int] = None,
         route: Optional[List[AddressLike]] = None,
     ) -> int:
         """
@@ -444,9 +444,9 @@ class Uniswap:
         input_token: AddressLike,
         output_token: AddressLike,
         qty: Union[int, Wei],
-        recipient: AddressLike = None,
-        fee: int = None,
-        slippage: float = None,
+        recipient: Optional[AddressLike] = None,
+        fee: Optional[int] = None,
+        slippage: Optional[float] = None,
         fee_on_transfer: bool = False,
     ) -> HexBytes:
         """Make a trade by defining the qty of the input token."""
@@ -489,9 +489,9 @@ class Uniswap:
         input_token: AddressLike,
         output_token: AddressLike,
         qty: Union[int, Wei],
-        recipient: AddressLike = None,
-        fee: int = None,
-        slippage: float = None,
+        recipient: Optional[AddressLike] = None,
+        fee: Optional[int] = None,
+        slippage: Optional[float] = None,
     ) -> HexBytes:
         """Make a trade by defining the qty of the output token."""
         if fee is None:
@@ -1178,7 +1178,7 @@ class Uniswap:
         tokenId: int,
         amount0Min: int = 0,
         amount1Min: int = 0,
-        deadline: int = None,
+        deadline: Optional[int] = None,
     ) -> TxReceipt:
         """
         remove all liquidity from the position associated w/ tokenId, collect fees, and burn token.
@@ -1342,8 +1342,8 @@ class Uniswap:
         _min_tick = self.find_tick_from_bitmap(
             BITMAP_SPACING, pool, TICK_SPACING, fee, False
         )
-        assert _max_tick != False, "Error finding max tick"
-        assert _min_tick != False, "Error finding min tick"
+        assert _max_tick is not False, "Error finding max tick"
+        assert _min_tick is not False, "Error finding min tick"
 
         Batch = namedtuple("Batch", "ticks batchResults")
         ticks = []
@@ -1452,7 +1452,7 @@ class Uniswap:
                     int(self.w3.eth.estimate_gas(transaction) * 1.2)
                 )
             else:
-                transaction["gas"] = Wei(250000)
+                transaction["gas"] = Wei(250_000)
 
         signed_txn = self.w3.eth.account.sign_transaction(
             transaction, private_key=self.private_key
@@ -1465,7 +1465,9 @@ class Uniswap:
             logger.debug(f"nonce: {tx_params['nonce']}")
             self.last_nonce = Nonce(tx_params["nonce"] + 1)
 
-    def _get_tx_params(self, value: Wei = Wei(0), gas: Wei = None) -> TxParams:
+    def _get_tx_params(
+        self, value: Wei = Wei(0), gas: Optional[Wei] = None
+    ) -> TxParams:
         """Get generic transaction parameters."""
         params: TxParams = {
             "from": _addr_to_str(self.address),
@@ -1474,8 +1476,10 @@ class Uniswap:
                 self.last_nonce, self.w3.eth.get_transaction_count(self.address)
             ),
         }
+
         if gas:
             params["gas"] = gas
+
         return params
 
     # ------ Price Calculation Utils ---------------------------------------------------
@@ -1569,7 +1573,7 @@ class Uniswap:
             block_identifier="latest"
         )
         decoded_results = [
-            self.w3.codec.decode_abi(output_types, multicall_result)
+            self.w3.codec.decode(output_types, multicall_result)
             for multicall_result in results
         ]
         normalized_results = [
@@ -1624,6 +1628,11 @@ class Uniswap:
             address = self.router.functions.WETH9().call()
         else:
             raise ValueError  # pragma: no cover
+
+        # Mainnet WETH9 address
+        # WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+        # assert address == WETH9_ADDRESS, "WETH address mismatch"
+
         return address
 
     @supports([3])
@@ -1669,7 +1678,7 @@ class Uniswap:
         )
         receipt = self.w3.eth.wait_for_transaction_receipt(tx)
 
-        event_logs = self.factory_contract.events.PoolCreated().processReceipt(receipt)
+        event_logs = self.factory_contract.events.PoolCreated().process_receipt(receipt)
         pool_address = event_logs[0]["args"]["pool"]
         pool_instance = _load_contract(
             self.w3, abi_name="uniswap-v3/pool", address=pool_address
@@ -1804,7 +1813,7 @@ class Uniswap:
 
     @supports([2, 3])
     def get_raw_price(
-        self, token_in: AddressLike, token_out: AddressLike, fee: int = None
+        self, token_in: AddressLike, token_out: AddressLike, fee: Optional[int] = None
     ) -> float:
         """
         Returns current price for pair of tokens [token_in, token_out] regrading liquidity that is being locked in the pool
@@ -1823,27 +1832,27 @@ class Uniswap:
 
         if self.version == 2:
             params: Iterable[Union[ChecksumAddress, Optional[int]]] = [
-                self.w3.toChecksumAddress(token_in),
-                self.w3.toChecksumAddress(token_out),
+                self.w3.to_checksum_address(token_in),
+                self.w3.to_checksum_address(token_out),
             ]
             pair_token = self.factory_contract.functions.getPair(*params).call()
             token_in_erc20 = _load_contract_erc20(
-                self.w3, self.w3.toChecksumAddress(token_in)
+                self.w3, self.w3.to_checksum_address(token_in)
             )
             token_in_balance = int(
                 token_in_erc20.functions.balanceOf(
-                    self.w3.toChecksumAddress(pair_token)
+                    self.w3.to_checksum_address(pair_token)
                 ).call()
             )
             token_in_decimals = self.get_token(token_in).decimals
             token_in_balance = token_in_balance / (10**token_in_decimals)
 
             token_out_erc20 = _load_contract_erc20(
-                self.w3, self.w3.toChecksumAddress(token_out)
+                self.w3, self.w3.to_checksum_address(token_out)
             )
             token_out_balance = int(
                 token_out_erc20.functions.balanceOf(
-                    self.w3.toChecksumAddress(pair_token)
+                    self.w3.to_checksum_address(pair_token)
                 ).call()
             )
             token_out_decimals = self.get_token(token_out).decimals
@@ -1852,15 +1861,15 @@ class Uniswap:
             raw_price = token_out_balance / token_in_balance
         else:
             params = [
-                self.w3.toChecksumAddress(token_in),
-                self.w3.toChecksumAddress(token_out),
+                self.w3.to_checksum_address(token_in),
+                self.w3.to_checksum_address(token_out),
                 fee,
             ]
             pool_address = self.factory_contract.functions.getPool(*params).call()
             pool_contract = _load_contract(
                 self.w3, abi_name="uniswap-v3/pool", address=pool_address
             )
-            t0 = pool_contract.functions.token0().call()
+            # t0 = pool_contract.functions.token0().call()
             t1 = pool_contract.functions.token1().call()
             if t1.lower() == token_in.lower():
                 den0 = self.get_token(token_in).decimals
@@ -1881,7 +1890,7 @@ class Uniswap:
         token_in: AddressLike,
         token_out: AddressLike,
         amount_in: int,
-        fee: int = None,
+        fee: Optional[int] = None,
         route: Optional[List[AddressLike]] = None,
     ) -> float:
         """
@@ -1953,7 +1962,9 @@ class Uniswap:
     @functools.lru_cache()
     @supports([1])
     def _exchange_contract(
-        self, token_addr: AddressLike = None, ex_addr: AddressLike = None
+        self,
+        token_addr: Optional[AddressLike] = None,
+        ex_addr: Optional[AddressLike] = None,
     ) -> Contract:
         if not ex_addr and token_addr:
             ex_addr = self._exchange_address_from_token(token_addr)

@@ -9,19 +9,16 @@ from dataclasses import dataclass
 from time import sleep
 
 from web3 import Web3
-from web3.exceptions import NameNotFound
 
-from uniswap import Uniswap, token
-from uniswap.constants import ETH_ADDRESS, WETH9_ADDRESS
+from uniswap import Uniswap
+from uniswap.constants import ETH_ADDRESS
 from uniswap.exceptions import InsufficientBalance
 from uniswap.tokens import get_tokens
 from uniswap.util import (
     _str_to_addr,
     default_tick_range,
     _addr_to_str,
-    _load_contract_erc20,
 )
-
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +30,13 @@ else:
     UNISWAP_VERSIONS = [1, 2, 3]
 
 RECEIPT_TIMEOUT = 5
+
+
+ONE_ETH = 10**18
+ONE_DAI = 10**18
+ONE_USDC = 10**6
+
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 
 @dataclass
@@ -53,7 +57,7 @@ def client(request, web3: Web3, ganache: GanacheInstance):
     )
 
 
-@pytest.fixture(scope="function", params=UNISWAP_VERSIONS)
+@pytest.fixture(scope="function")
 def tokens(client: Uniswap):
     return get_tokens(client.netname)
 
@@ -65,14 +69,18 @@ def test_assets(client: Uniswap):
     """
     tokens = get_tokens(client.netname)
 
-    for token_name, amount in [("DAI", 100 * 10 ** 18), ("USDC", 100 * 10 ** 6)]:
+    for token_name, amount in [
+        ("DAI", 10_000 * ONE_DAI),
+        ("USDC", 10_000 * ONE_USDC),
+    ]:
         token_addr = tokens[token_name]
         price = client.get_price_output(_str_to_addr(ETH_ADDRESS), token_addr, amount)
         logger.info(f"Cost of {amount} {token_name}: {price}")
         logger.info("Buying...")
 
-        tx = client.make_trade_output(tokens["ETH"], token_addr, amount)
-        client.w3.eth.wait_for_transaction_receipt(tx, timeout=RECEIPT_TIMEOUT)
+        txid = client.make_trade_output(tokens["ETH"], token_addr, amount)
+        tx = client.w3.eth.wait_for_transaction_receipt(txid, timeout=RECEIPT_TIMEOUT)
+        assert tx["status"] == 1, f"Transaction failed: {tx}"
 
 
 @pytest.fixture(scope="module")
@@ -96,7 +104,7 @@ def ganache() -> Generator[GanacheInstance, None, None]:
         )
 
     port = 10999
-    defaultGasPrice = 1000_000_000_000  # 1000 gwei
+    defaultGasPrice = 100_000_000_000  # 100 gwei
     p = subprocess.Popen(
         f"""ganache
         --port {port}
@@ -125,16 +133,9 @@ def does_not_raise():
     yield
 
 
-ONE_ETH = 10 ** 18
-ONE_USDC = 10 ** 6
-
-ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
-
-
 # TODO: Change pytest.param(..., mark=pytest.mark.xfail) to the expectation/raises method
 @pytest.mark.usefixtures("client", "web3")
 class TestUniswap(object):
-
     # ------ Exchange ------------------------------------------------------------------
     def test_get_fee_maker(self, client: Uniswap):
         if client.version not in [1, 2]:
@@ -343,7 +344,7 @@ class TestUniswap(object):
             amount1,
             tick_lower=min_tick,
             tick_upper=max_tick,
-            deadline=2 ** 64,
+            deadline=2**64,
         )
         assert r["status"]
 
@@ -357,7 +358,7 @@ class TestUniswap(object):
 
     @pytest.mark.parametrize(
         "deadline",
-        [(2 ** 64)],
+        [(2**64)],
     )
     def test_close_position(self, client: Uniswap, deadline):
         if client.version != 3:
@@ -445,7 +446,7 @@ class TestUniswap(object):
 
             txid = client.make_trade(input_token, output_token, qty, recipient)
             tx = web3.eth.wait_for_transaction_receipt(txid, timeout=RECEIPT_TIMEOUT)
-            assert tx["status"]
+            assert tx["status"], f"Transaction failed with status {tx['status']}: {tx}"
 
             # TODO: Checks for ETH, taking gas into account
             bal_in_after = client.get_token_balance(input_token)
@@ -460,7 +461,7 @@ class TestUniswap(object):
             # Token -> Token
             ("DAI", "USDC", ONE_USDC, None, does_not_raise),
             # Token -> ETH
-            ("DAI", "ETH", 100 * ONE_USDC, None, does_not_raise),
+            ("DAI", "ETH", ONE_ETH // 10, None, does_not_raise),
             # FIXME: These should probably be uncommented eventually
             # ("ETH", "UNI", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # ("UNI", "ETH", int(0.000001 * ONE_ETH), ZERO_ADDRESS),

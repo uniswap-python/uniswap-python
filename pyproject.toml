@@ -24,7 +24,7 @@ unipy = "uniswap:main"
 
 [tool.poetry.dependencies]
 python = "^3.7.2"
-web3 = { version = ">5.23.0,<7.0", allow-prereleases = true }
+web3 = { version = "^6.0", allow-prereleases = true }
 click = "^8.0.3"
 python-dotenv = "*"
 typing-extensions = "*"
@@ -39,10 +39,14 @@ flake8 = "*"
 Sphinx = "*"
 sphinx-book-theme = "*"
 sphinx-click = "*"
+pydata-sphinx-theme = "0.13.1"  # due to: https://github.com/executablebooks/sphinx-book-theme/issues/711
 
 [tool.pytest.ini_options]
 log_cli = false  # to print logs during tests, set to true
 #log_level = "NOTSET"
+
+[tool.ruff]
+ignore = ["E402", "E501"]
 
 [build-system]
 requires = ["poetry>=0.12"]
