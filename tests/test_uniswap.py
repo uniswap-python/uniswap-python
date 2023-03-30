@@ -461,7 +461,7 @@ class TestUniswap(object):
             # Token -> Token
             ("DAI", "USDC", ONE_USDC, None, does_not_raise),
             # Token -> ETH
-            ("DAI", "ETH", 100 * ONE_USDC, None, does_not_raise),
+            ("DAI", "ETH", ONE_ETH // 10, None, does_not_raise),
             # FIXME: These should probably be uncommented eventually
             # ("ETH", "UNI", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # ("UNI", "ETH", int(0.000001 * ONE_ETH), ZERO_ADDRESS),

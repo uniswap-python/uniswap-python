@@ -9,7 +9,7 @@ from web3 import Web3
 from web3._utils.abi import map_abi_data
 from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
 from web3.contract import Contract
-from web3.contract.base_contract import BaseContractFunction
+from web3.contract.contract import ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
     TxParams,
@@ -1435,12 +1435,12 @@ class Uniswap:
         return int(time.time()) + 10 * 60
 
     def _build_and_send_tx(
-        self, function: BaseContractFunction, tx_params: Optional[TxParams] = None
+        self, function: ContractFunction, tx_params: Optional[TxParams] = None
     ) -> HexBytes:
         """Build and send a transaction."""
         if not tx_params:
             tx_params = self._get_tx_params()
-        transaction = function._build_transaction(tx_params)
+        transaction = function.build_transaction(tx_params)
 
         if "gas" not in tx_params:
             # `use_estimate_gas` needs to be True for networks like Arbitrum (can't assume 250000 gas),
@@ -1452,7 +1452,7 @@ class Uniswap:
                     int(self.w3.eth.estimate_gas(transaction) * 1.2)
                 )
             else:
-                transaction["gas"] = Wei(250000)
+                transaction["gas"] = Wei(250_000)
 
         signed_txn = self.w3.eth.account.sign_transaction(
             transaction, private_key=self.private_key

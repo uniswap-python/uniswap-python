@@ -64,7 +64,7 @@ def _load_abi(name: str) -> str:
 @functools.lru_cache()
 def _load_contract(w3: Web3, abi_name: str, address: AddressLike) -> Contract:
     address = Web3.to_checksum_address(address)
-    return w3.eth.contract(address=address, abi=_load_abi(abi_name))  # type: ignore
+    return w3.eth.contract(address=address, abi=_load_abi(abi_name))
 
 
 def _load_contract_erc20(w3: Web3, address: AddressLike) -> Contract:
