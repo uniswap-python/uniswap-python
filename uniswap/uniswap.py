@@ -702,6 +702,21 @@ class Uniswap:
                 )
             else:
                 func = self.router.functions.swapExactTokensForTokens
+            
+            camelot_dex_arbitrum_router_addr = "0xc873fEcbd354f5A56E00E710B90EF4201db2448d"
+            if self.router.address == camelot_dex_arbitrum_router_addr:
+                logger.info("Using CamelotDex Arbitrum Router....")
+                return self._build_and_send_tx(
+                    func(
+                        qty,
+                        min_tokens_bought,
+                        [input_token, output_token],
+                        recipient,
+                        '0x0000000000000000000000000000000000000000',
+                        self._deadline(),
+                    ),
+                )
+            
             return self._build_and_send_tx(
                 func(
                     qty,
