@@ -54,6 +54,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip poetry
         poetry config virtualenvs.in-project true
+        poetry config installer.modern-installation false
 
     - name: Set up cache
       uses: actions/cache@v2
@@ -69,7 +70,7 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install
-        npm install -g ganache@7.3.2
+        npm install -g ganache@7.5.0
 
     - name: Test
       env:
@@ -81,6 +82,8 @@ jobs:
 
     - name: "Upload coverage to Codecov"
       uses: codecov/codecov-action@v1
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       with:
         fail_ci_if_error: true
 
@@ -105,6 +108,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip poetry
         poetry config virtualenvs.in-project true
+        poetry config installer.modern-installation false
 
     - name: Set up cache
       uses: actions/cache@v2
