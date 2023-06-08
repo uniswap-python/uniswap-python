@@ -1635,7 +1635,7 @@ class Uniswap:
 
         return address
 
-    @supports([3])
+    @supports([2, 3])
     def get_pool_instance(
         self, token_0: AddressLike, token_1: AddressLike, fee: int = 3_000
     ) -> Contract:
@@ -1650,13 +1650,24 @@ class Uniswap:
             _tick_spacing.keys()
         ), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
 
-        pool_address = self.factory_contract.functions.getPool(
-            token_0, token_1, fee
-        ).call()
+        if self.version == 2:
+            pool_address = self.factory_contract.functions.getPair(
+                token_0, token_1
+            ).call()
+        elif self.version == 3:
+            pool_address = self.factory_contract.functions.getPool(
+                token_0, token_1, fee
+            ).call()
         assert pool_address != ETH_ADDRESS, "0 address returned. Pool does not exist"
-        pool_instance = _load_contract(
-            self.w3, abi_name="uniswap-v3/pool", address=pool_address
-        )
+
+        if self.version == 2:
+            pool_instance = _load_contract(
+                self.w3, abi_name="uniswap-v2/pool", address=pool_address
+            )
+        elif self.version == 3:
+            pool_instance = _load_contract(
+                self.w3, abi_name="uniswap-v3/pool", address=pool_address
+            )
 
         return pool_instance
 
