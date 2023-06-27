@@ -70,6 +70,7 @@ _router_contract_addresses_v2 = {
     "harmony_mainnet": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
     "harmony_testnet": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
 }
+
 # need to replace with actual addresses
 _poolmanager_contract_addresses = {
     "mainnet": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
