@@ -20,6 +20,8 @@ The unofficial Python client for [Uniswap](https://uniswap.io/).
 
 Documentation is available at https://uniswap-python.com/
 
+**Want to help implement support for Uniswap v4?** See [issue #337](https://github.com/uniswap-python/uniswap-python/issues/337)
+
 ## Functionality
 
 *  A simple to use Python wrapper for all available contract functions and variables

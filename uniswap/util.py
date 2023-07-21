@@ -4,7 +4,7 @@ import math
 import functools
 import lru
 
-from typing import Any, Generator, Sequence, Union, List, Tuple, Type, Dict, cast
+from typing import Any, Generator, List, Sequence, Tuple, Union
 
 from web3 import Web3
 from web3.exceptions import NameNotFound
@@ -18,7 +18,7 @@ from .types import AddressLike, Address
 
 def _get_eth_simple_cache_middleware() -> Middleware:
     return construct_simple_cache_middleware(
-        cache_class=cast(Type[Dict[Any, Any]], functools.partial(lru.LRU, 256)),
+        cache=functools.partial(lru.LRU, 256),  # type: ignore
         rpc_whitelist=SIMPLE_CACHE_RPC_WHITELIST,
     )
 
@@ -37,10 +37,10 @@ def _str_to_addr(s: Union[AddressLike, str]) -> Address:
 def _addr_to_str(a: AddressLike) -> str:
     if isinstance(a, bytes):
         # Address or ChecksumAddress
-        addr: str = Web3.toChecksumAddress("0x" + bytes(a).hex())
+        addr: str = Web3.to_checksum_address("0x" + bytes(a).hex())
         return addr
     elif isinstance(a, str) and a.startswith("0x"):
-        addr = Web3.toChecksumAddress(a)
+        addr = Web3.to_checksum_address(a)
         return addr
 
     raise NameNotFound(a)
@@ -63,8 +63,8 @@ def _load_abi(name: str) -> str:
 
 @functools.lru_cache()
 def _load_contract(w3: Web3, abi_name: str, address: AddressLike) -> Contract:
-    address = Web3.toChecksumAddress(address)
-    return w3.eth.contract(address=address, abi=_load_abi(abi_name))  # type: ignore
+    address = Web3.to_checksum_address(address)
+    return w3.eth.contract(address=address, abi=_load_abi(abi_name))
 
 
 def _load_contract_erc20(w3: Web3, address: AddressLike) -> Contract:
