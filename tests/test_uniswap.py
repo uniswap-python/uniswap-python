@@ -65,7 +65,7 @@ def test_assets(client: Uniswap):
     """
     tokens = get_tokens(client.netname)
 
-    for token_name, amount in [("DAI", 100 * 10 ** 18), ("USDC", 100 * 10 ** 6)]:
+    for token_name, amount in [("DAI", 100 * 10**18), ("USDC", 100 * 10**6)]:
         token_addr = tokens[token_name]
         price = client.get_price_output(_str_to_addr(ETH_ADDRESS), token_addr, amount)
         logger.info(f"Cost of {amount} {token_name}: {price}")
@@ -125,8 +125,8 @@ def does_not_raise():
     yield
 
 
-ONE_ETH = 10 ** 18
-ONE_USDC = 10 ** 6
+ONE_ETH = 10**18
+ONE_USDC = 10**6
 
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
@@ -134,7 +134,6 @@ ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 # TODO: Change pytest.param(..., mark=pytest.mark.xfail) to the expectation/raises method
 @pytest.mark.usefixtures("client", "web3")
 class TestUniswap(object):
-
     # ------ Exchange ------------------------------------------------------------------
     def test_get_fee_maker(self, client: Uniswap):
         if client.version not in [1, 2]:
@@ -343,7 +342,7 @@ class TestUniswap(object):
             amount1,
             tick_lower=min_tick,
             tick_upper=max_tick,
-            deadline=2 ** 64,
+            deadline=2**64,
         )
         assert r["status"]
 
@@ -357,7 +356,7 @@ class TestUniswap(object):
 
     @pytest.mark.parametrize(
         "deadline",
-        [(2 ** 64)],
+        [(2**64)],
     )
     def test_close_position(self, client: Uniswap, deadline):
         if client.version != 3:

@@ -127,13 +127,12 @@ def chunks(arr: Sequence[Any], n: int) -> Generator:
     for i in range(0, len(arr), n):
         yield arr[i : i + n]
 
-def fee_to_fraction(fee:int):
+
+def fee_to_fraction(fee: int):
     return fee / 1000000
 
-def fraction_to_fee(fraction:float):
-    return fraction * 1000000
 
-def realised_fee_percentage(fee:int, amount_in:int) -> float:
+def realised_fee_percentage(fee: int, amount_in: int) -> float:
     """
     Calculate realised fee expressed as a percentage of the amount_in.
     The realised fee is rounded up as fractional units cannot be used -
