@@ -16,7 +16,7 @@ from web3.types import (
     Nonce,
     HexBytes,
 )
-
+from web3._utils.abi import encode_abi
 from .types import AddressLike
 from .token import ERC20Token
 from .tokens import tokens, tokens_rinkeby
@@ -106,7 +106,40 @@ class Uniswap4:
         token1: AddressLike,  # output token
         qty: int,
         fee: int,
-        route: Optional[List[AddressLike]] = None,
+        zero_to_one: bool = true,
+    ) -> int:
+        """
+        :if `zero_to_one` is true: given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
+        :if `zero_to_one` is false: returns the minimum amount of `token0` required to buy `qty` amount of `token1`.
+        """
+
+        # WIP
+
+        return 0
+
+    def get_spot_price(
+        self,
+        token0: AddressLike,  # input token
+        token1: AddressLike,  # output token
+        qty: int,
+        fee: int,
+        zero_to_one: bool = true,
+    ) -> int:
+        """
+        :if `zero_to_one` is true: given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
+        :if `zero_to_one` is false: returns the minimum amount of `token0` required to buy `qty` amount of `token1`.
+        """
+
+        # WIP
+
+        return 0
+
+    def get_price_impact(
+        self,
+        token0: AddressLike,  # input token
+        token1: AddressLike,  # output token
+        qty: int,
+        fee: int,
         zero_to_one: bool = true,
     ) -> int:
         """
@@ -190,8 +223,8 @@ class Uniswap4:
         qty: Union[int, Wei],
         fee: int,
         tick_spacing: int,
-        hooks: AddressLike,
         sqrt_price_limit_x96: int,
+        hooks: AddressLike = ETH,
     ) -> HexBytes:
         """
         :Initialize the state for a given pool ID
@@ -232,7 +265,7 @@ class Uniswap4:
         tick_spacing: int,
         tick_upper: int,
         tick_lower: int,
-        hooks: AddressLike,
+        hooks: AddressLike = ETH,
     ) -> HexBytes:
         if currency0 == currency1:
             raise ValueError
@@ -344,6 +377,9 @@ class Uniswap4:
         except:
             symbol = _symbol
         return ERC20Token(symbol, address, name, decimals)
+
+    def get_pool_id(self, currency0: AddressLike, currency1: AddressLike, fee : int, tickSpacing : int, hooks : AddressLike = ETH) -> int:
+        return int(self.w3.keccak(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)]))
 
     # ------ Test utilities ------------------------------------------------------------
 
