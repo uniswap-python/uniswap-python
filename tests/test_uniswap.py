@@ -69,6 +69,7 @@ def test_assets(client: Uniswap):
     """
     tokens = get_tokens(client.netname)
 
+
     for token_name, amount in [
         ("DAI", 10_000 * ONE_DAI),
         ("USDC", 10_000 * ONE_USDC),
@@ -131,6 +132,13 @@ def ganache() -> Generator[GanacheInstance, None, None]:
 @contextmanager
 def does_not_raise():
     yield
+
+
+
+ONE_ETH = 10**18
+ONE_USDC = 10**6
+
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 
 # TODO: Change pytest.param(..., mark=pytest.mark.xfail) to the expectation/raises method

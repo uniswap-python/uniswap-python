@@ -33,6 +33,7 @@ from .util import (
     encode_sqrt_ratioX96,
     is_same_address,
     nearest_tick,
+    realised_fee_percentage,
 )
 from .decorators import supports, check_approval
 from .constants import (
@@ -1926,7 +1927,14 @@ class Uniswap:
             cost_amount / (amount_in / (10 ** self.get_token(token_in).decimals))
         ) / 10 ** self.get_token(token_out).decimals
 
-        return float((price_small - price_amount) / price_small)
+        # calculate and subtract the realised fees from the price impact. See:
+        # https://github.com/uniswap-python/uniswap-python/issues/310
+        # The fee calculation will need to be updated when adding support for the AutoRouter.
+        price_impact_with_fees = float((price_small - price_amount) / price_small)
+        fee_realised_percentage = realised_fee_percentage(fee, amount_in)
+        price_impact_real = price_impact_with_fees - fee_realised_percentage
+
+        return price_impact_real
 
     # ------ Exchange ------------------------------------------------------------------
     @supports([1, 2])
