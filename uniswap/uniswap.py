@@ -1891,7 +1891,7 @@ class Uniswap:
         token_in: AddressLike,
         token_out: AddressLike,
         amount_in: int,
-        fee: Optional[int] = None,
+        fee: int,
         route: Optional[List[AddressLike]] = None,
     ) -> float:
         """

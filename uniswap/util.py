@@ -128,7 +128,7 @@ def chunks(arr: Sequence[Any], n: int) -> Generator:
         yield arr[i : i + n]
 
 
-def fee_to_fraction(fee: int):
+def fee_to_fraction(fee: int) -> float:
     return fee / 1000000
 
 
