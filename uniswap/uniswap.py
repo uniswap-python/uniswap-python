@@ -1,10 +1,21 @@
-from collections import namedtuple
+import functools
+import logging
 import os
 import time
-import logging
-import functools
-from typing import List, Any, Optional, Sequence, Union, Tuple, Iterable, Dict
+from collections import namedtuple
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
+from eth_typing.evm import Address, ChecksumAddress
+from hexbytes import HexBytes
 from web3 import Web3
 from web3._utils.abi import map_abi_data
 from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
@@ -12,42 +23,41 @@ from web3.contract import Contract
 from web3.contract.contract import ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
+    Nonce,
     TxParams,
     TxReceipt,
     Wei,
-    Nonce,
 )
-from eth_typing.evm import Address, ChecksumAddress
-from hexbytes import HexBytes
-from .types import AddressLike
+
+from .constants import (
+    ETH_ADDRESS,
+    MAX_TICK,
+    MAX_UINT_128,
+    MIN_TICK,
+    WETH9_ADDRESS,
+    _factory_contract_addresses_v1,
+    _factory_contract_addresses_v2,
+    _netid_to_name,
+    _router_contract_addresses_v2,
+    _tick_bitmap_range,
+    _tick_spacing,
+)
+from .decorators import check_approval, supports
+from .exceptions import InsufficientBalance, InvalidToken
 from .token import ERC20Token
-from .exceptions import InvalidToken, InsufficientBalance
+from .types import AddressLike
 from .util import (
-    _get_eth_simple_cache_middleware,
-    _str_to_addr,
     _addr_to_str,
-    _validate_address,
+    _get_eth_simple_cache_middleware,
     _load_contract,
     _load_contract_erc20,
+    _str_to_addr,
+    _validate_address,
     chunks,
     encode_sqrt_ratioX96,
     is_same_address,
     nearest_tick,
     realised_fee_percentage,
-)
-from .decorators import supports, check_approval
-from .constants import (
-    MAX_UINT_128,
-    MAX_TICK,
-    MIN_TICK,
-    WETH9_ADDRESS,
-    _netid_to_name,
-    _factory_contract_addresses_v1,
-    _factory_contract_addresses_v2,
-    _router_contract_addresses_v2,
-    _tick_spacing,
-    _tick_bitmap_range,
-    ETH_ADDRESS,
 )
 
 logger = logging.getLogger(__name__)

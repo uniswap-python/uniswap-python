@@ -1,19 +1,30 @@
-import os
+import functools
 import json
 import math
-import functools
+import os
+from typing import (
+    Any,
+    Generator,
+    List,
+    Sequence,
+    Tuple,
+    Union,
+)
+
 import lru
-
-from typing import Any, Generator, List, Sequence, Tuple, Union
-
 from web3 import Web3
-from web3.exceptions import NameNotFound
 from web3.contract import Contract
+from web3.exceptions import NameNotFound
 from web3.middleware.cache import construct_simple_cache_middleware
 from web3.types import Middleware
 
-from .constants import MIN_TICK, MAX_TICK, _tick_spacing, SIMPLE_CACHE_RPC_WHITELIST
-from .types import AddressLike, Address
+from .constants import (
+    MAX_TICK,
+    MIN_TICK,
+    SIMPLE_CACHE_RPC_WHITELIST,
+    _tick_spacing,
+)
+from .types import Address, AddressLike
 
 
 def _get_eth_simple_cache_middleware() -> Middleware:

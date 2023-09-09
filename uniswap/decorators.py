@@ -1,9 +1,16 @@
 import functools
-from typing import Callable, List, TYPE_CHECKING, TypeVar, Optional
-from typing_extensions import ParamSpec, Concatenate
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    List,
+    Optional,
+    TypeVar,
+)
 
-from .types import AddressLike
+from typing_extensions import Concatenate, ParamSpec
+
 from .constants import ETH_ADDRESS
+from .types import AddressLike
 
 if TYPE_CHECKING:
     from .uniswap import Uniswap

@@ -1,7 +1,6 @@
 from typing import Set, cast
-from web3.types import (  # noqa: F401
-    RPCEndpoint,
-)
+
+from web3.types import RPCEndpoint  # noqa: F401
 
 # look at web3/middleware/cache.py for reference
 # RPC methods that will be cached inside _get_eth_simple_cache_middleware

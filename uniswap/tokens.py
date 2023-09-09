@@ -1,8 +1,7 @@
 from typing import Dict
 
-from web3 import Web3
 from eth_typing.evm import ChecksumAddress
-
+from web3 import Web3
 
 tokens_mainnet: Dict[str, ChecksumAddress] = {
     k: Web3.to_checksum_address(v)
