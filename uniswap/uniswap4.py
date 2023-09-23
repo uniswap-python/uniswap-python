@@ -98,6 +98,8 @@ class Uniswap4:
         if hasattr(self, "poolmanager_contract"):
             logger.info(f"Using factory contract: {self.poolmanager_contract}")
 
+    # ------ Contract calls ------------------------------------------------------------
+
     # ------ Market --------------------------------------------------------------------
 
     def get_price(
@@ -161,7 +163,7 @@ class Uniswap4:
         tick_spacing: int,
         sqrt_price_limit_x96: int = 0,
         zero_for_one: bool = true,
-        hooks: AddressLike = ETH,
+        hooks: AddressLike = NOHOOK_ADDRESS,
     ) -> HexBytes:
         """
         :Swap against the given pool
@@ -224,7 +226,7 @@ class Uniswap4:
         fee: int,
         tick_spacing: int,
         sqrt_price_limit_x96: int,
-        hooks: AddressLike = ETH,
+        hooks: AddressLike = NOHOOK_ADDRESS,
     ) -> HexBytes:
         """
         :Initialize the state for a given pool ID
@@ -265,7 +267,7 @@ class Uniswap4:
         tick_spacing: int,
         tick_upper: int,
         tick_lower: int,
-        hooks: AddressLike = ETH,
+        hooks: AddressLike = NOHOOK_ADDRESS,
     ) -> HexBytes:
         if currency0 == currency1:
             raise ValueError
@@ -378,8 +380,8 @@ class Uniswap4:
             symbol = _symbol
         return ERC20Token(symbol, address, name, decimals)
 
-    def get_pool_id(self, currency0: AddressLike, currency1: AddressLike, fee : int, tickSpacing : int, hooks : AddressLike = ETH) -> int:
-        return int(self.w3.keccak(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)]))
+    def get_pool_id(self, currency0: AddressLike, currency1: AddressLike, fee : int, tickSpacing : int, hooks : AddressLike = ETH) -> bytes:
+        return self.w3.keccak_solidity(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)])
 
     # ------ Test utilities ------------------------------------------------------------
 
