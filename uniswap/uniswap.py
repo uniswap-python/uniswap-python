@@ -29,7 +29,6 @@ from web3.types import (
     Wei,
 )
 
-
 from .constants import (
     ETH_ADDRESS,
     MAX_TICK,

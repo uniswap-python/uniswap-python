@@ -17,5 +17,5 @@ class InsufficientBalance(Exception):
 
 class InvalidFeeTier(Exception):
     """
-    Raised when an invalid fee tier is used for a protocol that supports multiple fee tiers (Uniswap V3 currently).
+    Raised when an invalid or unsupported fee tier is used.
     """
