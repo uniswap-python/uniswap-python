@@ -13,3 +13,9 @@ class InsufficientBalance(Exception):
 
     def __init__(self, had: int, needed: int) -> None:
         Exception.__init__(self, f"Insufficient balance. Had {had}, needed {needed}")
+
+
+class InvalidFeeTier(Exception):
+    """
+    Raised when an invalid fee tier is used for a protocol that supports multiple fee tiers (Uniswap V3 currently).
+    """
