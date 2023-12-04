@@ -12,7 +12,7 @@ from web3 import Web3
 
 from uniswap import Uniswap
 from uniswap.constants import ETH_ADDRESS
-from uniswap.exceptions import InsufficientBalance
+from uniswap.exceptions import InsufficientBalance, InvalidFeeTier
 from uniswap.tokens import get_tokens
 from uniswap.util import (
     _str_to_addr,
@@ -512,3 +512,33 @@ class TestUniswap(object):
             balance_after = client.get_token_balance(output_token)
             if output_token != tokens["ETH"]:
                 assert balance_before + qty == balance_after
+
+    def test_fee_required_for_uniswap_v3(
+        self,
+        client: Uniswap,
+        tokens,
+    ) -> None:
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        with pytest.raises(InvalidFeeTier):
+            client.get_price_input(tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client.get_price_output(tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client._get_eth_token_output_price(tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client._get_token_eth_output_price(tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client._get_token_token_output_price(
+                tokens["UNI"], tokens["ETH"], ONE_ETH, fee=None
+            )
+        with pytest.raises(InvalidFeeTier):
+            client.make_trade(tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client.make_trade_output(tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client.get_pool_instance(tokens["ETH"], tokens["UNI"], fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client.create_pool_instance(tokens["ETH"], tokens["UNI"], fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client.get_raw_price(tokens["ETH"], tokens["UNI"], fee=None)
