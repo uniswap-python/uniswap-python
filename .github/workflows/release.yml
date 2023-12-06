@@ -26,5 +26,5 @@ jobs:
         # set pyproject.toml version to github.ref_name (without v prefix)
         # just in case someone forgot...
         VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
-        sed -i 's/^version = ".*"$/version = "'"$VERSION"'"/' pyproject.toml
+        sed -i 's/^version = ".*"/version = "'"$VERSION"'"/' pyproject.toml
         poetry publish --build --username=__token__ --password=$PYPI_TOKEN
