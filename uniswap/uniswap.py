@@ -92,6 +92,8 @@ class Uniswap:
         factory_contract_addr: Optional[str] = None,
         router_contract_addr: Optional[str] = None,
         enable_caching: bool = False,
+		*args,
+		**kwargs
     ) -> None:
         """
         :param address: The public address of the ETH wallet to use.
