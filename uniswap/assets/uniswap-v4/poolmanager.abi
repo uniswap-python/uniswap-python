@@ -635,9 +635,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "locker",
+        "type": "address"
       },
       {
         "internalType": "Currency",
@@ -645,7 +645,7 @@
         "type": "address"
       }
     ],
-    "name": "getCurrencyDelta",
+    "name": "currencyDelta",
     "outputs": [
       {
         "internalType": "int256",
