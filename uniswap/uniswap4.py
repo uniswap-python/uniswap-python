@@ -290,7 +290,7 @@ class Uniswap4Core:
         fee: int,
         tick_spacing: int,
         sqrt_price_limit_x96: int = 0,
-        zero_for_one: bool = true,
+        zero_for_one: bool = True,
         hooks: AddressLike = NOHOOK_ADDRESS,
     ) -> HexBytes:
         """
