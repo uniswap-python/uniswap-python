@@ -80,6 +80,19 @@ Contributors also earn this beautiful [GitPOAP](https://gitpoap.notion.site/What
 
 ## Changelog
 
+_0.7.2_
+
+* Updated: Default fee is not applied when using Uniswap V3. Default fee for Uniswap V1 and V2 is still 0.3%.
+* Updated: `InvalidFeeTier` exception is raised when a tier is not supported by the protocol version. See all supported tiers in [`uniswap.fee.FeeTier`](./uniswap/fee.py#L12)
+
+_0.7.1_
+
+* incomplete changelog
+
+_0.7.0_
+
+* incomplete changelog
+
 _0.5.4_
 
 * added use of gas estimation instead of a fixed gas limit (to support Arbitrum)

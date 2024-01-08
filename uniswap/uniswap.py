@@ -1,10 +1,21 @@
-from collections import namedtuple
+import functools
+import logging
 import os
 import time
-import logging
-import functools
-from typing import List, Any, Optional, Sequence, Union, Tuple, Iterable, Dict
+from collections import namedtuple
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
+from eth_typing.evm import Address, ChecksumAddress
+from hexbytes import HexBytes
 from web3 import Web3
 from web3._utils.abi import map_abi_data
 from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
@@ -12,41 +23,42 @@ from web3.contract import Contract
 from web3.contract.contract import ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
+    Nonce,
     TxParams,
     TxReceipt,
     Wei,
-    Nonce,
 )
-from eth_typing.evm import Address, ChecksumAddress
-from hexbytes import HexBytes
-from .types import AddressLike
+
+from .constants import (
+    ETH_ADDRESS,
+    MAX_TICK,
+    MAX_UINT_128,
+    MIN_TICK,
+    WETH9_ADDRESS,
+    _factory_contract_addresses_v1,
+    _factory_contract_addresses_v2,
+    _netid_to_name,
+    _router_contract_addresses_v2,
+    _tick_bitmap_range,
+    _tick_spacing,
+)
+from .decorators import check_approval, supports
+from .exceptions import InsufficientBalance, InvalidToken
+from .fee import validate_fee_tier
 from .token import ERC20Token
-from .exceptions import InvalidToken, InsufficientBalance
+from .types import AddressLike
 from .util import (
-    _get_eth_simple_cache_middleware,
-    _str_to_addr,
     _addr_to_str,
-    _validate_address,
+    _get_eth_simple_cache_middleware,
     _load_contract,
     _load_contract_erc20,
+    _str_to_addr,
+    _validate_address,
     chunks,
     encode_sqrt_ratioX96,
     is_same_address,
     nearest_tick,
-)
-from .decorators import supports, check_approval
-from .constants import (
-    MAX_UINT_128,
-    MAX_TICK,
-    MIN_TICK,
-    WETH9_ADDRESS,
-    _netid_to_name,
-    _factory_contract_addresses_v1,
-    _factory_contract_addresses_v2,
-    _router_contract_addresses_v2,
-    _tick_spacing,
-    _tick_bitmap_range,
-    ETH_ADDRESS,
+    realised_fee_percentage,
 )
 
 logger = logging.getLogger(__name__)
@@ -223,10 +235,7 @@ class Uniswap:
         route: Optional[List[AddressLike]] = None,
     ) -> int:
         """Given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`."""
-        if fee is None:
-            fee = 3000
-            if self.version == 3:
-                logger.warning("No fee set, assuming 0.3%")
+        fee = validate_fee_tier(fee=fee, version=self.version)
 
         if token0 == ETH_ADDRESS:
             return self._get_eth_token_input_price(token1, Wei(qty), fee)
@@ -244,10 +253,7 @@ class Uniswap:
         route: Optional[List[AddressLike]] = None,
     ) -> int:
         """Returns the minimum amount of `token0` required to buy `qty` amount of `token1`."""
-        if fee is None:
-            fee = 3000
-            if self.version == 3:
-                logger.warning("No fee set, assuming 0.3%")
+        fee = validate_fee_tier(fee=fee, version=self.version)
 
         if is_same_address(token0, ETH_ADDRESS):
             return self._get_eth_token_output_price(token1, qty, fee)
@@ -349,6 +355,7 @@ class Uniswap:
         fee: Optional[int] = None,
     ) -> Wei:
         """Public price (i.e. amount of ETH needed) for ETH to token trades with an exact output."""
+        fee = validate_fee_tier(fee=fee, version=self.version)
         if self.version == 1:
             ex = self._exchange_contract(token)
             price: Wei = ex.functions.getEthToTokenOutputPrice(qty).call()
@@ -356,9 +363,6 @@ class Uniswap:
             route = [self.get_weth_address(), token]
             price = self.router.functions.getAmountsIn(qty, route).call()[0]
         elif self.version == 3:
-            if fee is None:
-                logger.warning("No fee set, assuming 0.3%")
-                fee = 3000
             price = Wei(
                 self._get_token_token_output_price(
                     self.get_weth_address(), token, qty, fee=fee
@@ -372,6 +376,7 @@ class Uniswap:
         self, token: AddressLike, qty: Wei, fee: Optional[int] = None  # input token
     ) -> int:
         """Public price (i.e. amount of input token needed) for token to ETH trades with an exact output."""
+        fee = validate_fee_tier(fee=fee, version=self.version)
         if self.version == 1:
             ex = self._exchange_contract(token)
             price: int = ex.functions.getTokenToEthOutputPrice(qty).call()
@@ -379,9 +384,6 @@ class Uniswap:
             route = [token, self.get_weth_address()]
             price = self.router.functions.getAmountsIn(qty, route).call()[0]
         elif self.version == 3:
-            if not fee:
-                logger.warning("No fee set, assuming 0.3%")
-                fee = 3000
             price = self._get_token_token_output_price(
                 token, self.get_weth_address(), qty, fee=fee
             )
@@ -403,6 +405,7 @@ class Uniswap:
 
         :param fee: (v3 only) The pool's fee in hundredths of a bip, i.e. 1e-6 (3000 is 0.3%)
         """
+        fee = validate_fee_tier(fee=fee, version=self.version)
         if not route:
             if self.version == 2:
                 # If one of the tokens are WETH, delegate to appropriate call.
@@ -418,9 +421,6 @@ class Uniswap:
         if self.version == 2:
             price: int = self.router.functions.getAmountsIn(qty, route).call()[0]
         elif self.version == 3:
-            if not fee:
-                logger.warning("No fee set, assuming 0.3%")
-                fee = 3000
             if route:
                 # NOTE: to support custom routes we need to support the Path data encoding: https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/Path.sol
                 # result: tuple = self.quoter.functions.quoteExactOutput(route, qty).call()
@@ -453,10 +453,7 @@ class Uniswap:
         if not isinstance(qty, int):
             raise TypeError("swapped quantity must be an integer")
 
-        if fee is None:
-            fee = 3000
-            if self.version == 3:
-                logger.warning("No fee set, assuming 0.3%")
+        fee = validate_fee_tier(fee=fee, version=self.version)
 
         if slippage is None:
             slippage = self.default_slippage
@@ -494,10 +491,7 @@ class Uniswap:
         slippage: Optional[float] = None,
     ) -> HexBytes:
         """Make a trade by defining the qty of the output token."""
-        if fee is None:
-            fee = 3000
-            if self.version == 3:
-                logger.warning("No fee set, assuming 0.3%")
+        fee = validate_fee_tier(fee=fee, version=self.version)
 
         if slippage is None:
             slippage = self.default_slippage
@@ -1646,9 +1640,7 @@ class Uniswap:
         """
 
         assert token_0 != token_1, "Token addresses cannot be the same"
-        assert fee in list(
-            _tick_spacing.keys()
-        ), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
+        fee = validate_fee_tier(fee=fee, version=self.version)
 
         pool_address = self.factory_contract.functions.getPool(
             token_0, token_1, fee
@@ -1669,9 +1661,7 @@ class Uniswap:
         """
         address = _addr_to_str(self.address)
         assert token_0 != token_1, "Token addresses cannot be the same"
-        assert fee in list(
-            _tick_spacing.keys()
-        ), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
+        fee = validate_fee_tier(fee=fee, version=self.version)
 
         tx = self.factory_contract.functions.createPool(token_0, token_1, fee).transact(
             {"from": address}
@@ -1820,10 +1810,7 @@ class Uniswap:
         Parameter `fee` is required for V3 only, can be omitted for V2
         Requires pair [token_in, token_out] having direct pool
         """
-        if not fee:
-            fee = 3000
-            if self.version == 3:
-                logger.warning("No fee set, assuming 0.3%")
+        fee = validate_fee_tier(fee=fee, version=self.version)
 
         if token_in == ETH_ADDRESS:
             token_in = self.get_weth_address()
@@ -1890,7 +1877,7 @@ class Uniswap:
         token_in: AddressLike,
         token_out: AddressLike,
         amount_in: int,
-        fee: Optional[int] = None,
+        fee: int,
         route: Optional[List[AddressLike]] = None,
     ) -> float:
         """
@@ -1926,7 +1913,14 @@ class Uniswap:
             cost_amount / (amount_in / (10 ** self.get_token(token_in).decimals))
         ) / 10 ** self.get_token(token_out).decimals
 
-        return float((price_small - price_amount) / price_small)
+        # calculate and subtract the realised fees from the price impact. See:
+        # https://github.com/uniswap-python/uniswap-python/issues/310
+        # The fee calculation will need to be updated when adding support for the AutoRouter.
+        price_impact_with_fees = float((price_small - price_amount) / price_small)
+        fee_realised_percentage = realised_fee_percentage(fee, amount_in)
+        price_impact_real = price_impact_with_fees - fee_realised_percentage
+
+        return price_impact_real
 
     # ------ Exchange ------------------------------------------------------------------
     @supports([1, 2])

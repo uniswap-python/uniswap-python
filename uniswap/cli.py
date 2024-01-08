@@ -1,16 +1,16 @@
 import logging
 import os
+from typing import Optional
 
 import click
 from dotenv import load_dotenv
 from web3 import Web3
-from typing import Optional
 
-from .uniswap import Uniswap, AddressLike, _str_to_addr
+from .constants import ETH_ADDRESS
+from .fee import FeeTier
 from .token import BaseToken
 from .tokens import get_tokens
-from .constants import ETH_ADDRESS
-
+from .uniswap import AddressLike, Uniswap, _str_to_addr
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ def price(
         else:
             decimals = uni.get_token(token_in).decimals
         quantity = 10**decimals
-    price = uni.get_price_input(token_in, token_out, qty=quantity)
+    price = uni.get_price_input(token_in, token_out, qty=quantity, fee=FeeTier.TIER_3000)
     if raw:
         click.echo(price)
     else:

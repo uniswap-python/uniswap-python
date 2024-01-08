@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "uniswap-python"
-version = "0.7.0"
+version = "0.7.2"  # this is automatically set in CI on tagged releases (before pushed to PyPI)
 description = "An unofficial Python wrapper for the decentralized exchange Uniswap"
 repository = "https://github.com/shanefontaine/uniswap-python"
 readme = "README.md"

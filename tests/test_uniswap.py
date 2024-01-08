@@ -9,10 +9,12 @@ from dataclasses import dataclass
 from time import sleep
 
 from web3 import Web3
+from web3.types import Wei
 
 from uniswap import Uniswap
 from uniswap.constants import ETH_ADDRESS
-from uniswap.exceptions import InsufficientBalance
+from uniswap.fee import FeeTier
+from uniswap.exceptions import InsufficientBalance, InvalidFeeTier
 from uniswap.tokens import get_tokens
 from uniswap.util import (
     _str_to_addr,
@@ -69,16 +71,17 @@ def test_assets(client: Uniswap):
     """
     tokens = get_tokens(client.netname)
 
+
     for token_name, amount in [
         ("DAI", 10_000 * ONE_DAI),
         ("USDC", 10_000 * ONE_USDC),
     ]:
         token_addr = tokens[token_name]
-        price = client.get_price_output(_str_to_addr(ETH_ADDRESS), token_addr, amount)
+        price = client.get_price_output(_str_to_addr(ETH_ADDRESS), token_addr, amount, fee=FeeTier.TIER_3000)
         logger.info(f"Cost of {amount} {token_name}: {price}")
         logger.info("Buying...")
 
-        txid = client.make_trade_output(tokens["ETH"], token_addr, amount)
+        txid = client.make_trade_output(tokens["ETH"], token_addr, amount, fee=FeeTier.TIER_3000)
         tx = client.w3.eth.wait_for_transaction_receipt(txid, timeout=RECEIPT_TIMEOUT)
         assert tx["status"] == 1, f"Transaction failed: {tx}"
 
@@ -133,6 +136,13 @@ def does_not_raise():
     yield
 
 
+
+ONE_ETH = 10**18
+ONE_USDC = 10**6
+
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+
 # TODO: Change pytest.param(..., mark=pytest.mark.xfail) to the expectation/raises method
 @pytest.mark.usefixtures("client", "web3")
 class TestUniswap(object):
@@ -151,47 +161,47 @@ class TestUniswap(object):
 
     # ------ Market --------------------------------------------------------------------
     @pytest.mark.parametrize(
-        "token0, token1, qty, kwargs",
+        "token0, token1, qty",
         [
-            ("ETH", "UNI", ONE_ETH, {}),
-            ("UNI", "ETH", ONE_ETH, {}),
-            ("ETH", "DAI", ONE_ETH, {}),
-            ("DAI", "ETH", ONE_ETH, {}),
-            ("ETH", "UNI", 2 * ONE_ETH, {}),
-            ("UNI", "ETH", 2 * ONE_ETH, {}),
-            ("WETH", "DAI", ONE_ETH, {}),
-            ("DAI", "WETH", ONE_ETH, {}),
-            ("DAI", "USDC", ONE_ETH, {"fee": 500}),
+            ("ETH", "UNI", ONE_ETH),
+            ("UNI", "ETH", ONE_ETH),
+            ("ETH", "DAI", ONE_ETH),
+            ("DAI", "ETH", ONE_ETH),
+            ("ETH", "UNI", 2 * ONE_ETH),
+            ("UNI", "ETH", 2 * ONE_ETH),
+            ("WETH", "DAI", ONE_ETH),
+            ("DAI", "WETH", ONE_ETH),
+            ("DAI", "USDC", ONE_ETH),
         ],
     )
-    def test_get_price_input(self, client, tokens, token0, token1, qty, kwargs):
+    def test_get_price_input(self, client: Uniswap, tokens, token0, token1, qty):
         token0, token1 = tokens[token0], tokens[token1]
         if client.version == 1 and ETH_ADDRESS not in [token0, token1]:
             pytest.skip("Not supported in this version of Uniswap")
-        r = client.get_price_input(token0, token1, qty, **kwargs)
+        r = client.get_price_input(token0, token1, qty, fee=FeeTier.TIER_3000)
         assert r
 
     @pytest.mark.parametrize(
-        "token0, token1, qty, kwargs",
+        "token0, token1, qty",
         [
-            ("ETH", "UNI", ONE_ETH, {}),
-            ("UNI", "ETH", ONE_ETH // 100, {}),
-            ("ETH", "DAI", ONE_ETH, {}),
-            ("DAI", "ETH", ONE_ETH, {}),
-            ("ETH", "UNI", 2 * ONE_ETH, {}),
-            ("WETH", "DAI", ONE_ETH, {}),
-            ("DAI", "WETH", ONE_ETH, {}),
-            ("DAI", "USDC", ONE_USDC, {"fee": 500}),
+            ("ETH", "UNI", ONE_ETH),
+            ("UNI", "ETH", ONE_ETH // 100),
+            ("ETH", "DAI", ONE_ETH),
+            ("DAI", "ETH", ONE_ETH),
+            ("ETH", "UNI", 2 * ONE_ETH),
+            ("WETH", "DAI", ONE_ETH),
+            ("DAI", "WETH", ONE_ETH),
+            ("DAI", "USDC", ONE_USDC),
         ],
     )
-    def test_get_price_output(self, client, tokens, token0, token1, qty, kwargs):
+    def test_get_price_output(self, client: Uniswap, tokens, token0, token1, qty):
         token0, token1 = tokens[token0], tokens[token1]
         if client.version == 1 and ETH_ADDRESS not in [token0, token1]:
             pytest.skip("Not supported in this version of Uniswap")
-        r = client.get_price_output(token0, token1, qty, **kwargs)
+        r = client.get_price_output(token0, token1, qty, fee=FeeTier.TIER_3000)
         assert r
 
-    @pytest.mark.parametrize("token0, token1, fee", [("DAI", "USDC", 500)])
+    @pytest.mark.parametrize("token0, token1, fee", [("DAI", "USDC", FeeTier.TIER_3000)])
     def test_get_raw_price(self, client: Uniswap, tokens, token0, token1, fee):
         token0, token1 = tokens[token0], tokens[token1]
         if client.version == 1:
@@ -202,7 +212,7 @@ class TestUniswap(object):
     @pytest.mark.parametrize(
         "token0, token1, kwargs",
         [
-            ("WETH", "DAI", {"fee": 500}),
+            ("WETH", "DAI", {"fee": FeeTier.TIER_3000}),
         ],
     )
     def test_get_pool_instance(self, client, tokens, token0, token1, kwargs):
@@ -215,7 +225,7 @@ class TestUniswap(object):
     @pytest.mark.parametrize(
         "token0, token1, kwargs",
         [
-            ("WETH", "DAI", {"fee": 500}),
+            ("WETH", "DAI", {"fee": FeeTier.TIER_3000}),
         ],
     )
     def test_get_pool_immutables(self, client, tokens, token0, token1, kwargs):
@@ -230,7 +240,7 @@ class TestUniswap(object):
     @pytest.mark.parametrize(
         "token0, token1, kwargs",
         [
-            ("WETH", "DAI", {"fee": 500}),
+            ("WETH", "DAI", {"fee": FeeTier.TIER_3000}),
         ],
     )
     def test_get_pool_state(self, client, tokens, token0, token1, kwargs):
@@ -245,7 +255,7 @@ class TestUniswap(object):
     @pytest.mark.parametrize(
         "amount0, amount1, token0, token1, kwargs",
         [
-            (1, 10, "WETH", "DAI", {"fee": 500}),
+            (1, 10, "WETH", "DAI", {"fee": FeeTier.TIER_3000}),
         ],
     )
     def test_mint_position(
@@ -300,7 +310,7 @@ class TestUniswap(object):
     @pytest.mark.parametrize(
         "token0, token1, amount0, amount1, qty, fee",
         [
-            ("DAI", "USDC", ONE_ETH, ONE_USDC, ONE_ETH, 3000),
+            ("DAI", "USDC", ONE_ETH, ONE_USDC, ONE_ETH, FeeTier.TIER_3000),
         ],
     )
     def test_v3_deploy_pool_with_liquidity(
@@ -317,14 +327,14 @@ class TestUniswap(object):
         print(pool.address)
         # Ensuring client has sufficient balance of both tokens
         eth_to_dai = client.make_trade(
-            tokens["ETH"], tokens[token0], qty, client.address
+            tokens["ETH"], tokens[token0], qty, client.address, fee=fee,
         )
         eth_to_dai_tx = client.w3.eth.wait_for_transaction_receipt(
             eth_to_dai, timeout=RECEIPT_TIMEOUT
         )
         assert eth_to_dai_tx["status"]
         dai_to_usdc = client.make_trade(
-            tokens[token0], tokens[token1], qty * 10, client.address
+            tokens[token0], tokens[token1], qty * 10, client.address, fee=fee,
         )
         dai_to_usdc_tx = client.w3.eth.wait_for_transaction_receipt(
             dai_to_usdc, timeout=RECEIPT_TIMEOUT
@@ -373,7 +383,7 @@ class TestUniswap(object):
         if client.version != 3:
             pytest.skip("Not supported in this version of Uniswap")
 
-        pool = client.get_pool_instance(tokens[token0], tokens[token1])
+        pool = client.get_pool_instance(tokens[token0], tokens[token1], fee=FeeTier.TIER_3000)
         tvl_0, tvl_1 = client.get_tvl_in_pool(pool)
         assert tvl_0 > 0
         assert tvl_1 > 0
@@ -444,7 +454,7 @@ class TestUniswap(object):
         with expectation():
             bal_in_before = client.get_token_balance(input_token)
 
-            txid = client.make_trade(input_token, output_token, qty, recipient)
+            txid = client.make_trade(input_token, output_token, qty, recipient, fee=FeeTier.TIER_3000)
             tx = web3.eth.wait_for_transaction_receipt(txid, timeout=RECEIPT_TIMEOUT)
             assert tx["status"], f"Transaction failed with status {tx['status']}: {tx}"
 
@@ -466,13 +476,6 @@ class TestUniswap(object):
             # ("ETH", "UNI", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # ("UNI", "ETH", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # ("DAI", "UNI", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
-            (
-                "DAI",
-                "ETH",
-                10 * ONE_ETH,
-                None,
-                lambda: pytest.raises(InsufficientBalance),
-            ),
             ("DAI", "DAI", ONE_USDC, None, lambda: pytest.raises(ValueError)),
         ],
     )
@@ -496,11 +499,45 @@ class TestUniswap(object):
         with expectation():
             balance_before = client.get_token_balance(output_token)
 
-            r = client.make_trade_output(input_token, output_token, qty, recipient)
+            r = client.make_trade_output(input_token, output_token, qty, recipient, fee=FeeTier.TIER_3000)
             tx = web3.eth.wait_for_transaction_receipt(r, timeout=RECEIPT_TIMEOUT)
             assert tx["status"]
 
-            # TODO: Checks for ETH, taking gas into account
+            # # TODO: Checks for ETH, taking gas into account
             balance_after = client.get_token_balance(output_token)
             if output_token != tokens["ETH"]:
                 assert balance_before + qty == balance_after
+
+    def test_fee_required_for_uniswap_v3(
+        self,
+        client: Uniswap,
+        tokens,
+    ) -> None:
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        with pytest.raises(InvalidFeeTier):
+            client.get_price_input(tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client.get_price_output(tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client._get_eth_token_output_price(tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client._get_token_eth_output_price(tokens["UNI"], Wei(ONE_ETH), fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client._get_token_token_output_price(
+                tokens["UNI"], tokens["ETH"], ONE_ETH, fee=None
+            )
+        with pytest.raises(InvalidFeeTier):
+            client.make_trade(tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            client.make_trade_output(tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None)
+        # NOTE: (rudiemeant@gmail.com): Since in 0.7.1 we're breaking the
+        # backwards-compatibility with 0.7.0, we should check
+        # that clients now get an error when trying to call methods
+        # without explicitly specifying a fee tier.
+        with pytest.raises(InvalidFeeTier):
+            client.get_pool_instance(tokens["ETH"], tokens["UNI"], fee=None)  # type: ignore[arg-type]
+        with pytest.raises(InvalidFeeTier):
+            client.create_pool_instance(tokens["ETH"], tokens["UNI"], fee=None)  # type: ignore[arg-type]
+        with pytest.raises(InvalidFeeTier):
+            client.get_raw_price(tokens["ETH"], tokens["UNI"], fee=None)
