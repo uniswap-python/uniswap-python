@@ -5,8 +5,8 @@ import functools
 from typing import List, Any, Optional, Union, Tuple, Dict
 
 from web3 import Web3
-from web3.eth import Contract
-from web3.contract import ContractFunction
+from web3.contract import Contract
+from web3.contract.contract import ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
 from web3.types import (
     TxParams,
@@ -34,6 +34,7 @@ from .constants import (
     _netid_to_name,
     _poolmanager_contract_addresses,
     ETH_ADDRESS,
+    NOHOOK_ADDRESS,
 )
 
 logger = logging.getLogger(__name__)
@@ -86,17 +87,22 @@ class Uniswap4Core:
 
         self.last_nonce: Nonce = self.w3.eth.get_transaction_count(self.address)
 
+        max_approval_hex = f"0x{64 * 'f'}"
+        self.max_approval_int = int(max_approval_hex, 16)
+        max_approval_check_hex = f"0x{15 * '0'}{49 * 'f'}"
+        self.max_approval_check_int = int(max_approval_check_hex, 16)
+
         if poolmanager_contract_addr is None:
             poolmanager_contract_addr = _poolmanager_contract_addresses[self.network]
 
-        self.poolmanager_contract = _load_contract(
+        self.router = _load_contract(
             self.w3,
             abi_name="uniswap-v4/poolmanager",
             address=_str_to_addr(poolmanager_contract_addr),
         )
 
         if hasattr(self, "poolmanager_contract"):
-            logger.info(f"Using pool manager contract: {self.poolmanager_contract}")
+            logger.info(f"Using pool manager contract: {self.router}")
 
     # ------ Contract calls ------------------------------------------------------------
 
@@ -109,9 +115,8 @@ class Uniswap4Core:
         qty: int,
         fee: int,
         tick_spacing: int,
-        zero_to_one: bool = true,
         sqrt_price_limit_x96: int = 0,
-        zero_for_one: bool = true,
+        zero_for_one: bool = True,
         hooks: AddressLike = NOHOOK_ADDRESS,
     ) -> int:
         """
@@ -285,7 +290,7 @@ class Uniswap4Core:
         fee: int,
         tick_spacing: int,
         sqrt_price_limit_x96: int = 0,
-        zero_for_one: bool = true,
+        zero_for_one: bool = True,
         hooks: AddressLike = NOHOOK_ADDRESS,
     ) -> HexBytes:
         """
@@ -593,7 +598,7 @@ class Uniswap4Core:
         return ERC20Token(symbol, address, name, decimals)
 
     def get_pool_id(self, currency0: AddressLike, currency1: AddressLike, fee : int, tickSpacing : int, hooks : AddressLike = ETH) -> bytes:
-        if currency0 > currency1:
+        if int(currency0) > (currency1):
             currency0 , currency1 = currency1 , currency0
         return self.w3.keccak_solidity(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)])
 
