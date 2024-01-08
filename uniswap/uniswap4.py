@@ -17,7 +17,7 @@ from web3.types import (
     HexBytes,
 )
 from web3._utils.abi import encode_abi
-from .types import AddressLike
+from .types import AddressLike, UniswapV4_slot0, UniswapV4_position_info, UniswapV4_tick_info
 from .token import ERC20Token
 from .tokens import tokens, tokens_rinkeby
 from .exceptions import InvalidToken, InsufficientBalance
@@ -39,7 +39,7 @@ from .constants import (
 logger = logging.getLogger(__name__)
 
 
-class Uniswap4:
+class Uniswap4Core:
     """
     Wrapper around Uniswap v4 contracts.
     """
@@ -96,65 +96,188 @@ class Uniswap4:
         )
 
         if hasattr(self, "poolmanager_contract"):
-            logger.info(f"Using factory contract: {self.poolmanager_contract}")
+            logger.info(f"Using pool manager contract: {self.poolmanager_contract}")
 
     # ------ Contract calls ------------------------------------------------------------
 
-    # ------ Market --------------------------------------------------------------------
+    # ------ Pool manager READ methods --------------------------------------------------------------------
 
     def get_price(
         self,
-        token0: AddressLike,  # input token
-        token1: AddressLike,  # output token
+        currency0: AddressLike,  # input token
+        currency1: AddressLike,  # output token
         qty: int,
         fee: int,
+        tick_spacing: int,
         zero_to_one: bool = true,
+        sqrt_price_limit_x96: int = 0,
+        zero_for_one: bool = true,
+        hooks: AddressLike = NOHOOK_ADDRESS,
     ) -> int:
         """
         :if `zero_to_one` is true: given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
         :if `zero_to_one` is false: returns the minimum amount of `token0` required to buy `qty` amount of `token1`.
         """
 
-        # WIP
+        if currency0 == currency1:
+            raise ValueError
 
-        return 0
+        pool_key = {
+            "currency0": currency0.address,
+            "currency1": currency1.address,
+            "fee": fee,
+            "tickSpacing": tick_spacing,
+            "hooks": hooks,
+        }
 
-    def get_spot_price(
+        swap_params = {
+            "zeroForOne": zero_for_one,
+            "amountSpecified": qty,
+            "sqrtPriceLimitX96": sqrt_price_limit_x96,
+        }
+
+        tx_params = self._get_tx_params()
+        transaction = self.router.functions.swap(
+                {
+                    "key": pool_key,
+                    "params": swap_params,
+                }
+            ).buildTransaction(tx_params)
+        # Uniswap3 uses 20% margin for transactions
+        transaction["gas"] = Wei(int(self.w3.eth.estimate_gas(transaction) * 1.2))
+        signed_txn = self.w3.eth.account.sign_transaction(
+            transaction, private_key=self.private_key
+        )
+
+        try:
+            price = self.w3.eth.call(signed_txn)
+        except ContractLogicError as revert:
+            price = self.w3.codec.decode_abi(["int128[]","uint160","uint32"], revert.data)[1]
+        return price
+
+    def get_slot0(
         self,
-        token0: AddressLike,  # input token
-        token1: AddressLike,  # output token
-        qty: int,
+        currency0: AddressLike,  # input token
+        currency1: AddressLike,  # output token
         fee: int,
-        zero_to_one: bool = true,
-    ) -> int:
+        tick_spacing: int,
+        hooks: AddressLike = NOHOOK_ADDRESS,
+    ) -> UniswapV4_slot0:
         """
-        :if `zero_to_one` is true: given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
-        :if `zero_to_one` is false: returns the minimum amount of `token0` required to buy `qty` amount of `token1`.
+        :Get the current value in slot0 of the given pool
         """
 
-        # WIP
+        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        slot0 = UniswapV4_slot0(*self.router.functions.getSlot0(pool_id).call())
+        return slot0
 
-        return 0
-
-    def get_price_impact(
+    def get_liquidity(
         self,
-        token0: AddressLike,  # input token
-        token1: AddressLike,  # output token
-        qty: int,
+        currency0: AddressLike,  # input token
+        currency1: AddressLike,  # output token
         fee: int,
-        zero_to_one: bool = true,
+        tick_spacing: int,
+        hooks: AddressLike = NOHOOK_ADDRESS,
     ) -> int:
         """
-        :if `zero_to_one` is true: given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
-        :if `zero_to_one` is false: returns the minimum amount of `token0` required to buy `qty` amount of `token1`.
+        :Get the current value of liquidity of the given pool
+        """
+        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        liquidity = self.router.functions.getLiquidity(pool_id).call()
+        return liquidity
+
+    def get_liquidity_for_position(
+        self,
+        currency0: AddressLike,  # input token
+        currency1: AddressLike,  # output token
+        fee: int,
+        tick_spacing: int,
+        owner: AddressLike,  # output token
+        tick_lower: int,
+        tick_upper: int,
+        hooks: AddressLike = NOHOOK_ADDRESS,
+    ) -> int:
+        """
+        :Get the current value of liquidity for the specified pool and position
+        """
+        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        liquidity = self.router.functions.getLiquidity(pool_id,owner,tick_lower,tick_upper).call()
+        return liquidity
+
+    def get_position(
+        self,
+        currency0: AddressLike,  # input token
+        currency1: AddressLike,  # output token
+        fee: int,
+        tick_spacing: int,
+        owner: AddressLike,  # output token
+        tick_lower: int,
+        tick_upper: int,
+        hooks: AddressLike = NOHOOK_ADDRESS,
+    ) -> UniswapV4_position_info:
+        """
+        :Get the current value of liquidity for the specified pool and position
+        """
+        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        liquidity = UniswapV4_position_info(*self.router.functions.getPosition(pool_id,owner,tick_lower,tick_upper).call())
+        return liquidity
+
+    def get_pool_tick_info(
+        self,
+        currency0: AddressLike,  # input token
+        currency1: AddressLike,  # output token
+        fee: int,
+        tick_spacing: int,
+        tick: int,
+        hooks: AddressLike = NOHOOK_ADDRESS,
+    ) -> UniswapV4_tick_info:
+        """
+        :Get the current value of liquidity for the specified pool and position
+        """
+        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        tick_info = UniswapV4_tick_info(*self.router.functions.getPoolTickInfo(pool_id,tick).call())
+        return tick_info
+
+    def get_pool_bitmap_info(
+        self,
+        currency0: AddressLike,  # input token
+        currency1: AddressLike,  # output token
+        fee: int,
+        tick_spacing: int,
+        word: int,
+        hooks: AddressLike = NOHOOK_ADDRESS,
+    ) -> int:
+        """
+        :Get the current value of liquidity for the specified pool and position
+        """
+        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        bitmap_info = self.router.functions.getPoolBitmapInfo(pool_id, word).call()
+        return bitmap_info
+
+    def currency_delta(
+        self,
+        locker: AddressLike,  # input token
+        currency0: AddressLike,  # output token
+    ) -> int:
+        """
+        :Get the current value of liquidity for the specified pool and position
+        """
+        currency_delta = self.router.functions.currencyDelta(locker, currency0).call()
+        return currency_delta
+
+    def reserves_of(
+        self,
+        currency0: AddressLike,  # input token
+    ) -> int:
+        """
+        :Get the current value in slot0 of the given pool
         """
 
-        # WIP
+        reserves = self.router.functions.reservesOf().call()
+        return reserves
 
-        return 0
-
-    # ------ Make Trade ----------------------------------------------------------------
-    def make_trade(
+    # ------ Pool manager WRITE methods ----------------------------------------------------------------
+    def swap(
         self,
         currency0: ERC20Token,
         currency1: ERC20Token,
@@ -200,24 +323,9 @@ class Uniswap4:
                     "params": swap_params,
                 }
             ),
-            self._get_tx_params(value=qty),
+            self._get_tx_params(),
         )
 
-    # ------ Wallet balance ------------------------------------------------------------
-    def get_eth_balance(self) -> Wei:
-        """Get the balance of ETH for your address."""
-        return self.w3.eth.get_balance(self.address)
-
-    def get_token_balance(self, token: AddressLike) -> int:
-        """Get the balance of a token for your address."""
-        _validate_address(token)
-        if _addr_to_str(token) == ETH_ADDRESS:
-            return self.get_eth_balance()
-        erc20 = _load_contract_erc20(self.w3, token)
-        balance: int = erc20.functions.balanceOf(self.address).call()
-        return balance
-
-    # ------ Liquidity -----------------------------------------------------------------
     def initialize(
         self,
         currency0: ERC20Token,
@@ -229,7 +337,7 @@ class Uniswap4:
         hooks: AddressLike = NOHOOK_ADDRESS,
     ) -> HexBytes:
         """
-        :Initialize the state for a given pool ID
+        :Initialize the state for a given pool key
         :
         :`currency0`:The lower currency of the pool, sorted numerically
         :`currency1`:The higher currency of the pool, sorted numerically
@@ -255,7 +363,47 @@ class Uniswap4:
                     "sqrtPriceX96": sqrt_price_limit_x96,
                 }
             ),
-            self._get_tx_params(value=qty),
+            self._get_tx_params(),
+        )
+
+    def donate(
+        self,
+        currency0: ERC20Token,
+        currency1: ERC20Token,
+        qty: Union[int, Wei],
+        fee: int,
+        tick_spacing: int,
+        sqrt_price_limit_x96: int,
+        hooks: AddressLike = NOHOOK_ADDRESS,
+    ) -> HexBytes:
+        """
+        :Donate the given currency amounts to the pool with the given pool key
+        :
+        :`currency0`:The lower currency of the pool, sorted numerically
+        :`currency1`:The higher currency of the pool, sorted numerically
+        :`fee`: The pool swap fee, capped at 1_000_000. The upper 4 bits determine if the hook sets any fees.
+        :`tickSpacing`: Ticks that involve positions must be a multiple of tick spacing
+        :`hooks`: The hooks of the pool
+        """
+        if currency0 == currency1:
+            raise ValueError
+
+        pool_key = {
+            "currency0": currency0.address,
+            "currency1": currency1.address,
+            "fee": fee,
+            "tickSpacing": tick_spacing,
+            "hooks": hooks,
+        }
+
+        return self._build_and_send_tx(
+            self.router.functions.donate(
+                {
+                    "key": pool_key,
+                    "sqrtPriceX96": sqrt_price_limit_x96,
+                }
+            ),
+            self._get_tx_params(),
         )
 
     def modify_position(
@@ -269,6 +417,16 @@ class Uniswap4:
         tick_lower: int,
         hooks: AddressLike = NOHOOK_ADDRESS,
     ) -> HexBytes:
+        """
+        :Modify the liquidity for the given pool
+        :Poke by calling with a zero liquidityDelta
+        :
+        :`currency0`:The lower currency of the pool, sorted numerically
+        :`currency1`:The higher currency of the pool, sorted numerically
+        :`fee`: The pool swap fee, capped at 1_000_000. The upper 4 bits determine if the hook sets any fees.
+        :`tickSpacing`: Ticks that involve positions must be a multiple of tick spacing
+        :`hooks`: The hooks of the pool
+        """
         if currency0 == currency1:
             raise ValueError
 
@@ -295,6 +453,60 @@ class Uniswap4:
             ),
             self._get_tx_params(value=qty),
         )
+
+    def settle(
+        self,
+        currency0: ERC20Token,
+        qty: Union[int, Wei],
+    ) -> HexBytes:
+        """
+        :Called by the user to pay what is owed
+        """
+
+        return self._build_and_send_tx(
+            self.router.functions.settle(
+                {
+                    "currency ": currency0,
+                }
+            ),
+            self._get_tx_params(value=qty),
+        )
+
+    def take(
+        self,
+        currency0: ERC20Token,
+        to: AddressLike,
+        qty: Union[int, Wei],
+    ) -> HexBytes:
+        """
+        :Called by the user to net out some value owed to the user
+        :Can also be used as a mechanism for _free_ flash loans
+        """
+
+        return self._build_and_send_tx(
+            self.router.functions.take(
+                {
+                    "currency ": currency0,
+                    "to ": to,
+                    "amount ": qty,
+                }
+            ),
+            self._get_tx_params(),
+        )
+
+    # ------ Wallet balance ------------------------------------------------------------
+    def get_eth_balance(self) -> Wei:
+        """Get the balance of ETH for your address."""
+        return self.w3.eth.get_balance(self.address)
+
+    def get_token_balance(self, token: AddressLike) -> int:
+        """Get the balance of a token for your address."""
+        _validate_address(token)
+        if _addr_to_str(token) == ETH_ADDRESS:
+            return self.get_eth_balance()
+        erc20 = _load_contract_erc20(self.w3, token)
+        balance: int = erc20.functions.balanceOf(self.address).call()
+        return balance
 
     # ------ Approval Utils ------------------------------------------------------------
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
@@ -381,6 +593,8 @@ class Uniswap4:
         return ERC20Token(symbol, address, name, decimals)
 
     def get_pool_id(self, currency0: AddressLike, currency1: AddressLike, fee : int, tickSpacing : int, hooks : AddressLike = ETH) -> bytes:
+        if currency0 > currency1:
+            currency0 , currency1 = currency1 , currency0
         return self.w3.keccak_solidity(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)])
 
     # ------ Test utilities ------------------------------------------------------------
