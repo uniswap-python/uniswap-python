@@ -91,14 +91,14 @@ class Uniswap4Core:
         self.max_approval_check_int = int(max_approval_check_hex, 16)
 
         if poolmanager_contract_addr is None:
-            self.poolmanager_contract_addr: AddressLike = _poolmanager_contract_addresses[self.network]
+            self.poolmanager_contract_addr: AddressLike = _str_to_addr(_poolmanager_contract_addresses[self.network])
         else:
-            self.poolmanager_contract_addr: AddressLike = poolmanager_contract_addr
+            self.poolmanager_contract_addr: AddressLike = _str_to_addr(poolmanager_contract_addr)
 
         self.router = _load_contract(
             self.w3,
             abi_name="uniswap-v4/poolmanager",
-            address=_str_to_addr(self.poolmanager_contract_addr),
+            address=self.poolmanager_contract_addr,
         )
 
         if hasattr(self, "poolmanager_contract"):
@@ -517,7 +517,7 @@ class Uniswap4Core:
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
         """Give an exchange/router max approval of a token."""
         max_approval = self.max_approval_int if not max_approval else max_approval
-        contract_addr = self.poolmanager_contract_addr
+        contract_addr = _addr_to_str(self.poolmanager_contract_addr)
         function = _load_contract_erc20(self.w3, token).functions.approve(
             contract_addr, max_approval
         )
@@ -597,7 +597,7 @@ class Uniswap4Core:
         if int(currency0) > int(currency1):
             currency0 , currency1 = currency1 , currency0
         pool_id = bytes(self.w3.solidity_keccak(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)]))
-        return 
+        return pool_id
 
 
     
