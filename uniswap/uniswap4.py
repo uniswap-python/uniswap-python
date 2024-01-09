@@ -16,7 +16,6 @@ from web3.types import (
     Nonce,
     HexBytes,
 )
-from web3._utils.abi import encode_abi
 from .types import AddressLike, UniswapV4_slot0, UniswapV4_position_info, UniswapV4_tick_info
 from .token import ERC20Token
 from .tokens import tokens, tokens_rinkeby
@@ -600,7 +599,7 @@ class Uniswap4Core:
     def get_pool_id(self, currency0: AddressLike, currency1: AddressLike, fee : int, tickSpacing : int, hooks : AddressLike = ETH) -> bytes:
         if int(currency0) > (currency1):
             currency0 , currency1 = currency1 , currency0
-        return self.w3.keccak_solidity(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)])
+        return self.w3.solidity_keccak(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)])
 
     # ------ Test utilities ------------------------------------------------------------
 
