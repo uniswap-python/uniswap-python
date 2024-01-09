@@ -18,7 +18,6 @@ from web3.types import (
 )
 from .types import AddressLike, UniswapV4_slot0, UniswapV4_position_info, UniswapV4_tick_info
 from .token import ERC20Token
-from .tokens import tokens, tokens_rinkeby
 from .exceptions import InvalidToken, InsufficientBalance
 from .util import (
     _str_to_addr,
@@ -116,7 +115,7 @@ class Uniswap4Core:
         tick_spacing: int,
         sqrt_price_limit_x96: int = 0,
         zero_for_one: bool = True,
-        hooks: AddressLike = NOHOOK_ADDRESS,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
     ) -> int:
         """
         :if `zero_to_one` is true: given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
@@ -127,8 +126,8 @@ class Uniswap4Core:
             raise ValueError
 
         pool_key = {
-            "currency0": currency0.address,
-            "currency1": currency1.address,
+            "currency0": currency0,
+            "currency1": currency1,
             "fee": fee,
             "tickSpacing": tick_spacing,
             "hooks": hooks,
@@ -146,7 +145,7 @@ class Uniswap4Core:
                     "key": pool_key,
                     "params": swap_params,
                 }
-            ).buildTransaction(tx_params)
+            ).build_transaction(tx_params)
         # Uniswap3 uses 20% margin for transactions
         transaction["gas"] = Wei(int(self.w3.eth.estimate_gas(transaction) * 1.2))
         signed_txn = self.w3.eth.account.sign_transaction(
@@ -156,7 +155,7 @@ class Uniswap4Core:
         try:
             price = self.w3.eth.call(signed_txn)
         except ContractLogicError as revert:
-            price = self.w3.codec.decode_abi(["int128[]","uint160","uint32"], revert.data)[1]
+            price = int(self.w3.codec.decode_abi(["int128[]","uint160","uint32"], revert.data)[1])
         return price
 
     def get_slot0(
@@ -165,7 +164,7 @@ class Uniswap4Core:
         currency1: AddressLike,  # output token
         fee: int,
         tick_spacing: int,
-        hooks: AddressLike = NOHOOK_ADDRESS,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
     ) -> UniswapV4_slot0:
         """
         :Get the current value in slot0 of the given pool
@@ -181,13 +180,13 @@ class Uniswap4Core:
         currency1: AddressLike,  # output token
         fee: int,
         tick_spacing: int,
-        hooks: AddressLike = NOHOOK_ADDRESS,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
     ) -> int:
         """
         :Get the current value of liquidity of the given pool
         """
         pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
-        liquidity = self.router.functions.getLiquidity(pool_id).call()
+        liquidity = int(self.router.functions.getLiquidity(pool_id).call())
         return liquidity
 
     def get_liquidity_for_position(
@@ -196,16 +195,16 @@ class Uniswap4Core:
         currency1: AddressLike,  # output token
         fee: int,
         tick_spacing: int,
-        owner: AddressLike,  # output token
+        owner: AddressLike,
         tick_lower: int,
         tick_upper: int,
-        hooks: AddressLike = NOHOOK_ADDRESS,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
     ) -> int:
         """
         :Get the current value of liquidity for the specified pool and position
         """
         pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
-        liquidity = self.router.functions.getLiquidity(pool_id,owner,tick_lower,tick_upper).call()
+        liquidity = int(self.router.functions.getLiquidity(pool_id,owner,tick_lower,tick_upper).call())
         return liquidity
 
     def get_position(
@@ -217,7 +216,7 @@ class Uniswap4Core:
         owner: AddressLike,  # output token
         tick_lower: int,
         tick_upper: int,
-        hooks: AddressLike = NOHOOK_ADDRESS,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
     ) -> UniswapV4_position_info:
         """
         :Get the current value of liquidity for the specified pool and position
@@ -233,7 +232,7 @@ class Uniswap4Core:
         fee: int,
         tick_spacing: int,
         tick: int,
-        hooks: AddressLike = NOHOOK_ADDRESS,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
     ) -> UniswapV4_tick_info:
         """
         :Get the current value of liquidity for the specified pool and position
@@ -249,13 +248,13 @@ class Uniswap4Core:
         fee: int,
         tick_spacing: int,
         word: int,
-        hooks: AddressLike = NOHOOK_ADDRESS,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
     ) -> int:
         """
         :Get the current value of liquidity for the specified pool and position
         """
         pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
-        bitmap_info = self.router.functions.getPoolBitmapInfo(pool_id, word).call()
+        bitmap_info = int(self.router.functions.getPoolBitmapInfo(pool_id, word).call())
         return bitmap_info
 
     def currency_delta(
@@ -285,12 +284,12 @@ class Uniswap4Core:
         self,
         currency0: ERC20Token,
         currency1: ERC20Token,
-        qty: Union[int, Wei],
+        qty: int,
         fee: int,
         tick_spacing: int,
         sqrt_price_limit_x96: int = 0,
         zero_for_one: bool = True,
-        hooks: AddressLike = NOHOOK_ADDRESS,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
     ) -> HexBytes:
         """
         :Swap against the given pool
@@ -334,11 +333,11 @@ class Uniswap4Core:
         self,
         currency0: ERC20Token,
         currency1: ERC20Token,
-        qty: Union[int, Wei],
+        qty: int,
         fee: int,
         tick_spacing: int,
         sqrt_price_limit_x96: int,
-        hooks: AddressLike = NOHOOK_ADDRESS,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
     ) -> HexBytes:
         """
         :Initialize the state for a given pool key
@@ -374,11 +373,11 @@ class Uniswap4Core:
         self,
         currency0: ERC20Token,
         currency1: ERC20Token,
-        qty: Union[int, Wei],
+        qty: int,
         fee: int,
         tick_spacing: int,
         sqrt_price_limit_x96: int,
-        hooks: AddressLike = NOHOOK_ADDRESS,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
     ) -> HexBytes:
         """
         :Donate the given currency amounts to the pool with the given pool key
@@ -414,12 +413,12 @@ class Uniswap4Core:
         self,
         currency0: ERC20Token,
         currency1: ERC20Token,
-        qty: Union[int, Wei],
+        qty: int,
         fee: int,
         tick_spacing: int,
         tick_upper: int,
         tick_lower: int,
-        hooks: AddressLike = NOHOOK_ADDRESS,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
     ) -> HexBytes:
         """
         :Modify the liquidity for the given pool
@@ -461,7 +460,7 @@ class Uniswap4Core:
     def settle(
         self,
         currency0: ERC20Token,
-        qty: Union[int, Wei],
+        qty: int,
     ) -> HexBytes:
         """
         :Called by the user to pay what is owed
@@ -480,7 +479,7 @@ class Uniswap4Core:
         self,
         currency0: ERC20Token,
         to: AddressLike,
-        qty: Union[int, Wei],
+        qty: int,
     ) -> HexBytes:
         """
         :Called by the user to net out some value owed to the user
@@ -597,7 +596,7 @@ class Uniswap4Core:
         return ERC20Token(symbol, address, name, decimals)
 
     def get_pool_id(self, currency0: AddressLike, currency1: AddressLike, fee : int, tickSpacing : int, hooks : AddressLike = ETH) -> bytes:
-        if int(currency0) > (currency1):
+        if int(currency0) > int(currency1):
             currency0 , currency1 = currency1 , currency0
         return self.w3.solidity_keccak(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)])
 
