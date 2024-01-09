@@ -50,7 +50,7 @@ class Uniswap4Core:
         provider: Optional[str] = None,
         web3: Optional[Web3] = None,
         default_slippage: float = 0.01,
-        poolmanager_contract_addr: Optional[str] = None,
+        poolmanager_contract_addr: Optional[AddressLike,str] = None,
     ) -> None:
         """
         :param address: The public address of the ETH wallet to use.
@@ -155,7 +155,7 @@ class Uniswap4Core:
         try:
             price = int(self.w3.eth.call(signed_txn))
         except ContractLogicError as revert:
-            price = int(self.w3.codec.decode_abi(["int128[]","uint160","uint32"], revert.data)[1])
+            price = int(self.w3.codec.decode(["int128[]","uint160","uint32"], bytes(revert))[1])
         return price
 
     def get_slot0(
@@ -170,7 +170,7 @@ class Uniswap4Core:
         :Get the current value in slot0 of the given pool
         """
 
-        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        pool_id = self.get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
         slot0 = UniswapV4_slot0(*self.router.functions.getSlot0(pool_id).call())
         return slot0
 
@@ -185,7 +185,7 @@ class Uniswap4Core:
         """
         :Get the current value of liquidity of the given pool
         """
-        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        pool_id = self.get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
         liquidity = int(self.router.functions.getLiquidity(pool_id).call())
         return liquidity
 
@@ -203,7 +203,7 @@ class Uniswap4Core:
         """
         :Get the current value of liquidity for the specified pool and position
         """
-        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        pool_id = self.get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
         liquidity = int(self.router.functions.getLiquidity(pool_id,owner,tick_lower,tick_upper).call())
         return liquidity
 
@@ -221,7 +221,7 @@ class Uniswap4Core:
         """
         :Get the current value of liquidity for the specified pool and position
         """
-        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        pool_id = self.get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
         liquidity = UniswapV4_position_info(*self.router.functions.getPosition(pool_id,owner,tick_lower,tick_upper).call())
         return liquidity
 
@@ -237,7 +237,7 @@ class Uniswap4Core:
         """
         :Get the current value of liquidity for the specified pool and position
         """
-        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        pool_id = self.get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
         tick_info = UniswapV4_tick_info(*self.router.functions.getPoolTickInfo(pool_id,tick).call())
         return tick_info
 
@@ -253,7 +253,7 @@ class Uniswap4Core:
         """
         :Get the current value of liquidity for the specified pool and position
         """
-        pool_id = get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
+        pool_id = self.get_pool_id(currency0, currency1, fee, tick_spacing, hooks)
         bitmap_info = int(self.router.functions.getPoolBitmapInfo(pool_id, word).call())
         return bitmap_info
 
@@ -515,7 +515,7 @@ class Uniswap4Core:
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
         """Give an exchange/router max approval of a token."""
         max_approval = self.max_approval_int if not max_approval else max_approval
-        contract_addr = poolmanager_contract_addr
+        contract_addr = self.poolmanager_contract_addr
         function = _load_contract_erc20(self.w3, token).functions.approve(
             contract_addr, max_approval
         )
@@ -537,7 +537,7 @@ class Uniswap4Core:
         """Build and send a transaction."""
         if not tx_params:
             tx_params = self._get_tx_params()
-        transaction = function.buildTransaction(tx_params)
+        transaction = function.build_transaction(tx_params)
         # Uniswap3 uses 20% margin for transactions
         transaction["gas"] = Wei(int(self.w3.eth.estimate_gas(transaction) * 1.2))
         signed_txn = self.w3.eth.account.sign_transaction(
@@ -570,7 +570,7 @@ class Uniswap4Core:
         # FIXME: This function should always return the same output for the same input
         #        and would therefore benefit from caching
         if address == ETH_ADDRESS:
-            return ERC20Token("ETH", ETH_ADDRESS, "Ether", 18)
+            return ERC20Token("ETH", address, "Ether", 18)
         token_contract = _load_contract(self.w3, abi_name, address=address)
         try:
             _name = token_contract.functions.name().call()
