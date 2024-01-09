@@ -156,7 +156,7 @@ class Uniswap4Core:
         try:
             price = int(self.w3.eth.call(signed_txn))
         except ContractLogicError as revert:
-            price = int(self.w3.codec.decode(["int128[]","uint160","uint32"], bytes(revert.data))[1])
+            price = int(self.w3.codec.decode(["int128[]","uint160","uint32"], bytes(revert.data))[1]) # type: ignore
         return price
 
     def get_slot0(
