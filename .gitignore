@@ -81,3 +81,6 @@ ENV/
 
 # mkdocs documentation
 /site
+/.vs/slnx.sqlite
+/.vs/ProjectSettings.json
+/.vs
