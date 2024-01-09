@@ -91,7 +91,7 @@ class Uniswap4Core:
         self.max_approval_check_int = int(max_approval_check_hex, 16)
 
         if poolmanager_contract_addr is None:
-            poolmanager_contract_addr = _str_to_addr(_poolmanager_contract_addresses[self.network])
+            poolmanager_contract_addr = _poolmanager_contract_addresses[self.network]
         self.poolmanager_contract_addr: AddressLike = _str_to_addr(poolmanager_contract_addr)
 
         self.router = _load_contract(
