@@ -50,7 +50,7 @@ class Uniswap4Core:
         provider: Optional[str] = None,
         web3: Optional[Web3] = None,
         default_slippage: float = 0.01,
-        poolmanager_contract_addr: Optional[AddressLike,str] = None,
+        poolmanager_contract_addr: Optional[str] = None,
     ) -> None:
         """
         :param address: The public address of the ETH wallet to use.
@@ -91,12 +91,14 @@ class Uniswap4Core:
         self.max_approval_check_int = int(max_approval_check_hex, 16)
 
         if poolmanager_contract_addr is None:
-            self.poolmanager_contract_addr = _poolmanager_contract_addresses[self.network]
+            self.poolmanager_contract_addr: AddressLike = _poolmanager_contract_addresses[self.network]
+        else:
+            self.poolmanager_contract_addr: AddressLike = poolmanager_contract_addr
 
         self.router = _load_contract(
             self.w3,
             abi_name="uniswap-v4/poolmanager",
-            address=_str_to_addr(poolmanager_contract_addr),
+            address=_str_to_addr(self.poolmanager_contract_addr),
         )
 
         if hasattr(self, "poolmanager_contract"):
@@ -155,7 +157,7 @@ class Uniswap4Core:
         try:
             price = int(self.w3.eth.call(signed_txn))
         except ContractLogicError as revert:
-            price = int(self.w3.codec.decode(["int128[]","uint160","uint32"], bytes(revert))[1])
+            price = int(self.w3.codec.decode(["int128[]","uint160","uint32"], bytes(revert.data))[1])
         return price
 
     def get_slot0(
