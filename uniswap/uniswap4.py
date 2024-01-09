@@ -47,10 +47,10 @@ class Uniswap4Core:
         self,
         address: Union[AddressLike, str, None],
         private_key: Optional[str],
-        provider: str = None,
-        web3: Web3 = None,
+        provider: Optional[str] = None,
+        web3: Optional[Web3] = None,
         default_slippage: float = 0.01,
-        poolmanager_contract_addr: str = None,
+        poolmanager_contract_addr: Optional[str] = None,
     ) -> None:
         """
         :param address: The public address of the ETH wallet to use.
@@ -91,7 +91,7 @@ class Uniswap4Core:
         self.max_approval_check_int = int(max_approval_check_hex, 16)
 
         if poolmanager_contract_addr is None:
-            poolmanager_contract_addr = _poolmanager_contract_addresses[self.network]
+            self.poolmanager_contract_addr = _poolmanager_contract_addresses[self.network]
 
         self.router = _load_contract(
             self.w3,
@@ -153,7 +153,7 @@ class Uniswap4Core:
         )
 
         try:
-            price = self.w3.eth.call(signed_txn)
+            price = int(self.w3.eth.call(signed_txn))
         except ContractLogicError as revert:
             price = int(self.w3.codec.decode_abi(["int128[]","uint160","uint32"], revert.data)[1])
         return price
@@ -265,7 +265,7 @@ class Uniswap4Core:
         """
         :Get the current value of liquidity for the specified pool and position
         """
-        currency_delta = self.router.functions.currencyDelta(locker, currency0).call()
+        currency_delta = int(self.router.functions.currencyDelta(locker, currency0).call())
         return currency_delta
 
     def reserves_of(
@@ -276,7 +276,7 @@ class Uniswap4Core:
         :Get the current value in slot0 of the given pool
         """
 
-        reserves = self.router.functions.reservesOf().call()
+        reserves = int(self.router.functions.reservesOf().call())
         return reserves
 
     # ------ Pool manager WRITE methods ----------------------------------------------------------------
@@ -454,7 +454,7 @@ class Uniswap4Core:
                     "params": modify_position_params,
                 }
             ),
-            self._get_tx_params(value=qty),
+            self._get_tx_params(value=Wei(qty)),
         )
 
     def settle(
@@ -472,7 +472,7 @@ class Uniswap4Core:
                     "currency ": currency0,
                 }
             ),
-            self._get_tx_params(value=qty),
+            self._get_tx_params(value=Wei(qty)),
         )
 
     def take(
@@ -515,11 +515,7 @@ class Uniswap4Core:
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
         """Give an exchange/router max approval of a token."""
         max_approval = self.max_approval_int if not max_approval else max_approval
-        contract_addr = (
-            self._exchange_address_from_token(token)
-            if self.version == 1
-            else self.router_address
-        )
+        contract_addr = poolmanager_contract_addr
         function = _load_contract_erc20(self.w3, token).functions.approve(
             contract_addr, max_approval
         )
@@ -595,23 +591,11 @@ class Uniswap4Core:
             symbol = _symbol
         return ERC20Token(symbol, address, name, decimals)
 
-    def get_pool_id(self, currency0: AddressLike, currency1: AddressLike, fee : int, tickSpacing : int, hooks : AddressLike = ETH) -> bytes:
+    def get_pool_id(self, currency0: AddressLike, currency1: AddressLike, fee : int, tickSpacing : int, hooks : Union[AddressLike, str, None] = NOHOOK_ADDRESS) -> bytes:
         if int(currency0) > int(currency1):
             currency0 , currency1 = currency1 , currency0
-        return self.w3.solidity_keccak(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)])
+        pool_id = bytes(self.w3.solidity_keccak(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)]))
+        return 
 
-    # ------ Test utilities ------------------------------------------------------------
 
-    def _get_token_addresses(self) -> Dict[str, ChecksumAddress]:
-        """
-        Returns a dict with addresses for tokens for the current net.
-        Used in testing.
-        """
-        netid = int(self.w3.net.version)
-        netname = _netid_to_name[netid]
-        if netname == "mainnet":
-            return tokens
-        elif netname == "rinkeby":
-            return tokens_rinkeby
-        else:
-            raise Exception(f"Unknown net '{netname}'")
+    
