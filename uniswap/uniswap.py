@@ -448,6 +448,7 @@ class Uniswap:
         fee: Optional[int] = None,
         slippage: Optional[float] = None,
         fee_on_transfer: bool = False,
+        route: Optional[List[AddressLike]] = None,
     ) -> HexBytes:
         """Make a trade by defining the qty of the input token."""
         if not isinstance(qty, int):
@@ -459,6 +460,9 @@ class Uniswap:
             slippage = self.default_slippage
 
         if input_token == output_token:
+            raise ValueError
+
+        if route and (input_token == ETH_ADDRESS or output_token == ETH_ADDRESS):
             raise ValueError
 
         if input_token == ETH_ADDRESS:
@@ -478,6 +482,7 @@ class Uniswap:
                 fee,
                 slippage,
                 fee_on_transfer,
+                route,
             )
 
     @check_approval
@@ -489,6 +494,7 @@ class Uniswap:
         recipient: Optional[AddressLike] = None,
         fee: Optional[int] = None,
         slippage: Optional[float] = None,
+        route: Optional[List[AddressLike]] = None,
     ) -> HexBytes:
         """Make a trade by defining the qty of the output token."""
         fee = validate_fee_tier(fee=fee, version=self.version)
@@ -497,6 +503,9 @@ class Uniswap:
             slippage = self.default_slippage
 
         if input_token == output_token:
+            raise ValueError
+
+        if route and (input_token == ETH_ADDRESS or output_token == ETH_ADDRESS):
             raise ValueError
 
         if input_token == ETH_ADDRESS:
@@ -513,7 +522,7 @@ class Uniswap:
             )
         else:
             return self._token_to_token_swap_output(
-                input_token, output_token, qty, recipient, fee, slippage
+                input_token, output_token, qty, recipient, fee, slippage, route
             )
 
     def _eth_to_token_swap_input(
@@ -695,6 +704,7 @@ class Uniswap:
         fee: int,
         slippage: float,
         fee_on_transfer: bool = False,
+        route: Optional[List[AddressLike]] = None,
     ) -> HexBytes:
         """Convert tokens to tokens given an input amount."""
         # Balance check
@@ -730,10 +740,12 @@ class Uniswap:
                 function = token_funcs.tokenToTokenTransferInput(*func_params)
             return self._build_and_send_tx(function)
         elif self.version == 2:
+            if not route:
+                route = [input_token, self.get_weth_address(), output_token]
             min_tokens_bought = int(
                 (1 - slippage)
                 * self._get_token_token_input_price(
-                    input_token, output_token, qty, fee=fee
+                    input_token, output_token, qty, fee=fee, route=route,
                 )
             )
             if fee_on_transfer:
@@ -746,7 +758,7 @@ class Uniswap:
                 func(
                     qty,
                     min_tokens_bought,
-                    [input_token, self.get_weth_address(), output_token],
+                    route,
                     recipient,
                     self._deadline(),
                 ),
@@ -959,6 +971,7 @@ class Uniswap:
         recipient: Optional[AddressLike],
         fee: int,
         slippage: float,
+        route: Optional[List[AddressLike]] = None,
     ) -> HexBytes:
         """Convert tokens to tokens given an output amount.
 
@@ -971,7 +984,7 @@ class Uniswap:
 
         # Balance check
         input_balance = self.get_token_balance(input_token)
-        cost = self._get_token_token_output_price(input_token, output_token, qty, fee)
+        cost = self._get_token_token_output_price(input_token, output_token, qty, fee, route)
         amount_in_max = int((1 + slippage) * cost)
         if (
             amount_in_max > input_balance
@@ -1000,15 +1013,17 @@ class Uniswap:
         elif self.version == 2:
             if recipient is None:
                 recipient = self.address
+            if not route:
+                route = [input_token, self.get_weth_address(), output_token]
             cost = self._get_token_token_output_price(
-                input_token, output_token, qty, fee=fee
+                input_token, output_token, qty, fee=fee, route=route
             )
             amount_in_max = int((1 + slippage) * cost)
             return self._build_and_send_tx(
                 self.router.functions.swapTokensForExactTokens(
                     qty,
                     amount_in_max,
-                    [input_token, self.get_weth_address(), output_token],
+                    route,
                     recipient,
                     self._deadline(),
                 ),
