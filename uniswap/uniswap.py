@@ -238,9 +238,9 @@ class Uniswap:
         fee = validate_fee_tier(fee=fee, version=self.version)
 
         if token0 == ETH_ADDRESS:
-            return self._get_eth_token_input_price(token1, Wei(qty), fee)
+            return self._get_eth_token_input_price(token1, Wei(qty), fee, route)
         elif token1 == ETH_ADDRESS:
-            return self._get_token_eth_input_price(token0, qty, fee)
+            return self._get_token_eth_input_price(token0, qty, fee, route)
         else:
             return self._get_token_token_input_price(token0, token1, qty, fee, route)
 
@@ -256,9 +256,9 @@ class Uniswap:
         fee = validate_fee_tier(fee=fee, version=self.version)
 
         if is_same_address(token0, ETH_ADDRESS):
-            return self._get_eth_token_output_price(token1, qty, fee)
+            return self._get_eth_token_output_price(token1, qty, fee, route)
         elif is_same_address(token1, ETH_ADDRESS):
-            return self._get_token_eth_output_price(token0, Wei(qty), fee)
+            return self._get_token_eth_output_price(token0, Wei(qty), fee, route)
         else:
             return self._get_token_token_output_price(token0, token1, qty, fee, route)
 
@@ -267,14 +267,17 @@ class Uniswap:
         token: AddressLike,  # output token
         qty: Wei,
         fee: int,
+        route: Optional[List[AddressLike]] = None,
     ) -> Wei:
         """Public price (i.e. amount of output token received) for ETH to token trades with an exact input."""
         if self.version == 1:
             ex = self._exchange_contract(token)
             price: Wei = ex.functions.getEthToTokenInputPrice(qty).call()
         elif self.version == 2:
+            if not route:
+                route = [self.get_weth_address(), token]
             price = self.router.functions.getAmountsOut(
-                qty, [self.get_weth_address(), token]
+                qty, route
             ).call()[-1]
         elif self.version == 3:
             price = self._get_token_token_input_price(
@@ -289,14 +292,17 @@ class Uniswap:
         token: AddressLike,  # input token
         qty: int,
         fee: int,
+        route: Optional[List[AddressLike]] = None,
     ) -> int:
         """Public price (i.e. amount of ETH received) for token to ETH trades with an exact input."""
         if self.version == 1:
             ex = self._exchange_contract(token)
             price: int = ex.functions.getTokenToEthInputPrice(qty).call()
         elif self.version == 2:
+            if not route:
+                route = [token, self.get_weth_address()]
             price = self.router.functions.getAmountsOut(
-                qty, [token, self.get_weth_address()]
+                qty, route
             ).call()[-1]
         elif self.version == 3:
             price = self._get_token_token_input_price(
@@ -375,7 +381,11 @@ class Uniswap:
         return price
 
     def _get_token_eth_output_price(
-        self, token: AddressLike, qty: Wei, fee: Optional[int] = None  # input token
+        self,
+        token: AddressLike,
+        qty: Wei,
+        fee: Optional[int] = None,  # input token
+        route: Optional[List[AddressLike]] = None,
     ) -> int:
         """Public price (i.e. amount of input token needed) for token to ETH trades with an exact output."""
         fee = validate_fee_tier(fee=fee, version=self.version)
@@ -383,7 +393,8 @@ class Uniswap:
             ex = self._exchange_contract(token)
             price: int = ex.functions.getTokenToEthOutputPrice(qty).call()
         elif self.version == 2:
-            route = [token, self.get_weth_address()]
+            if not route:
+                route = [token, self.get_weth_address()]
             price = self.router.functions.getAmountsIn(qty, route).call()[0]
         elif self.version == 3:
             price = self._get_token_token_output_price(
