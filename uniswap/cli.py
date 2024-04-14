@@ -1,20 +1,26 @@
 import logging
 import os
+from typing import Optional
 
 import click
 from dotenv import load_dotenv
 from web3 import Web3
 
-from .uniswap import Uniswap, AddressLike, _str_to_addr
-from .token import BaseToken
-from .tokens import tokens
 from .constants import ETH_ADDRESS
-
+from .fee import FeeTier
+from .token import BaseToken
+from .tokens import get_tokens
+from .uniswap import AddressLike, Uniswap, _str_to_addr
 
 logger = logging.getLogger(__name__)
 
+# Global used in _coerce_to_checksum to look up tokens
+_uni: Optional[Uniswap] = None
+
 
 def _coerce_to_checksum(addr: str) -> str:
+    assert _uni
+    tokens = get_tokens(_uni.netname)
     if not addr.startswith("0x"):
         if addr.upper() in tokens:
             return tokens[addr.upper()]
@@ -22,10 +28,10 @@ def _coerce_to_checksum(addr: str) -> str:
             raise ValueError(
                 "token was not an address, and a shorthand was not found in the token db"
             )
-    if Web3.isChecksumAddress(addr):
+    if Web3.is_checksum_address(addr):
         return addr
     else:
-        return Web3.toChecksumAddress(addr)
+        return Web3.to_checksum_address(addr)
 
 
 @click.group()
@@ -33,7 +39,7 @@ def _coerce_to_checksum(addr: str) -> str:
 @click.option(
     "--version",
     type=click.Choice(["1", "2", "3"]),
-    default=os.getenv("UNISWAP_VERSION", "2"),
+    default=os.getenv("UNISWAP_VERSION", "3"),
 )
 @click.pass_context
 def main(ctx: click.Context, verbose: bool, version: str) -> None:
@@ -43,6 +49,8 @@ def main(ctx: click.Context, verbose: bool, version: str) -> None:
     ctx.ensure_object(dict)
     ctx.obj["VERBOSE"] = verbose
     ctx.obj["UNISWAP"] = Uniswap(None, None, version=int(version))
+    global _uni
+    _uni = ctx.obj["UNISWAP"]
 
 
 @main.command()
@@ -63,7 +71,7 @@ def price(
     token_in: AddressLike,
     token_out: AddressLike,
     raw: bool,
-    quantity: int = None,
+    quantity: Optional[int] = None,
 ) -> None:
     """Returns the price of ``quantity`` tokens of ``token_in`` quoted in ``token_out``."""
     uni: Uniswap = ctx.obj["UNISWAP"]
@@ -72,8 +80,8 @@ def price(
             decimals = 18
         else:
             decimals = uni.get_token(token_in).decimals
-        quantity = 10 ** decimals
-    price = uni.get_price_input(token_in, token_out, qty=quantity)
+        quantity = 10**decimals
+    price = uni.get_price_input(token_in, token_out, qty=quantity, fee=FeeTier.TIER_3000)
     if raw:
         click.echo(price)
     else:
@@ -81,7 +89,7 @@ def price(
             decimals = 18
         else:
             decimals = uni.get_token(token_out).decimals
-        click.echo(price / 10 ** decimals)
+        click.echo(price / 10**decimals)
 
 
 @main.command()
@@ -100,7 +108,7 @@ def token(ctx: click.Context, token: AddressLike) -> None:
 def tokendb(ctx: click.Context, metadata: bool) -> None:
     """List known token addresses"""
     uni: Uniswap = ctx.obj["UNISWAP"]
-    for symbol, addr in tokens.items():
+    for symbol, addr in get_tokens(uni.netname).items():
         if metadata and addr != "0x0000000000000000000000000000000000000000":
             data = uni.get_token(_str_to_addr(addr))
             assert data.symbol.lower() == symbol.lower()
