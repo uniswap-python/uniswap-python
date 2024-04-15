@@ -1403,7 +1403,7 @@ class Uniswap:
         tx = self._build_and_send_tx(function)
         self.w3.eth.wait_for_transaction_receipt(tx, timeout=6000)
 
-        # Add extra sleep to let tx propogate correctly
+        # Add extra sleep to let tx propagate correctly
         time.sleep(1)
 
     def _is_approved(self, token: AddressLike) -> bool:
