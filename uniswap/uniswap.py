@@ -1403,7 +1403,7 @@ class Uniswap:
         tx = self._build_and_send_tx(function)
         self.w3.eth.wait_for_transaction_receipt(tx, timeout=6000)
 
-        # Add extra sleep to let tx propogate correctly
+        # Add extra sleep to let tx propagate correctly
         time.sleep(1)
 
     def _is_approved(self, token: AddressLike) -> bool:
@@ -1413,6 +1413,8 @@ class Uniswap:
             contract_addr = self._exchange_address_from_token(token)
         elif self.version in [2, 3]:
             contract_addr = self.router_address
+        else:
+            raise ValueError
         amount = (
             _load_contract_erc20(self.w3, token)
             .functions.allowance(self.address, contract_addr)
