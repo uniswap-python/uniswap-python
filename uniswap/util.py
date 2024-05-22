@@ -99,6 +99,32 @@ def encode_sqrt_ratioX96(amount_0: int, amount_1: int) -> int:
     return int(math.sqrt(ratioX192))
 
 
+def get_tick_at_sqrt(sqrtPriceX96: int) -> int:
+    sqrtPriceX96 = int(sqrtPriceX96)
+
+    # Define constants
+    Q96 = 2**96
+
+    # Calculate the price from the sqrt ratio
+    ratio = sqrtPriceX96 / Q96
+    price = ratio**2
+
+    # Calculate the natural logarithm of the price
+    logPrice = math.log(price)
+
+    # Calculate the log base 1.0001 of the price
+    logBase = math.log(1.0001)
+    tick = logPrice / logBase
+
+    # Round tick to nearest integer
+    tick = int(round(tick))
+
+    # Ensure the tick is within the valid range
+    assert tick >= MIN_TICK and tick <= MAX_TICK
+
+    return tick
+
+
 # Adapted from: https://github.com/tradingstrategy-ai/web3-ethereum-defi/blob/c3c68bc723d55dda0cc8252a0dadb534c4fdb2c5/eth_defi/uniswap_v3/utils.py#L77
 def get_min_tick(fee: int) -> int:
     min_tick_spacing: int = _tick_spacing[fee]
