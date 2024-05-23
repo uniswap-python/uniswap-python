@@ -81,7 +81,9 @@ def price(
         else:
             decimals = uni.get_token(token_in).decimals
         quantity = 10**decimals
-    price = uni.get_price_input(token_in, token_out, qty=quantity, fee=FeeTier.TIER_3000)
+    price = uni.get_price_input(
+        token_in, token_out, qty=quantity, fee=FeeTier.TIER_3000
+    )
     if raw:
         click.echo(price)
     else:

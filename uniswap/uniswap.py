@@ -22,6 +22,7 @@ from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
 from web3.contract import Contract
 from web3.contract.contract import ContractFunction
 from web3.exceptions import BadFunctionCallOutput, ContractLogicError
+from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.types import (
     Nonce,
     TxParams,
@@ -37,8 +38,13 @@ from .constants import (
     WETH9_ADDRESS,
     _factory_contract_addresses_v1,
     _factory_contract_addresses_v2,
+    _factory_contract_addresses_v3,
     _netid_to_name,
     _router_contract_addresses_v2,
+    _router_contract_addresses_v3,
+    _quoter_contract_addresses_v3,
+    _posmanager_contract_addresses_v3,
+    _router_special_addresses_v3,
     _tick_bitmap_range,
     _tick_spacing,
 )
@@ -89,8 +95,11 @@ class Uniswap:
         default_slippage: float = 0.01,
         use_estimate_gas: bool = True,
         # use_eip1559: bool = True,
+        use_rpc_gas_price: bool = False,
         factory_contract_addr: Optional[str] = None,
         router_contract_addr: Optional[str] = None,
+        quoter_contract_addr: Optional[str] = None,
+        posmanager_contract_addr: Optional[str] = None,
         enable_caching: bool = False,
     ) -> None:
         """
@@ -129,6 +138,8 @@ class Uniswap:
             if not provider:
                 provider = os.environ["PROVIDER"]
             self.w3 = Web3(Web3.HTTPProvider(provider, request_kwargs={"timeout": 60}))
+        if use_rpc_gas_price:
+            self.w3.eth.set_gas_price_strategy(rpc_gas_price_strategy)
 
         if enable_caching:
             self.w3.middleware_onion.inject(_get_eth_simple_cache_middleware(), layer=0)
@@ -181,30 +192,54 @@ class Uniswap:
             )
         elif self.version == 3:
             # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
-            factory_contract_address = _str_to_addr(
-                "0x1F98431c8aD98523631AE4a59f267346ea31F984"
-            )
-            self.factory_contract = _load_contract(
-                self.w3, abi_name="uniswap-v3/factory", address=factory_contract_address
-            )
-            quoter_addr = _str_to_addr("0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6")
-            self.router_address = _str_to_addr(
-                "0xE592427A0AEce92De3Edee1F18E0157C05861564"
-            )
-            self.quoter = _load_contract(
-                self.w3, abi_name="uniswap-v3/quoter", address=quoter_addr
-            )
+            def def_address(addresses: Dict[str, str]) -> str:
+                return addresses.get(self.netname) or addresses["mainnet"]
+
+            if self.netname == "binance":
+                router_abi_name = "uniswap-v3/router-pancakeswap"
+                quoter_abi_name = "uniswap-v3/quoter-pancakeswap"
+            else:
+                router_abi_name = "uniswap-v3/router"
+                quoter_abi_name = "uniswap-v3/quoter"
+
+            if router_contract_addr is None:
+                router_contract_addr = def_address(_router_contract_addresses_v3)
+
+            self.router_address = _str_to_addr(router_contract_addr)
             self.router = _load_contract(
-                self.w3, abi_name="uniswap-v3/router", address=self.router_address
+                self.w3, abi_name=router_abi_name, address=self.router_address
             )
-            self.positionManager_addr = _str_to_addr(
-                "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+
+            # Special address inside a smart contract is equivalent to address(this)
+            self.router_spec_addr = def_address(_router_special_addresses_v3)
+
+            if factory_contract_addr is None:
+                factory_contract_addr = def_address(_factory_contract_addresses_v3)
+            self.factory_contract = _load_contract(
+                self.w3,
+                abi_name="uniswap-v3/factory",
+                address=_str_to_addr(factory_contract_addr),
             )
+
+            if quoter_contract_addr is None:
+                quoter_contract_addr = def_address(_quoter_contract_addresses_v3)
+            self.quoter = _load_contract(
+                self.w3,
+                abi_name=quoter_abi_name,
+                address=_str_to_addr(quoter_contract_addr),
+            )
+
+            if posmanager_contract_addr is None:
+                posmanager_contract_addr = def_address(
+                    _posmanager_contract_addresses_v3
+                )
+            self.positionManager_addr = _str_to_addr(posmanager_contract_addr)
             self.nonFungiblePositionManager = _load_contract(
                 self.w3,
                 abi_name="uniswap-v3/nonFungiblePositionManager",
                 address=self.positionManager_addr,
             )
+
             if self.netname == "arbitrum":
                 multicall2_addr = _str_to_addr(
                     "0x50075F151ABC5B6B448b1272A0a1cFb5CFA25828"
@@ -341,9 +376,9 @@ class Uniswap:
 
             # FIXME: How to calculate this properly? See https://docs.uniswap.org/reference/libraries/SqrtPriceMath
             sqrtPriceLimitX96 = 0
-            price = self.quoter.functions.quoteExactInputSingle(
+            price = self._quoter_quoteExactInputSingle(
                 token0, token1, fee, qty, sqrtPriceLimitX96
-            ).call()
+            )
         else:
             raise ValueError("function not supported for this version of Uniswap")
         return price
@@ -430,12 +465,50 @@ class Uniswap:
             #   - https://docs.uniswap.org/reference/libraries/SqrtPriceMath
             #   - https://github.com/Uniswap/uniswap-v3-sdk/blob/main/src/swapRouter.ts
             sqrtPriceLimitX96 = 0
-            price = self.quoter.functions.quoteExactOutputSingle(
+            price = self._quoter_quoteExactOutputSingle(
                 token0, token1, fee, qty, sqrtPriceLimitX96
-            ).call()
+            )
         else:
             raise ValueError  # pragma: no cover
         return price
+
+    def _quoter_quoteExactOutputSingle(
+        self,
+        token0: AddressLike,
+        token1: AddressLike,
+        fee: int,
+        qty: int,
+        sqrtPriceLimitX96: int,
+    ) -> int:
+        if self.netname == "binance":
+            result = self.quoter.functions.quoteExactOutputSingle(
+                (token0, token1, qty, fee, sqrtPriceLimitX96)
+            ).call()[0]
+            return int(result)
+        else:
+            result = self.quoter.functions.quoteExactOutputSingle(
+                token0, token1, fee, qty, sqrtPriceLimitX96
+            ).call()
+            return int(result)
+
+    def _quoter_quoteExactInputSingle(
+        self,
+        token0: AddressLike,
+        token1: AddressLike,
+        fee: int,
+        qty: int,
+        sqrtPriceLimitX96: int,
+    ) -> int:
+        if self.netname == "binance":
+            result = self.quoter.functions.quoteExactInputSingle(
+                (token0, token1, qty, fee, sqrtPriceLimitX96)
+            ).call()[0]
+            return int(result)
+        else:
+            result = self.quoter.functions.quoteExactInputSingle(
+                token0, token1, fee, qty, sqrtPriceLimitX96
+            ).call()
+            return int(result)
 
     # ------ Make Trade ----------------------------------------------------------------
     @check_approval
@@ -578,19 +651,27 @@ class Uniswap:
             )
             sqrtPriceLimitX96 = 0
 
+            deadline = self._deadline()
+            args = {
+                "tokenIn": self.get_weth_address(),
+                "tokenOut": output_token,
+                "fee": fee,
+                "recipient": recipient,
+                "deadline": deadline,
+                "amountIn": qty,
+                "amountOutMinimum": min_tokens_bought,
+                "sqrtPriceLimitX96": sqrtPriceLimitX96,
+            }
+            self._patch_exact_single_args(args)
+
+            if self.netname == "binance":
+                swap_func = self._v3_multicall_deadline_wrapper(
+                    "exactInputSingle", deadline, [args]
+                )
+            else:
+                swap_func = self.router.functions.exactInputSingle(args)
             return self._build_and_send_tx(
-                self.router.functions.exactInputSingle(
-                    {
-                        "tokenIn": self.get_weth_address(),
-                        "tokenOut": output_token,
-                        "fee": fee,
-                        "recipient": recipient,
-                        "deadline": self._deadline(),
-                        "amountIn": qty,
-                        "amountOutMinimum": min_tokens_bought,
-                        "sqrtPriceLimitX96": sqrtPriceLimitX96,
-                    }
-                ),
+                swap_func,
                 self._get_tx_params(value=qty),
             )
         else:
@@ -658,20 +739,22 @@ class Uniswap:
             )
             sqrtPriceLimitX96 = 0
 
+            deadline = self._deadline()
+            args = {
+                "tokenIn": input_token,
+                "tokenOut": output_token,
+                "fee": fee,
+                "recipient": self.router_spec_addr,
+                "deadline": deadline,
+                "amountIn": qty,
+                "amountOutMinimum": min_tokens_bought,
+                "sqrtPriceLimitX96": sqrtPriceLimitX96,
+            }
+            self._patch_exact_single_args(args)
+
             swap_data = self.router.encodeABI(
                 fn_name="exactInputSingle",
-                args=[
-                    (
-                        input_token,
-                        output_token,
-                        fee,
-                        ETH_ADDRESS,
-                        self._deadline(),
-                        qty,
-                        min_tokens_bought,
-                        sqrtPriceLimitX96,
-                    )
-                ],
+                args=[args],
             )
 
             unwrap_data = self.router.encodeABI(
@@ -679,10 +762,14 @@ class Uniswap:
             )
 
             # Multicall
-            return self._build_and_send_tx(
-                self.router.functions.multicall([swap_data, unwrap_data]),
-                self._get_tx_params(),
-            )
+            if self.netname == "binance":
+                multicall = self.router.functions.multicall(
+                    deadline, [swap_data, unwrap_data]
+                )
+            else:
+                multicall = self.router.functions.multicall([swap_data, unwrap_data])
+
+            return self._build_and_send_tx(multicall)
         else:
             raise ValueError  # pragma: no cover
 
@@ -763,21 +850,26 @@ class Uniswap:
             )
             sqrtPriceLimitX96 = 0
 
-            return self._build_and_send_tx(
-                self.router.functions.exactInputSingle(
-                    {
-                        "tokenIn": input_token,
-                        "tokenOut": output_token,
-                        "fee": fee,
-                        "recipient": recipient,
-                        "deadline": self._deadline(),
-                        "amountIn": qty,
-                        "amountOutMinimum": min_tokens_bought,
-                        "sqrtPriceLimitX96": sqrtPriceLimitX96,
-                    }
-                ),
-                self._get_tx_params(),
-            )
+            deadline = self._deadline()
+            args = {
+                "tokenIn": input_token,
+                "tokenOut": output_token,
+                "fee": fee,
+                "recipient": recipient,
+                "deadline": deadline,
+                "amountIn": qty,
+                "amountOutMinimum": min_tokens_bought,
+                "sqrtPriceLimitX96": sqrtPriceLimitX96,
+            }
+            self._patch_exact_single_args(args)
+
+            if self.netname == "binance":
+                swap_func = self._v3_multicall_deadline_wrapper(
+                    "exactInputSingle", deadline, [args]
+                )
+            else:
+                swap_func = self.router.functions.exactInputSingle(args)
+            return self._build_and_send_tx(swap_func)
         else:
             raise ValueError  # pragma: no cover
 
@@ -835,27 +927,32 @@ class Uniswap:
 
             sqrtPriceLimitX96 = 0
 
-            swap_data = self.router.encodeABI(
-                fn_name="exactOutputSingle",
-                args=[
-                    (
-                        self.get_weth_address(),
-                        output_token,
-                        fee,
-                        recipient,
-                        self._deadline(),
-                        qty,
-                        amount_in_max,
-                        sqrtPriceLimitX96,
-                    )
-                ],
-            )
+            deadline = self._deadline()
+            args = {
+                "tokenIn": self.get_weth_address(),
+                "tokenOut": output_token,
+                "fee": fee,
+                "recipient": recipient,
+                "deadline": deadline,
+                "amountOut": qty,
+                "amountInMaximum": amount_in_max,
+                "sqrtPriceLimitX96": sqrtPriceLimitX96,
+            }
+            self._patch_exact_single_args(args)
+
+            swap_data = self.router.encodeABI(fn_name="exactOutputSingle", args=[args])
 
             refund_data = self.router.encodeABI(fn_name="refundETH", args=None)
 
             # Multicall
+            if self.netname == "binance":
+                multicall = self.router.functions.multicall(
+                    deadline, [swap_data, refund_data]
+                )
+            else:
+                multicall = self.router.functions.multicall([swap_data, refund_data])
             return self._build_and_send_tx(
-                self.router.functions.multicall([swap_data, refund_data]),
+                multicall,
                 self._get_tx_params(value=amount_in_max),
             )
         else:
@@ -923,20 +1020,22 @@ class Uniswap:
 
             sqrtPriceLimitX96 = 0
 
+            deadline = self._deadline()
+            args = {
+                "tokenIn": input_token,
+                "tokenOut": self.get_weth_address(),
+                "fee": fee,
+                "recipient": self.router_spec_addr,
+                "deadline": deadline,
+                "amountOut": qty,
+                "amountInMaximum": amount_in_max,
+                "sqrtPriceLimitX96": sqrtPriceLimitX96,
+            }
+            self._patch_exact_single_args(args)
+
             swap_data = self.router.encodeABI(
                 fn_name="exactOutputSingle",
-                args=[
-                    (
-                        input_token,
-                        self.get_weth_address(),
-                        fee,
-                        ETH_ADDRESS,
-                        self._deadline(),
-                        qty,
-                        amount_in_max,
-                        sqrtPriceLimitX96,
-                    )
-                ],
+                args=[args],
             )
 
             unwrap_data = self.router.encodeABI(
@@ -944,10 +1043,13 @@ class Uniswap:
             )
 
             # Multicall
-            return self._build_and_send_tx(
-                self.router.functions.multicall([swap_data, unwrap_data]),
-                self._get_tx_params(),
-            )
+            if self.netname == "binance":
+                multicall = self.router.functions.multicall(
+                    deadline, [swap_data, unwrap_data]
+                )
+            else:
+                multicall = self.router.functions.multicall([swap_data, unwrap_data])
+            return self._build_and_send_tx(multicall)
         else:
             raise ValueError
 
@@ -1019,23 +1121,38 @@ class Uniswap:
 
             sqrtPriceLimitX96 = 0
 
-            return self._build_and_send_tx(
-                self.router.functions.exactOutputSingle(
-                    {
-                        "tokenIn": input_token,
-                        "tokenOut": output_token,
-                        "fee": fee,
-                        "recipient": recipient,
-                        "deadline": self._deadline(),
-                        "amountOut": qty,
-                        "amountInMaximum": amount_in_max,
-                        "sqrtPriceLimitX96": sqrtPriceLimitX96,
-                    },
-                ),
-                self._get_tx_params(),
-            )
+            deadline = self._deadline()
+            args = {
+                "tokenIn": input_token,
+                "tokenOut": output_token,
+                "fee": fee,
+                "recipient": recipient,
+                "deadline": deadline,
+                "amountOut": qty,
+                "amountInMaximum": amount_in_max,
+                "sqrtPriceLimitX96": sqrtPriceLimitX96,
+            }
+            self._patch_exact_single_args(args)
+
+            if self.netname == "binance":
+                swap_func = self._v3_multicall_deadline_wrapper(
+                    "exactOutputSingle", deadline, [args]
+                )
+            else:
+                swap_func = self.router.functions.exactOutputSingle(args)
+            return self._build_and_send_tx(swap_func)
         else:
             raise ValueError
+
+    def _patch_exact_single_args(self, args: Dict) -> None:
+        if self.netname == "binance":
+            del args["deadline"]
+
+    def _v3_multicall_deadline_wrapper(
+        self, fn_name: str, deadline: int, args: List
+    ) -> ContractFunction:
+        data = self.router.encodeABI(fn_name=fn_name, args=args)
+        return self.router.functions.multicall(deadline, [data])
 
     # ------ Wallet balance ------------------------------------------------------------
     def get_eth_balance(self) -> Wei:
@@ -1436,7 +1553,13 @@ class Uniswap:
         """Build and send a transaction."""
         if not tx_params:
             tx_params = self._get_tx_params()
-        transaction = function.build_transaction(tx_params)
+
+        # Without ['gas'] parameter Web3 will call estimate_gas internally
+        tx_params_gas = tx_params
+        if "gas" not in tx_params:
+            tx_params_gas = tx_params.copy()
+            tx_params_gas["gas"] = 1
+        transaction = function.build_transaction(tx_params_gas)
 
         if "gas" not in tx_params:
             # `use_estimate_gas` needs to be True for networks like Arbitrum (can't assume 250000 gas),
@@ -1459,6 +1582,7 @@ class Uniswap:
             return self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
         finally:
             logger.debug(f"nonce: {tx_params['nonce']}")
+            logger.debug(f"transaction: {transaction}")
             self.last_nonce = Nonce(tx_params["nonce"] + 1)
 
     def _get_tx_params(

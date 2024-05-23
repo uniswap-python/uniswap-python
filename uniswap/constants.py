@@ -31,7 +31,7 @@ _netid_to_name = {
     421611: "arbitrum_testnet",
     1666600000: "harmony_mainnet",
     1666700000: "harmony_testnet",
-    11155111: "sepolia"
+    11155111: "sepolia",
 }
 
 _factory_contract_addresses_v1 = {
@@ -56,7 +56,12 @@ _factory_contract_addresses_v2 = {
     # SushiSwap on Harmony
     "harmony_mainnet": "0xc35DADB65012eC5796536bD9864eD8773aBc74C4",
     "harmony_testnet": "0xc35DADB65012eC5796536bD9864eD8773aBc74C4",
-    "sepolia": "0x7E0987E5b3a30e3f2828572Bb659A548460a3003"
+    "sepolia": "0x7E0987E5b3a30e3f2828572Bb659A548460a3003",
+}
+
+_factory_contract_addresses_v3 = {
+    "mainnet": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    "binance": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865",
 }
 
 _router_contract_addresses_v2 = {
@@ -70,8 +75,28 @@ _router_contract_addresses_v2 = {
     # SushiSwap on Harmony
     "harmony_mainnet": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
     "harmony_testnet": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
-    #sepolia tesnet router address
+    # sepolia tesnet router address
     "sepolia": "0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008",
+}
+
+_router_contract_addresses_v3 = {
+    "mainnet": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+    "binance": "0x13f4EA83D0bd40E75C8222255bc855a974568Dd4",
+}
+
+_quoter_contract_addresses_v3 = {
+    "mainnet": "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6",
+    "binance": "0xB048Bbc1Ee6b733FFfCFb9e9CeF7375518e25997",
+}
+
+_posmanager_contract_addresses_v3 = {
+    "mainnet": "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+    "binance": "0x46A15B0b27311cedF172AB29E4f4766fbE7F4364",
+}
+
+_router_special_addresses_v3 = {
+    "mainnet": "0x0000000000000000000000000000000000000000",
+    "binance": "0x0000000000000000000000000000000000000002",
 }
 
 MAX_UINT_128 = (2**128) - 1

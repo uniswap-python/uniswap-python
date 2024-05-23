@@ -25,6 +25,9 @@ class FeeTier(enum.IntEnum):
     TIER_3000 = 3000
     TIER_10000 = 10000
 
+    # Pancakeswap tier
+    TIER_2500 = 2500
+
 
 def validate_fee_tier(fee: Optional[int], version: int) -> int:
     """
