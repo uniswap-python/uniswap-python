@@ -1,6 +1,7 @@
 from typing import Union
 from dataclasses import dataclass
 from eth_typing.evm import Address, ChecksumAddress
+from typing import List, Tuple
 
 
 AddressLike = Union[Address, ChecksumAddress]
@@ -44,7 +45,7 @@ class UniswapV4_PathKey:
     # Ticks that involve positions must be a multiple of tick spacing
     tickSpacing : int
     # The hooks of the pool
-    hooks : list[Address]
+    hooks : List[Address]
 
-    def __repr__(self) -> (Address, Address, int, int, list[Address]):
+    def __repr__(self) -> Tuple(Address, Address, int, int, List[Address]):
         return (self.currency0, self.currency1, self.fee, self.tickSpacing, self.hooks)

@@ -130,7 +130,7 @@ class Uniswap4Core:
         sqrt_price_limit_x96: int = 0,
         zero_for_one: bool = True,
         hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
-    ):
+    ) -> Any:
         """
         :if `zero_to_one` is true: given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
         :if `zero_to_one` is false: returns the minimum amount of `token0` required to buy `qty` amount of `token1`.
@@ -173,7 +173,7 @@ class Uniswap4Core:
         sqrt_price_limit_x96: int = 0,
         zero_for_one: bool = True,
         hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
-    ):
+    ) -> Any:
         """
         :if `zero_to_one` is true: given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
         :if `zero_to_one` is false: returns the minimum amount of `token0` required to buy `qty` amount of `token1`.
@@ -210,13 +210,10 @@ class Uniswap4Core:
         currency: AddressLike,  # input token
         qty: int,
         path : list[UniswapV4_PathKey],
-    ):
+    ) -> Any:
         """
         :path  is a swap route
         """
-
-        if currency0 == currency1:
-            raise ValueError
 
         quote_params = {
             "exactCurrency": currency,
@@ -236,13 +233,10 @@ class Uniswap4Core:
         currency: AddressLike,  # input token
         qty: int,
         path : list[UniswapV4_PathKey],
-    ):
+    ) -> Any:
         """
         :path  is a swap route
         """
-
-        if currency0 == currency1:
-            raise ValueError
 
         quote_params = {
             "exactCurrency": currency,
