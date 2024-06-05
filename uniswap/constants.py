@@ -77,7 +77,7 @@ _router_contract_addresses_v2 = {
     "sepolia": "0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008",
 }
 
-# need to replace with actual addresses
+# need to replace with actual addresses after release
 _poolmanager_contract_addresses = {
     "mainnet": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
     "ropsten": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
@@ -88,6 +88,16 @@ _poolmanager_contract_addresses = {
     "binance_testnet": "0x6725F303b657a9451d8BA641348b6761A6CC7a17",
 }
 
+# need to replace with actual addresses after release
+_quoter_contract_addresses = {
+    "mainnet": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "ropsten": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "rinkeby": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "görli": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "xdai": "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7",
+    "binance": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
+    "binance_testnet": "0x6725F303b657a9451d8BA641348b6761A6CC7a17",
+}
 MAX_UINT_128 = (2**128) - 1
 
 # Source: https://github.com/Uniswap/v3-core/blob/v1.0.0/contracts/libraries/TickMath.sol#L8-L11

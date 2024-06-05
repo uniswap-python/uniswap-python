@@ -32,3 +32,19 @@ class UniswapV4_tick_info:
     
     def __repr__(self) -> str:
         return f"Tick info (liquidityGross: {self.liquidityGross}; liquidityNet: {self.liquidityNet}; feeGrowthOutside0X128: {self.feeGrowthOutside0X128}; feeGrowthOutside1X128: {self.feeGrowthOutside1X128!r})"
+
+@dataclass
+class UniswapV4_PathKey:
+    # The lower currency of the pool, sorted numerically
+    currency0 : Address
+    # The higher currency of the pool, sorted numerically
+    currency1 : Address
+    # The pool swap fee, capped at 1_000_000. If the first bit is 1, the pool has a dynamic fee and must be exactly equal to 0x800000
+    fee : int
+    # Ticks that involve positions must be a multiple of tick spacing
+    tickSpacing : int
+    # The hooks of the pool
+    hooks : list[Address]
+
+    def __repr__(self) -> (Address, Address, int, int, list[Address]):
+        return (self.currency0, self.currency1, self.fee, self.tickSpacing, self.hooks)
