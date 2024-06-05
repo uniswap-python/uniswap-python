@@ -215,9 +215,10 @@ class Uniswap4Core:
         :path  is a swap route
         """
 
+        quote_path = [item.astulpe() for item in path]
         quote_params = {
             "exactCurrency": currency,
-            "path": path,
+            "path": quote_path,
             "recipient": self.address,
             "exactAmount": qty,
         }
@@ -238,9 +239,10 @@ class Uniswap4Core:
         :path  is a swap route
         """
 
+        quote_path = [item.astulpe() for item in path]
         quote_params = {
             "exactCurrency": currency,
-            "path": path,
+            "path": quote_path,
             "recipient": self.address,
             "exactAmount": qty,
         }

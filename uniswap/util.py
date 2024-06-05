@@ -92,8 +92,11 @@ def _encode_path(token_in: AddressLike, route: List[Tuple[int, AddressLike]]) ->
 
 
 # Adapted from: https://github.com/Uniswap/v3-sdk/blob/main/src/utils/encodeSqrtRatioX96.ts
-def decode_sqrt_ratioX96(amount_0: int, amount_1: int) -> int:
-    return int(amount_0 * amount_0 * 10**amount_1 >> 192)
+def decode_sqrt_ratioX96(sqrtPriceX96: int) -> float:
+    Q96 = 2**96
+    ratio = sqrtPriceX96 / Q96
+    price = ratio**2
+    return price
 
 # Adapted from: https://github.com/Uniswap/v3-sdk/blob/main/src/utils/encodeSqrtRatioX96.ts
 def encode_sqrt_ratioX96(amount_0: int, amount_1: int) -> int:
