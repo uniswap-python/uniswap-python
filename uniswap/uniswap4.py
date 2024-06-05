@@ -16,7 +16,7 @@ from web3.types import (
     Nonce,
     HexBytes,
 )
-from .types import AddressLike, UniswapV4_slot0, UniswapV4_position_info, UniswapV4_tick_info
+from .types import AddressLike, UniswapV4_slot0, UniswapV4_position_info, UniswapV4_tick_info, UniswapV4_PathKey
 from .token import ERC20Token
 from .exceptions import InvalidToken, InsufficientBalance
 from .util import (
@@ -31,6 +31,7 @@ from .decorators import supports, check_approval
 from .constants import (
     _netid_to_name,
     _poolmanager_contract_addresses,
+    _quoter_contract_addresses,
     ETH_ADDRESS,
     NOHOOK_ADDRESS,
 )
@@ -51,6 +52,7 @@ class Uniswap4Core:
         web3: Optional[Web3] = None,
         default_slippage: float = 0.01,
         poolmanager_contract_addr: Optional[str] = None,
+        quoter_contract_addr: Optional[str] = None,
     ) -> None:
         """
         :param address: The public address of the ETH wallet to use.
@@ -94,10 +96,20 @@ class Uniswap4Core:
             poolmanager_contract_addr = _poolmanager_contract_addresses[self.network]
         self.poolmanager_contract_addr: AddressLike = _str_to_addr(poolmanager_contract_addr)
 
+        if quoter_contract_addr is None:
+            quoter_contract_addr = _quoter_contract_addresses[self.network]
+        self.quoter_contract_addr: AddressLike = _str_to_addr(quoter_contract_addr)
+
         self.router = _load_contract(
             self.w3,
             abi_name="uniswap-v4/poolmanager",
             address=self.poolmanager_contract_addr,
+        )
+
+        self.quoter = _load_contract(
+            self.w3,
+            abi_name="uniswap-v4/quoter",
+            address=self.quoter_contract_addr,
         )
 
         if hasattr(self, "poolmanager_contract"):
@@ -105,19 +117,20 @@ class Uniswap4Core:
 
     # ------ Contract calls ------------------------------------------------------------
 
-    # ------ Pool manager READ methods --------------------------------------------------------------------
+    # ------ Quoter methods --------------------------------------------------------------------
 
-    def get_price(
+    def get_quote_exact_input_single(
         self,
         currency0: AddressLike,  # input token
         currency1: AddressLike,  # output token
         qty: int,
         fee: int,
         tick_spacing: int,
+        hook_data: bytes,
         sqrt_price_limit_x96: int = 0,
         zero_for_one: bool = True,
         hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
-    ) -> int:
+    ):
         """
         :if `zero_to_one` is true: given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
         :if `zero_to_one` is false: returns the minimum amount of `token0` required to buy `qty` amount of `token1`.
@@ -134,31 +147,117 @@ class Uniswap4Core:
             "hooks": hooks,
         }
 
-        swap_params = {
+        quote_params = {
+            "poolKey": pool_key,
             "zeroForOne": zero_for_one,
-            "amountSpecified": qty,
+            "recipient": self.address,
+            "exactAmount": qty,
             "sqrtPriceLimitX96": sqrt_price_limit_x96,
+            "hookData" : hook_data,
         }
 
-        tx_params = self._get_tx_params()
-        transaction = self.router.functions.swap(
-                {
-                    "key": pool_key,
-                    "params": swap_params,
-                }
-            ).build_transaction(tx_params)
-        # Uniswap3 uses 20% margin for transactions
-        transaction["gas"] = Wei(int(self.w3.eth.estimate_gas(transaction) * 1.2))
-        signed_txn = self.w3.eth.account.sign_transaction(
-            transaction, private_key=self.private_key
-        )
+        values = self.quoter.functions.quoteExactInputSingle(quote_params)
+        #[0]returns deltaAmounts: Delta amounts resulted from the swap
+        #[1]returns sqrtPriceX96After: The sqrt price of the pool after the swap
+        #[2]returns initializedTicksLoaded: The number of initialized ticks that the swap loaded
+        return values
 
-        try:
-            price = int(self.w3.eth.call(signed_txn))
-        except ContractLogicError as revert:
-            price = int(self.w3.codec.decode(["int128[]","uint160","uint32"], bytes(revert.data))[1]) # type: ignore
-        return price
+    def get_quote_exact_output_single(
+        self,
+        currency0: AddressLike,  # input token
+        currency1: AddressLike,  # output token
+        qty: int,
+        fee: int,
+        tick_spacing: int,
+        hook_data: bytes,
+        sqrt_price_limit_x96: int = 0,
+        zero_for_one: bool = True,
+        hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
+    ):
+        """
+        :if `zero_to_one` is true: given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
+        :if `zero_to_one` is false: returns the minimum amount of `token0` required to buy `qty` amount of `token1`.
+        """
 
+        if currency0 == currency1:
+            raise ValueError
+
+        pool_key = {
+            "currency0": currency0,
+            "currency1": currency1,
+            "fee": fee,
+            "tickSpacing": tick_spacing,
+            "hooks": hooks,
+        }
+
+        quote_params = {
+            "poolKey": pool_key,
+            "zeroForOne": zero_for_one,
+            "recipient": self.address,
+            "exactAmount": qty,
+            "sqrtPriceLimitX96": sqrt_price_limit_x96,
+            "hookData" : hook_data,
+        }
+
+        values = self.quoter.functions.quoteExactOutputSingle(quote_params)
+        #[0]returns deltaAmounts: Delta amounts resulted from the swap
+        #[1]returns sqrtPriceX96After: The sqrt price of the pool after the swap
+        #[2]returns initializedTicksLoaded: The number of initialized ticks that the swap loaded
+        return values
+    
+    def get_quote_exact_input(
+        self,
+        currency: AddressLike,  # input token
+        qty: int,
+        path : list[UniswapV4_PathKey],
+    ):
+        """
+        :path  is a swap route
+        """
+
+        if currency0 == currency1:
+            raise ValueError
+
+        quote_params = {
+            "exactCurrency": currency,
+            "path": path,
+            "recipient": self.address,
+            "exactAmount": qty,
+        }
+
+        values = self.quoter.functions.quoteExactInput(quote_params)
+        #[0] returns deltaAmounts: Delta amounts along the path resulted from the swap
+        #[1] returns sqrtPriceX96AfterList: List of the sqrt price after the swap for each pool in the path
+        #[2] returns initializedTicksLoadedList: List of the initialized ticks that the swap loaded for each pool in the path
+        return values
+
+    def get_quote_exact_output(
+        self,
+        currency: AddressLike,  # input token
+        qty: int,
+        path : list[UniswapV4_PathKey],
+    ):
+        """
+        :path  is a swap route
+        """
+
+        if currency0 == currency1:
+            raise ValueError
+
+        quote_params = {
+            "exactCurrency": currency,
+            "path": path,
+            "recipient": self.address,
+            "exactAmount": qty,
+        }
+
+        values = self.quoter.functions.quoteExactOutput(quote_params)
+        #[0] returns deltaAmounts: Delta amounts along the path resulted from the swap
+        #[1] returns sqrtPriceX96AfterList: List of the sqrt price after the swap for each pool in the path
+        #[2] returns initializedTicksLoadedList: List of the initialized ticks that the swap loaded for each pool in the path
+        return values
+
+    # ------ Pool manager READ methods -------------------------------------------------------------------- 
     def get_slot0(
         self,
         currency0: AddressLike,  # input token
@@ -291,6 +390,9 @@ class Uniswap4Core:
         sqrt_price_limit_x96: int = 0,
         zero_for_one: bool = True,
         hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
+        gas: Optional[Wei] = None,
+        max_fee: Optional[Wei] = None,
+        priority_fee: Optional[Wei] = None,
     ) -> HexBytes:
         """
         :Swap against the given pool
@@ -327,7 +429,7 @@ class Uniswap4Core:
                     "params": swap_params,
                 }
             ),
-            self._get_tx_params(),
+            self._get_tx_params(gas = gas, max_fee = max_fee, priority_fee = priority_fee),
         )
 
     def initialize(
@@ -339,6 +441,9 @@ class Uniswap4Core:
         tick_spacing: int,
         sqrt_price_limit_x96: int,
         hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
+        gas: Optional[Wei] = None,
+        max_fee: Optional[Wei] = None,
+        priority_fee: Optional[Wei] = None,
     ) -> HexBytes:
         """
         :Initialize the state for a given pool key
@@ -367,7 +472,7 @@ class Uniswap4Core:
                     "sqrtPriceX96": sqrt_price_limit_x96,
                 }
             ),
-            self._get_tx_params(),
+            self._get_tx_params(gas = gas, max_fee = max_fee, priority_fee = priority_fee),
         )
 
     def donate(
@@ -379,6 +484,9 @@ class Uniswap4Core:
         tick_spacing: int,
         sqrt_price_limit_x96: int,
         hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
+        gas: Optional[Wei] = None,
+        max_fee: Optional[Wei] = None,
+        priority_fee: Optional[Wei] = None,
     ) -> HexBytes:
         """
         :Donate the given currency amounts to the pool with the given pool key
@@ -407,7 +515,7 @@ class Uniswap4Core:
                     "sqrtPriceX96": sqrt_price_limit_x96,
                 }
             ),
-            self._get_tx_params(),
+            self._get_tx_params(gas = gas, max_fee = max_fee, priority_fee = priority_fee),
         )
 
     def modify_position(
@@ -420,6 +528,9 @@ class Uniswap4Core:
         tick_upper: int,
         tick_lower: int,
         hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
+        gas: Optional[Wei] = None,
+        max_fee: Optional[Wei] = None,
+        priority_fee: Optional[Wei] = None,
     ) -> HexBytes:
         """
         :Modify the liquidity for the given pool
@@ -455,13 +566,16 @@ class Uniswap4Core:
                     "params": modify_position_params,
                 }
             ),
-            self._get_tx_params(value=Wei(qty)),
+            self._get_tx_params(value=Wei(qty), gas = gas, max_fee = max_fee, priority_fee = priority_fee),
         )
 
     def settle(
         self,
         currency0: ERC20Token,
         qty: int,
+        gas: Optional[Wei] = None,
+        max_fee: Optional[Wei] = None,
+        priority_fee: Optional[Wei] = None,
     ) -> HexBytes:
         """
         :Called by the user to pay what is owed
@@ -473,7 +587,7 @@ class Uniswap4Core:
                     "currency ": currency0,
                 }
             ),
-            self._get_tx_params(value=Wei(qty)),
+            self._get_tx_params(value=Wei(qty), gas = gas, max_fee = max_fee, priority_fee = priority_fee),
         )
 
     def take(
@@ -481,6 +595,9 @@ class Uniswap4Core:
         currency0: ERC20Token,
         to: AddressLike,
         qty: int,
+        gas: Optional[Wei] = None,
+        max_fee: Optional[Wei] = None,
+        priority_fee: Optional[Wei] = None,
     ) -> HexBytes:
         """
         :Called by the user to net out some value owed to the user
@@ -495,7 +612,7 @@ class Uniswap4Core:
                     "amount ": qty,
                 }
             ),
-            self._get_tx_params(),
+            self._get_tx_params(gas = gas, max_fee = max_fee, priority_fee = priority_fee),
         )
 
     # ------ Wallet balance ------------------------------------------------------------
@@ -529,7 +646,7 @@ class Uniswap4Core:
 
     # ------ Tx Utils ------------------------------------------------------------------
     def _deadline(self) -> int:
-        """Get a predefined deadline. 10min by default (same as the Uniswap SDK)."""
+        """Get a predefined deadline. 10min by default."""
         return int(time.time()) + 10 * 60
 
     def _build_and_send_tx(
@@ -552,15 +669,24 @@ class Uniswap4Core:
             logger.debug(f"nonce: {tx_params['nonce']}")
             self.last_nonce = Nonce(tx_params["nonce"] + 1)
 
-    def _get_tx_params(self, value: Wei = Wei(0)) -> TxParams:
+    def _get_tx_params(self, value: Wei = Wei(0), gas: Optional[Wei] = None, max_fee: Optional[Wei] = None, priority_fee: Optional[Wei] = None) -> TxParams:
         """Get generic transaction parameters."""
-        return {
+        params: TxParams = {
             "from": _addr_to_str(self.address),
             "value": value,
             "nonce": max(
                 self.last_nonce, self.w3.eth.get_transaction_count(self.address)
             ),
         }
+
+        if gas:
+            params["gas"] = gas
+        if max_fee:
+            params["maxFeePerGas"] = max_fee
+        if priority_fee:
+            params["maxPriorityFeePerGas"] = priority_fee
+
+        return params
 
     # ------ Helpers ------------------------------------------------------------
 
