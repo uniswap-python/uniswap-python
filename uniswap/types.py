@@ -46,6 +46,3 @@ class UniswapV4_PathKey:
     tickSpacing : int
     # The hooks of the pool
     hooks : List[Address]
-
-    def __repr__(self) -> Tuple[Address, Address, int, int, List[Address]]:
-        return (self.currency0, self.currency1, self.fee, self.tickSpacing, self.hooks)
