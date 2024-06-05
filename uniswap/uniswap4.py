@@ -2,6 +2,7 @@ import os
 import time
 import logging
 import functools
+import dataclasses
 from typing import List, Any, Optional, Union, Tuple, Dict
 
 from web3 import Web3
@@ -215,7 +216,7 @@ class Uniswap4Core:
         :path  is a swap route
         """
 
-        quote_path = [item.astulpe() for item in path]
+        quote_path = [dataclasses.astuple(item) for item in path]
         quote_params = {
             "exactCurrency": currency,
             "path": quote_path,
@@ -239,7 +240,7 @@ class Uniswap4Core:
         :path  is a swap route
         """
 
-        quote_path = [item.astulpe() for item in path]
+        quote_path = [dataclasses.astuple(item) for item in path]
         quote_params = {
             "exactCurrency": currency,
             "path": quote_path,
