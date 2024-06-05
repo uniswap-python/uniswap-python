@@ -209,7 +209,7 @@ class Uniswap4Core:
         self,
         currency: AddressLike,  # input token
         qty: int,
-        path : list[UniswapV4_PathKey],
+        path : List[UniswapV4_PathKey],
     ) -> Any:
         """
         :path  is a swap route
@@ -232,7 +232,7 @@ class Uniswap4Core:
         self,
         currency: AddressLike,  # input token
         qty: int,
-        path : list[UniswapV4_PathKey],
+        path : List[UniswapV4_PathKey],
     ) -> Any:
         """
         :path  is a swap route
