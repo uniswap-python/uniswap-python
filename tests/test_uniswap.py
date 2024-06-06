@@ -476,6 +476,13 @@ class TestUniswap(object):
             # ("ETH", "UNI", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # ("UNI", "ETH", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
             # ("DAI", "UNI", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
+            (
+                "DAI",
+                "ETH",
+                10 * ONE_ETH,
+                None,
+                lambda: pytest.raises(InsufficientBalance),
+            ),
             ("DAI", "DAI", ONE_USDC, None, lambda: pytest.raises(ValueError)),
         ],
     )
