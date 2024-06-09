@@ -600,7 +600,7 @@ class Uniswap4Core:
     def take(
         self,
         currency0: Union[AddressLike, str, None],
-        to: AddressLike,
+        to: Union[AddressLike, str, None],
         qty: int,
         gas: Optional[Wei] = None,
         max_fee: Optional[Wei] = None,
@@ -775,7 +775,7 @@ class Uniswap4Core:
             symbol = _symbol
         return ERC20Token(symbol, address, name, decimals)
 
-    def get_pool_id(self, currency0: str, currency1: str, fee : int, tickSpacing : int, hooks : Union[AddressLike, str, None] = NOHOOK_ADDRESS) -> bytes:
+    def get_pool_id(self, currency0: Union[AddressLike, str, None], currency1: Union[AddressLike, str, None], fee : int, tickSpacing : int, hooks : Union[AddressLike, str, None] = NOHOOK_ADDRESS) -> bytes:
         if int(currency0, 16) > int(currency1, 16):
             currency0 , currency1 = currency1 , currency0
         pool_id = bytes(self.w3.solidity_keccak(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)]))
