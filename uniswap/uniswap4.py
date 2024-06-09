@@ -570,7 +570,7 @@ class Uniswap4Core:
             self.router.functions.modifyLiquidity(
                 {
                     "key": pool_key,
-                    "params": modify_position_params,
+                    "params": modify_liquidity_params,
                     "hookData": hook_data,
                 }
             ),
@@ -580,6 +580,7 @@ class Uniswap4Core:
     def settle(
         self,
         currency0: Union[AddressLike, str, None],
+        qty: int,
         gas: Optional[Wei] = None,
         max_fee: Optional[Wei] = None,
         priority_fee: Optional[Wei] = None,
@@ -776,6 +777,8 @@ class Uniswap4Core:
         return ERC20Token(symbol, address, name, decimals)
 
     def get_pool_id(self, currency0: Union[AddressLike, str, None], currency1: Union[AddressLike, str, None], fee : int, tickSpacing : int, hooks : Union[AddressLike, str, None] = NOHOOK_ADDRESS) -> bytes:
+        currency0 = str(currency0)
+        currency1 = str(currency1)
         if int(currency0, 16) > int(currency1, 16):
             currency0 , currency1 = currency1 , currency0
         pool_id = bytes(self.w3.solidity_keccak(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)]))
