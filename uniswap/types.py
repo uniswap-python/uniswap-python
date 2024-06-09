@@ -35,7 +35,7 @@ class UniswapV4_tick_info:
         return f"Tick info (liquidityGross: {self.liquidityGross}; liquidityNet: {self.liquidityNet}; feeGrowthOutside0X128: {self.feeGrowthOutside0X128}; feeGrowthOutside1X128: {self.feeGrowthOutside1X128!r})"
 
 @dataclass
-class UniswapV4_PathKey:
+class UniswapV4_path_key:
     # The lower currency of the pool, sorted numerically
     currency0 : Address
     # The higher currency of the pool, sorted numerically

@@ -17,7 +17,7 @@ from web3.types import (
     Nonce,
     HexBytes,
 )
-from .types import AddressLike, UniswapV4_slot0, UniswapV4_position_info, UniswapV4_tick_info, UniswapV4_PathKey
+from .types import AddressLike, UniswapV4_slot0, UniswapV4_position_info, UniswapV4_tick_info, UniswapV4_path_key
 from .token import ERC20Token
 from .exceptions import InvalidToken, InsufficientBalance
 from .util import (
@@ -210,7 +210,7 @@ class Uniswap4Core:
         self,
         currency: AddressLike,  # input token
         qty: int,
-        path : List[UniswapV4_PathKey],
+        path : List[UniswapV4_path_key],
     ) -> Any:
         """
         :path  is a swap route
@@ -234,7 +234,7 @@ class Uniswap4Core:
         self,
         currency: AddressLike,  # input token
         qty: int,
-        path : List[UniswapV4_PathKey],
+        path : List[UniswapV4_path_key],
     ) -> Any:
         """
         :path  is a swap route
@@ -384,6 +384,7 @@ class Uniswap4Core:
         qty: int,
         fee: int,
         tick_spacing: int,
+        hook_data : bytes,
         sqrt_price_limit_x96: int = 0,
         zero_for_one: bool = True,
         hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
@@ -437,6 +438,7 @@ class Uniswap4Core:
         fee: int,
         tick_spacing: int,
         sqrt_price_limit_x96: int,
+        hook_data : bytes,
         hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
         gas: Optional[Wei] = None,
         max_fee: Optional[Wei] = None,
@@ -467,6 +469,7 @@ class Uniswap4Core:
                 {
                     "key": pool_key,
                     "sqrtPriceX96": sqrt_price_limit_x96,
+                    "hookData": hook_data,
                 }
             ),
             self._get_tx_params(gas = gas, max_fee = max_fee, priority_fee = priority_fee),
@@ -476,10 +479,12 @@ class Uniswap4Core:
         self,
         currency0: ERC20Token,
         currency1: ERC20Token,
-        qty: int,
+        qty1: int,
+        qty2: int,
         fee: int,
         tick_spacing: int,
         sqrt_price_limit_x96: int,
+        hook_data : bytes,
         hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
         gas: Optional[Wei] = None,
         max_fee: Optional[Wei] = None,
@@ -509,13 +514,15 @@ class Uniswap4Core:
             self.router.functions.donate(
                 {
                     "key": pool_key,
-                    "sqrtPriceX96": sqrt_price_limit_x96,
+                    "amount0": qty1,
+                    "amount1": qty2,
+                    "hookData": hook_data,
                 }
             ),
             self._get_tx_params(gas = gas, max_fee = max_fee, priority_fee = priority_fee),
         )
 
-    def modify_position(
+    def modify_liquidity(
         self,
         currency0: ERC20Token,
         currency1: ERC20Token,
@@ -524,6 +531,8 @@ class Uniswap4Core:
         tick_spacing: int,
         tick_upper: int,
         tick_lower: int,
+        salt : int,
+        hook_data : bytes,
         hooks: Union[AddressLike, str, None] = NOHOOK_ADDRESS,
         gas: Optional[Wei] = None,
         max_fee: Optional[Wei] = None,
@@ -550,17 +559,19 @@ class Uniswap4Core:
             "hooks": hooks,
         }
 
-        modify_position_params = {
+        modify_liquidity_params = {
             "tickLower": tick_lower,
             "tickUpper": tick_upper,
             "liquidityDelta": qty,
+            "salt": salt,
         }
 
         return self._build_and_send_tx(
-            self.router.functions.modifyPosition(
+            self.router.functions.modifyLiquidity(
                 {
                     "key": pool_key,
                     "params": modify_position_params,
+                    "hookData": hook_data,
                 }
             ),
             self._get_tx_params(value=Wei(qty), gas = gas, max_fee = max_fee, priority_fee = priority_fee),
@@ -568,8 +579,7 @@ class Uniswap4Core:
 
     def settle(
         self,
-        currency0: ERC20Token,
-        qty: int,
+        currency0: Union[AddressLike, str, None],
         gas: Optional[Wei] = None,
         max_fee: Optional[Wei] = None,
         priority_fee: Optional[Wei] = None,
@@ -589,7 +599,7 @@ class Uniswap4Core:
 
     def take(
         self,
-        currency0: ERC20Token,
+        currency0: Union[AddressLike, str, None],
         to: AddressLike,
         qty: int,
         gas: Optional[Wei] = None,
@@ -606,6 +616,56 @@ class Uniswap4Core:
                 {
                     "currency ": currency0,
                     "to ": to,
+                    "amount ": qty,
+                }
+            ),
+            self._get_tx_params(gas = gas, max_fee = max_fee, priority_fee = priority_fee),
+        )
+
+    def mint(
+        self,
+        currency0: Union[AddressLike, str, None],
+        id: int,
+        qty: int,
+        gas: Optional[Wei] = None,
+        max_fee: Optional[Wei] = None,
+        priority_fee: Optional[Wei] = None,
+    ) -> HexBytes:
+        """
+        :Called by the user to net out some value owed to the user
+        :Can also be used as a mechanism for _free_ flash loans
+        """
+
+        return self._build_and_send_tx(
+            self.router.functions.mint(
+                {
+                    "currency ": currency0,
+                    "id ": id,
+                    "amount ": qty,
+                }
+            ),
+            self._get_tx_params(gas = gas, max_fee = max_fee, priority_fee = priority_fee),
+        )
+
+    def burn(
+        self,
+        currency0: Union[AddressLike, str, None],
+        id: int,
+        qty: int,
+        gas: Optional[Wei] = None,
+        max_fee: Optional[Wei] = None,
+        priority_fee: Optional[Wei] = None,
+    ) -> HexBytes:
+        """
+        :Called by the user to net out some value owed to the user
+        :Can also be used as a mechanism for _free_ flash loans
+        """
+
+        return self._build_and_send_tx(
+            self.router.functions.burn(
+                {
+                    "currency ": currency0,
+                    "id ": id,
                     "amount ": qty,
                 }
             ),
@@ -715,8 +775,8 @@ class Uniswap4Core:
             symbol = _symbol
         return ERC20Token(symbol, address, name, decimals)
 
-    def get_pool_id(self, currency0: AddressLike, currency1: AddressLike, fee : int, tickSpacing : int, hooks : Union[AddressLike, str, None] = NOHOOK_ADDRESS) -> bytes:
-        if int(currency0) > int(currency1):
+    def get_pool_id(self, currency0: str, currency1: str, fee : int, tickSpacing : int, hooks : Union[AddressLike, str, None] = NOHOOK_ADDRESS) -> bytes:
+        if int(currency0, 16) > int(currency1, 16):
             currency0 , currency1 = currency1 , currency0
         pool_id = bytes(self.w3.solidity_keccak(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)]))
         return pool_id
