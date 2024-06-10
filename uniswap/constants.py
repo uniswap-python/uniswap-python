@@ -12,6 +12,7 @@ SIMPLE_CACHE_RPC_WHITELIST = cast(
 )
 
 ETH_ADDRESS = "0x0000000000000000000000000000000000000000"
+NOHOOK_ADDRESS = "0x0000000000000000000000000000000000000000"
 WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
 
 # see: https://chainid.network/chains/
@@ -27,8 +28,10 @@ _netid_to_name = {
     137: "polygon",
     100: "xdai",
     250: "fantom",
+    17000: "holesky",
     42161: "arbitrum",
     421611: "arbitrum_testnet",
+    11155111: "sepolia",
     1666600000: "harmony_mainnet",
     1666700000: "harmony_testnet",
     11155111: "sepolia"
@@ -74,6 +77,27 @@ _router_contract_addresses_v2 = {
     "sepolia": "0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008",
 }
 
+# TODO: replace with actual addresses after official deployment
+_poolmanager_contract_addresses = {
+    #"mainnet": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "ropsten": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "rinkeby": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "görli": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    #"xdai": "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7",
+    #"binance": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
+    "binance_testnet": "0x6725F303b657a9451d8BA641348b6761A6CC7a17",
+}
+
+# TODO: replace with actual addresses after official deployment
+_quoter_contract_addresses = {
+    #"mainnet": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "ropsten": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "rinkeby": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    "görli": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    #"xdai": "0xA818b4F111Ccac7AA31D0BCc0806d64F2E0737D7",
+    #"binance": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
+    "binance_testnet": "0x6725F303b657a9451d8BA641348b6761A6CC7a17",
+}
 MAX_UINT_128 = (2**128) - 1
 
 # Source: https://github.com/Uniswap/v3-core/blob/v1.0.0/contracts/libraries/TickMath.sol#L8-L11
