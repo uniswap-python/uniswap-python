@@ -777,8 +777,8 @@ class Uniswap4Core:
         return ERC20Token(symbol, address, name, decimals)
 
     def get_pool_id(self, currency0: Union[AddressLike, str, None], currency1: Union[AddressLike, str, None], fee : int, tickSpacing : int, hooks : Union[AddressLike, str, None] = NOHOOK_ADDRESS) -> bytes:
-        currency0 = str(self.w3.to_checksum_address(currency0))
-        currency1 = str(self.w3.to_checksum_address(currency1))
+        currency0 = self.w3.to_checksum_address(str(currency0))
+        currency1 = self.w3.to_checksum_address(str(currency1))
         if int(currency0, 16) > int(currency1, 16):
             currency0 , currency1 = currency1 , currency0
         pool_id = bytes(self.w3.solidity_keccak(["address", "address", "int24", "int24", "address"], [(currency0, currency1, fee, tickSpacing, hooks)]))
