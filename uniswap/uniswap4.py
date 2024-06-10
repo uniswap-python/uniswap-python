@@ -747,35 +747,7 @@ class Uniswap4Core:
         return params
 
     # ------ Helpers ------------------------------------------------------------
-
-    def get_token(self, address: AddressLike, abi_name: str = "erc20") -> ERC20Token:
-        """
-        Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
-        """
-        # FIXME: This function should always return the same output for the same input
-        #        and would therefore benefit from caching
-        if address == ETH_ADDRESS:
-            return ERC20Token("ETH", address, "Ether", 18)
-        token_contract = _load_contract(self.w3, abi_name, address=address)
-        try:
-            _name = token_contract.functions.name().call()
-            _symbol = token_contract.functions.symbol().call()
-            decimals = token_contract.functions.decimals().call()
-        except Exception as e:
-            logger.warning(
-                f"Exception occurred while trying to get token {_addr_to_str(address)}: {e}"
-            )
-            raise InvalidToken(address)
-        try:
-            name = _name.decode()
-        except:
-            name = _name
-        try:
-            symbol = _symbol.decode()
-        except:
-            symbol = _symbol
-        return ERC20Token(symbol, address, name, decimals)
-
+ 
     def get_pool_id(self, currency0: Union[AddressLike, str, None], currency1: Union[AddressLike, str, None], fee : int, tickSpacing : int, hooks : Union[AddressLike, str, None] = NOHOOK_ADDRESS) -> bytes:
         currency0 = self.w3.to_checksum_address(str(currency0))
         currency1 = self.w3.to_checksum_address(str(currency1))
