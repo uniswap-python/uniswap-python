@@ -673,20 +673,6 @@ class Uniswap4Core:
             self._get_tx_params(gas = gas, max_fee = max_fee, priority_fee = priority_fee),
         )
 
-    # ------ Wallet balance ------------------------------------------------------------
-    def get_eth_balance(self) -> Wei:
-        """Get the balance of ETH for your address."""
-        return self.w3.eth.get_balance(self.address)
-
-    def get_token_balance(self, token: AddressLike) -> int:
-        """Get the balance of a token for your address."""
-        _validate_address(token)
-        if _addr_to_str(token) == ETH_ADDRESS:
-            return self.get_eth_balance()
-        erc20 = _load_contract_erc20(self.w3, token)
-        balance: int = erc20.functions.balanceOf(self.address).call()
-        return balance
-
     # ------ Approval Utils ------------------------------------------------------------
     def approve(self, token: AddressLike, max_approval: Optional[int] = None) -> None:
         """Give an exchange/router max approval of a token."""
