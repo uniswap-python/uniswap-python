@@ -37,12 +37,12 @@ class UniswapV4_tick_info:
 @dataclass
 class UniswapV4_path_key:
     # The lower currency of the pool, sorted numerically
-    currency0 : Address
+    currency0 : str
     # The higher currency of the pool, sorted numerically
-    currency1 : Address
+    currency1 : str
     # The pool swap fee, capped at 1_000_000. If the first bit is 1, the pool has a dynamic fee and must be exactly equal to 0x800000
     fee : int
     # Ticks that involve positions must be a multiple of tick spacing
     tickSpacing : int
     # The hooks of the pool
-    hooks : List[Address]
+    hooks : str
