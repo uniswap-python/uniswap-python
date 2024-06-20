@@ -10,6 +10,7 @@ env:
   # Public key for PRs, plz don't abuse
   PROVIDER_MAINNET: ${{ secrets.MAINNET_PROVIDER || 'https://mainnet.infura.io/v3/42ffb4f2549c4a5fa3b5d6db70f6fad1' }}
   PROVIDER_ARBITRUM: 'https://rpc.ankr.com/arbitrum'
+  PROVIDER_POLYGON: 'https://rpc.ankr.com/polygon'
   PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
 
 jobs:
@@ -24,14 +25,11 @@ jobs:
         include:
           - network: arbitrum
             uniswap-version: 3
-        #include:
+          - network: polygon
+            uniswap-version: 3
         #  - network: xdai
         #    uniswap-version: 3
-        #include:
         #  - network: optimism
-        #    uniswap-version: 3
-        #include:
-        #  - network: polygon
         #    uniswap-version: 3
 
     steps:
@@ -75,7 +73,7 @@ jobs:
     - name: Test
       env:
         # Use the secret if available, otherwise fallback to the public key
-        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) }}
+        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'polygon') && env.PROVIDER_POLYGON) }}
         UNISWAP_VERSION: ${{ matrix.uniswap-version }}
       run: |
         make test

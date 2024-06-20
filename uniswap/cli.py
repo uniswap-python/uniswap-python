@@ -109,9 +109,18 @@ def tokendb(ctx: click.Context, metadata: bool) -> None:
     """List known token addresses"""
     uni: Uniswap = ctx.obj["UNISWAP"]
     for symbol, addr in get_tokens(uni.netname).items():
-        if metadata and addr != "0x0000000000000000000000000000000000000000":
+        if (
+            metadata
+            and addr != "0x0000000000000000000000000000000000000000"  # ETH
+            and addr != "0x0000000000000000000000000000000000001010"  # MATIC
+        ):
             data = uni.get_token(_str_to_addr(addr))
-            assert data.symbol.lower() == symbol.lower()
+            if data.symbol.lower() != symbol.lower():
+                logger.warning(
+                    "Requested symbol '%s' doesn't agree with contract symbol '%s'",
+                    symbol,
+                    data.symbol,
+                )
             click.echo(data)
         else:
             click.echo(BaseToken(symbol, addr))
