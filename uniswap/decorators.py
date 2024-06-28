@@ -6,6 +6,7 @@ from typing import (
     Optional,
     TypeVar,
 )
+from typing import Union
 
 from typing_extensions import Concatenate, ParamSpec
 
@@ -20,28 +21,30 @@ T = TypeVar("T")
 P = ParamSpec("P")
 
 
-def check_approval(
-    method: Callable[Concatenate["Uniswap", P], T]
-) -> Callable[Concatenate["Uniswap", P], T]:
-    """Decorator to check if user is approved for a token. It approves them if they
+def check_approval(method: Callable[..., T]) -> Callable[..., T]:
+    """Decorator to check if the user is approved for a token. It approves them if they
     need to be approved."""
 
     @functools.wraps(method)
-    def approved(self: "Uniswap", *args: P.args, **kwargs: P.kwargs) -> T:
+    def approved(self: "Uniswap", *args: Union[AddressLike, int], **kwargs: AddressLike) -> T:
         # Check to see if the first token is actually ETH
-        token: Optional[AddressLike] = args[0] if args[0] != ETH_ADDRESS else None  # type: ignore
+        token: Optional[AddressLike] = args[0] if args and args[0] != ETH_ADDRESS else None  # type: ignore
         token_two = None
 
-        # Check second token, if needed
+        # Check the second token if needed
         if method.__name__ == "make_trade" or method.__name__ == "make_trade_output":
-            token_two = args[1] if args[1] != ETH_ADDRESS else None
+            token_two = args[1] if len(args) > 1 and args[1] != ETH_ADDRESS else None
 
-        # Approve both tokens, if needed
+        # Approve both tokens if needed
         if token:
             is_approved = self._is_approved(token)
-            # logger.warning(f"Approved? {token}: {is_approved}")
             if not is_approved:
                 self.approve(token)
+        if token_two:
+            is_approved_two = self._is_approved(token_two)
+            if not is_approved_two:
+                self.approve(token_two)
+
         return method(self, *args, **kwargs)
 
     return approved
