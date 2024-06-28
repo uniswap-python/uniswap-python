@@ -13,7 +13,7 @@ from typing import (
     Tuple,
     Union,
 )
-
+from decimal import Decimal
 from eth_typing.evm import Address, ChecksumAddress
 from hexbytes import HexBytes
 from web3 import Web3
@@ -450,6 +450,104 @@ class Uniswap:
         fee: Optional[int] = None,
         slippage: Optional[float] = None,
         fee_on_transfer: bool = False,
+        simulate = False
+    ) -> HexBytes:
+        """Make a trade by defining the qty of the input token."""
+        if not isinstance(qty, int):
+            raise TypeError("swapped quantity must be an integer")
+
+        fee = validate_fee_tier(fee=fee, version=self.version)
+
+        if slippage is None:
+            slippage = self.default_slippage
+
+        if input_token == output_token:
+            raise ValueError
+
+        if input_token == ETH_ADDRESS:
+            transaction = self._eth_to_token_swap_input(
+                output_token,
+                Wei(qty),
+                recipient,
+                fee,
+                slippage,
+                fee_on_transfer,
+                simulate=simulate
+            )
+        elif output_token == ETH_ADDRESS:
+            transaction = self._token_to_eth_swap_input(
+                input_token,
+                qty,
+                recipient,
+                fee,
+                slippage,
+                fee_on_transfer,
+                simulate=simulate
+            )
+        else:
+            transaction = self._token_to_token_swap_input(
+                input_token,
+                output_token,
+                qty,
+                recipient,
+                fee,
+                slippage,
+                fee_on_transfer,
+                simulate=simulate
+            )
+
+        if not simulate:
+            return transaction
+        else:
+            input_token_decimals = self.get_token(input_token).decimals
+            output_token_decimals = self.get_token(output_token).decimals
+            exchange_rate = self.get_price_input(input_token, output_token, int(10 ** input_token_decimals))
+            exchange_rate_fmt = exchange_rate / (10 ** input_token_decimals)
+            qty_fmt = qty / (10 ** output_token_decimals)
+            amount_out = int(Decimal(str(exchange_rate_fmt)) * Decimal(str(qty_fmt)) * Decimal(str(1 - self.get_fee_taker())) * (10**output_token_decimals))
+            quote_fee = qty * self.get_fee_taker()
+
+            estimated_gas = transaction['gas']
+            gas_price = self.w3.eth.gas_price
+            gas_cost = estimated_gas * gas_price
+            gas_amount_tokens = Web3.from_wei(gas_cost, 'ether')
+            return {
+                'amount_in': qty,
+                'amount_out': amount_out,
+                'exchange_rate': exchange_rate_fmt,
+                'fee': quote_fee,
+                'gas_price': gas_price,
+                'estimated_gas': estimated_gas,
+                'gas_cost': gas_cost,
+                'gas_tokens_cost': gas_amount_tokens
+            }
+
+    @check_approval
+    @supports([2])
+    def simulate_trade(
+        self,
+        input_token: AddressLike,
+        output_token: AddressLike,
+        qty: Union[int, Wei],
+        recipient: Optional[AddressLike] = None,
+        fee: Optional[int] = None,
+        slippage: Optional[float] = None,
+        fee_on_transfer: bool = False,
+    ) -> HexBytes:
+        quote_token_decimals = self.get_token(quote_token).decimals
+        exchange_rate = self.get_price_input(base_token, quote_token, int(10 ** quote_token_decimals))
+        amount_out = exchange_rate * qty * (10**quote_token_decimals)
+        fee = qty * self.get_fee_taker
+
+    def estimate_trade_gas(
+        self,
+        input_token: AddressLike,
+        output_token: AddressLike,
+        qty: Union[int, Wei],
+        recipient: Optional[AddressLike] = None,
+        fee: Optional[int] = None,
+        slippage: Optional[float] = None,
+        fee_on_transfer: bool = False,
     ) -> HexBytes:
         """Make a trade by defining the qty of the input token."""
         if not isinstance(qty, int):
@@ -526,6 +624,7 @@ class Uniswap:
         fee: int,
         slippage: float,
         fee_on_transfer: bool = False,
+        simulate = False
     ) -> HexBytes:
         """Convert ETH to tokens given an input amount."""
         if output_token == ETH_ADDRESS:
@@ -537,14 +636,19 @@ class Uniswap:
 
         if self.version == 1:
             token_funcs = self._exchange_contract(output_token).functions
-            tx_params = self._get_tx_params(qty)
+            txn_params = self._get_tx_params(qty)
             func_params: List[Any] = [qty, self._deadline()]
             if not recipient:
                 function = token_funcs.ethToTokenSwapInput(*func_params)
             else:
                 func_params.append(recipient)
                 function = token_funcs.ethToTokenTransferInput(*func_params)
-            return self._build_and_send_tx(function, tx_params)
+            transaction = self._build_txn(function, txn_params)
+            if not simulate:
+                return self._send_txn(transaction, txn_params)
+            else:
+                return transaction
+            # return self._build_and_send_tx(function, tx_params)
 
         elif self.version == 2:
             if recipient is None:
@@ -558,7 +662,9 @@ class Uniswap:
                 )
             else:
                 func = self.router.functions.swapExactETHForTokens
-            return self._build_and_send_tx(
+
+            txn_params = self._get_tx_params(qty)
+            transaction = self._build_txn(
                 func(
                     amount_out_min,
                     [self.get_weth_address(), output_token],
@@ -567,6 +673,20 @@ class Uniswap:
                 ),
                 self._get_tx_params(qty),
             )
+            if not simulate:
+                return self._send_txn(transaction, txn_params)
+            else:
+                return transaction
+
+            # return self._build_and_send_tx(
+            #     func(
+            #         amount_out_min,
+            #         [self.get_weth_address(), output_token],
+            #         recipient,
+            #         self._deadline(),
+            #     ),
+            #     self._get_tx_params(qty),
+            # )
         elif self.version == 3:
             if recipient is None:
                 recipient = self.address
@@ -580,7 +700,8 @@ class Uniswap:
             )
             sqrtPriceLimitX96 = 0
 
-            return self._build_and_send_tx(
+            txn_params = self._get_tx_params(value=qty)
+            transaction = self._build_txn(
                 self.router.functions.exactInputSingle(
                     {
                         "tokenIn": self.get_weth_address(),
@@ -593,8 +714,28 @@ class Uniswap:
                         "sqrtPriceLimitX96": sqrtPriceLimitX96,
                     }
                 ),
-                self._get_tx_params(value=qty),
+                txn_params,
             )
+            if not simulate:
+                return self._send_txn(transaction, txn_params)
+            else:
+                return transaction
+
+            # return self._build_and_send_tx(
+            #     self.router.functions.exactInputSingle(
+            #         {
+            #             "tokenIn": self.get_weth_address(),
+            #             "tokenOut": output_token,
+            #             "fee": fee,
+            #             "recipient": recipient,
+            #             "deadline": self._deadline(),
+            #             "amountIn": qty,
+            #             "amountOutMinimum": min_tokens_bought,
+            #             "sqrtPriceLimitX96": sqrtPriceLimitX96,
+            #         }
+            #     ),
+            #     self._get_tx_params(value=qty),
+            # )
         else:
             raise ValueError  # pragma: no cover
 
@@ -606,6 +747,7 @@ class Uniswap:
         fee: int,
         slippage: float,
         fee_on_transfer: bool = False,
+        simulate=False
     ) -> HexBytes:
         """Convert tokens to ETH given an input amount."""
         if input_token == ETH_ADDRESS:
@@ -624,7 +766,14 @@ class Uniswap:
             else:
                 func_params.append(recipient)
                 function = token_funcs.tokenToEthTransferInput(*func_params)
-            return self._build_and_send_tx(function)
+
+            txn_params = self._get_tx_params()
+            transaction = self._build_txn(function, txn_params)
+            if not simulate:
+                return self._send_txn(transaction, txn_params)
+            else:
+                return transaction
+            # return self._build_and_send_tx(function)
         elif self.version == 2:
             if recipient is None:
                 recipient = self.address
@@ -637,7 +786,9 @@ class Uniswap:
                 )
             else:
                 func = self.router.functions.swapExactTokensForETH
-            return self._build_and_send_tx(
+
+            txn_params = self._get_tx_params()
+            transaction = self._build_txn(
                 func(
                     qty,
                     amount_out_min,
@@ -645,7 +796,21 @@ class Uniswap:
                     recipient,
                     self._deadline(),
                 ),
+                txn_params
             )
+            if not simulate:
+                return self._send_txn(transaction, txn_params)
+            else:
+                return transaction
+            # return self._build_and_send_tx(
+            #     func(
+            #         qty,
+            #         amount_out_min,
+            #         [input_token, self.get_weth_address()],
+            #         recipient,
+            #         self._deadline(),
+            #     ),
+            # )
         elif self.version == 3:
             if recipient is None:
                 recipient = self.address
@@ -680,11 +845,21 @@ class Uniswap:
                 fn_name="unwrapWETH9", args=[min_tokens_bought, recipient]
             )
 
-            # Multicall
-            return self._build_and_send_tx(
+            txn_params = self._get_tx_params()
+            transaction = self._build_txn(
                 self.router.functions.multicall([swap_data, unwrap_data]),
-                self._get_tx_params(),
+                txn_params
             )
+            if not simulate:
+                return self._send_txn(transaction, txn_params)
+            else:
+                return transaction
+
+            # Multicall
+            # return self._build_and_send_tx(
+            #     self.router.functions.multicall([swap_data, unwrap_data]),
+            #     self._get_tx_params(),
+            # )
         else:
             raise ValueError  # pragma: no cover
 
@@ -697,6 +872,7 @@ class Uniswap:
         fee: int,
         slippage: float,
         fee_on_transfer: bool = False,
+        simulate=False
     ) -> HexBytes:
         """Convert tokens to tokens given an input amount."""
         # Balance check
@@ -730,7 +906,15 @@ class Uniswap:
             else:
                 func_params.insert(len(func_params) - 1, recipient)
                 function = token_funcs.tokenToTokenTransferInput(*func_params)
-            return self._build_and_send_tx(function)
+
+            txn_params = self._get_tx_params()
+            transaction = self._build_txn(function, txn_params)
+            if not simulate:
+                return self._send_txn(transaction, txn_params)
+            else:
+                return transaction
+
+            # return self._build_and_send_tx(function)
         elif self.version == 2:
             min_tokens_bought = int(
                 (1 - slippage)
@@ -744,7 +928,9 @@ class Uniswap:
                 )
             else:
                 func = self.router.functions.swapExactTokensForTokens
-            return self._build_and_send_tx(
+
+            txn_params = self._get_tx_params()
+            transaction = self._build_txn(
                 func(
                     qty,
                     min_tokens_bought,
@@ -752,7 +938,21 @@ class Uniswap:
                     recipient,
                     self._deadline(),
                 ),
-            )
+                txn_params)
+            if not simulate:
+                return self._send_txn(transaction, txn_params)
+            else:
+                return transaction
+
+            # return self._build_and_send_tx(
+            #     func(
+            #         qty,
+            #         min_tokens_bought,
+            #         [input_token, self.get_weth_address(), output_token],
+            #         recipient,
+            #         self._deadline(),
+            #     ),
+            # )
         elif self.version == 3:
             if fee_on_transfer:
                 raise Exception("fee on transfer not supported by Uniswap v3")
@@ -765,7 +965,8 @@ class Uniswap:
             )
             sqrtPriceLimitX96 = 0
 
-            return self._build_and_send_tx(
+            txn_params = self._get_tx_params()
+            transaction = self._build_txn(
                 self.router.functions.exactInputSingle(
                     {
                         "tokenIn": input_token,
@@ -778,8 +979,28 @@ class Uniswap:
                         "sqrtPriceLimitX96": sqrtPriceLimitX96,
                     }
                 ),
-                self._get_tx_params(),
+                txn_params,
             )
+            if not simulate:
+                return self._send_txn(transaction, txn_params)
+            else:
+                return transaction
+
+            # return self._build_and_send_tx(
+            #     self.router.functions.exactInputSingle(
+            #         {
+            #             "tokenIn": input_token,
+            #             "tokenOut": output_token,
+            #             "fee": fee,
+            #             "recipient": recipient,
+            #             "deadline": self._deadline(),
+            #             "amountIn": qty,
+            #             "amountOutMinimum": min_tokens_bought,
+            #             "sqrtPriceLimitX96": sqrtPriceLimitX96,
+            #         }
+            #     ),
+            #     self._get_tx_params(),
+            # )
         else:
             raise ValueError  # pragma: no cover
 
@@ -1430,10 +1651,10 @@ class Uniswap:
         """Get a predefined deadline. 10min by default (same as the Uniswap SDK)."""
         return int(time.time()) + 10 * 60
 
-    def _build_and_send_tx(
+    def _build_txn(
         self, function: ContractFunction, tx_params: Optional[TxParams] = None
     ) -> HexBytes:
-        """Build and send a transaction."""
+        """Build transaction."""
         if not tx_params:
             tx_params = self._get_tx_params()
         transaction = function.build_transaction(tx_params)
@@ -1450,6 +1671,11 @@ class Uniswap:
             else:
                 transaction["gas"] = Wei(250_000)
 
+        return transaction
+
+    def _send_txn(
+        self, transaction, tx_params
+    ) -> HexBytes:
         signed_txn = self.w3.eth.account.sign_transaction(
             transaction, private_key=self.private_key
         )
@@ -1460,6 +1686,13 @@ class Uniswap:
         finally:
             logger.debug(f"nonce: {tx_params['nonce']}")
             self.last_nonce = Nonce(tx_params["nonce"] + 1)
+
+    def _build_and_send_tx(
+        self, transaction, tx_params: Optional[TxParams] = None
+    ) -> HexBytes:
+        """Build and send a transaction."""
+        transaction = self._build_txn(function, tx_params)
+        return _send_txn(transaction, tx_params)
 
     def _get_tx_params(
         self, value: Wei = Wei(0), gas: Optional[Wei] = None
