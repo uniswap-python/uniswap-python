@@ -331,7 +331,7 @@ class Uniswap:
                     return int(self._get_token_eth_input_price(token0, qty, fee))
 
                 route = [token0, self.get_weth_address(), token1]
-                logger.warning(f"No route specified, assuming route: {route}")
+                # logger.warning(f"No route specified, assuming route: {route}")
 
         if self.version == 2:
             price: int = self.router.functions.getAmountsOut(qty, route).call()[-1]
@@ -418,7 +418,7 @@ class Uniswap:
                     return int(self._get_token_eth_output_price(token0, Wei(qty), fee))
 
                 route = [token0, self.get_weth_address(), token1]
-                logger.warning(f"No route specified, assuming route: {route}")
+                # logger.warning(f"No route specified, assuming route: {route}")
 
         if self.version == 2:
             price: int = self.router.functions.getAmountsIn(qty, route).call()[0]
@@ -535,7 +535,7 @@ class Uniswap:
         fee_on_transfer: bool = False,
     ) -> HexBytes:
         quote_token_decimals = self.get_token(quote_token).decimals
-        exchange_rate = self.get_price_input(base_token, quote_token, int(10 ** quote_token_decimals))
+        exchange_rate = self.get_raw_price(base_token, quote_token)
         amount_out = exchange_rate * qty * (10**quote_token_decimals)
         fee = qty * self.get_fee_taker
 
@@ -1654,9 +1654,9 @@ class Uniswap:
     def _build_txn(
         self, function: ContractFunction, tx_params: Optional[TxParams] = None
     ) -> HexBytes:
-        """Build transaction."""
         if not tx_params:
             tx_params = self._get_tx_params()
+        """Build transaction."""
         transaction = function.build_transaction(tx_params)
 
         if "gas" not in tx_params:
@@ -1688,11 +1688,13 @@ class Uniswap:
             self.last_nonce = Nonce(tx_params["nonce"] + 1)
 
     def _build_and_send_tx(
-        self, transaction, tx_params: Optional[TxParams] = None
+        self, function: ContractFunction, tx_params: Optional[TxParams] = None
     ) -> HexBytes:
+        if not tx_params:
+            tx_params = self._get_tx_params()
         """Build and send a transaction."""
         transaction = self._build_txn(function, tx_params)
-        return _send_txn(transaction, tx_params)
+        return self._send_txn(transaction, tx_params)
 
     def _get_tx_params(
         self, value: Wei = Wei(0), gas: Optional[Wei] = None
