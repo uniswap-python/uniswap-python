@@ -40,7 +40,7 @@ from .constants import (
     _netid_to_name,
     _router_contract_addresses_v2,
     _tick_bitmap_range,
-    _tick_spacing,
+    _tick_spacing, Mainnet, Sepolia, NET,
 )
 from .decorators import check_approval, supports
 from .exceptions import InsufficientBalance, InvalidToken
@@ -92,7 +92,7 @@ class Uniswap:
         factory_contract_addr: Optional[str] = None,
         router_contract_addr: Optional[str] = None,
         enable_caching: bool = False,
-    ) -> None:
+    MAINNET_QUOTER_ADDRESS=None) -> None:
         """
         :param address: The public address of the ETH wallet to use.
         :param private_key: The private key of the ETH wallet to use.
@@ -181,38 +181,26 @@ class Uniswap:
             )
         elif self.version == 3:
             # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
-            factory_contract_address = _str_to_addr(
-                "0x1F98431c8aD98523631AE4a59f267346ea31F984"
-            )
+            net = NET[self.netname]
+            factory_contract_address = _str_to_addr(net.factory_contract_address)
             self.factory_contract = _load_contract(
                 self.w3, abi_name="uniswap-v3/factory", address=factory_contract_address
             )
-            quoter_addr = _str_to_addr("0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6")
-            self.router_address = _str_to_addr(
-                "0xE592427A0AEce92De3Edee1F18E0157C05861564"
-            )
+            quoter_addr = _str_to_addr(net.quoter_address)
+            self.router_address = _str_to_addr(net.router_address)
             self.quoter = _load_contract(
                 self.w3, abi_name="uniswap-v3/quoter", address=quoter_addr
             )
             self.router = _load_contract(
                 self.w3, abi_name="uniswap-v3/router", address=self.router_address
             )
-            self.positionManager_addr = _str_to_addr(
-                "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
-            )
+            self.positionManager_addr = _str_to_addr(net.position_manager_address)
             self.nonFungiblePositionManager = _load_contract(
                 self.w3,
                 abi_name="uniswap-v3/nonFungiblePositionManager",
                 address=self.positionManager_addr,
             )
-            if self.netname == "arbitrum":
-                multicall2_addr = _str_to_addr(
-                    "0x50075F151ABC5B6B448b1272A0a1cFb5CFA25828"
-                )
-            else:
-                multicall2_addr = _str_to_addr(
-                    "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
-                )
+            multicall2_addr = _str_to_addr(net.multicall2_address)
             self.multicall2 = _load_contract(
                 self.w3, abi_name="uniswap-v3/multicall", address=multicall2_addr
             )
@@ -341,9 +329,17 @@ class Uniswap:
 
             # FIXME: How to calculate this properly? See https://docs.uniswap.org/reference/libraries/SqrtPriceMath
             sqrtPriceLimitX96 = 0
-            price = self.quoter.functions.quoteExactInputSingle(
-                token0, token1, fee, qty, sqrtPriceLimitX96
+            price, sqrtPriceX96After, initializedTicksCrossed, gasEstimate = (
+                self.quoter.functions.quoteExactInputSingle(
+                    {
+                    'tokenIn':token0,
+                    'tokenOut':token1,
+                    'fee': fee,
+                    'amountIn': qty,
+                    'sqrtPriceLimitX96': sqrtPriceLimitX96
+                    }
             ).call()
+            )
         else:
             raise ValueError("function not supported for this version of Uniswap")
         return price
