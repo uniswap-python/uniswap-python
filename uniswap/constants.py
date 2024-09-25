@@ -90,3 +90,34 @@ _tick_bitmap_range = {
     3_000: (-58, 57),
     10_000: (-18, 17),
 }
+
+# https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
+class Mainnet:
+    factory_contract_address = "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+    quoter_address = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
+    router_address = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+    position_manager_address = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+    multicall2_address = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696"
+
+
+class Arbitrum:
+    factory_contract_address = "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+    quoter_address = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
+    router_address = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+    position_manager_address = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+    multicall2_address = "0x50075F151ABC5B6B448b1272A0a1cFb5CFA25828"
+
+
+class Sepolia:
+    factory_contract_address = "0x0227628f3F023bb0B980b67D528571c95c6DaC1c"
+    quoter_address = "0xEd1f6473345F45b75F8179591dd5bA1888cf2FB3"
+    router_address = "0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E"
+    position_manager_address = "0x1238536071E1c677A632429e3655c799b22cDA52"
+    multicall2_address = "0xD7F33bCdb21b359c8ee6F0251d30E94832baAd07"
+
+
+NET = {
+    _netid_to_name[1]: Mainnet,
+    _netid_to_name[42161]: Arbitrum,
+    _netid_to_name[11155111]: Sepolia,
+}
