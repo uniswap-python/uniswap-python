@@ -34,7 +34,7 @@ _netid_to_name = {
     11155111: "sepolia",
     324: "zksync",
     480: "worldchain",
-    
+
 }
 
 _factory_contract_addresses_v1 = {
@@ -68,6 +68,7 @@ _router_contract_addresses_v2 = {
     "ropsten": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
     "rinkeby": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
     "görli": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+    "sepolia": "0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008",
     "xdai": "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77",
     "binance": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
     "binance_testnet": "0xD99D1c33F9fC3444f8101754aBC46c52416550D1",
@@ -77,6 +78,7 @@ _router_contract_addresses_v2 = {
     #sepolia tesnet router address
     "sepolia": "0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008",
     "worldchain": "0x541aB7c31A119441eF3575F6973277DE0eF460bd",
+
 }
 
 MAX_UINT_128 = (2**128) - 1
