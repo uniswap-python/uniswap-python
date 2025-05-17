@@ -32,6 +32,9 @@ _netid_to_name = {
     1666600000: "harmony_mainnet",
     1666700000: "harmony_testnet",
     11155111: "sepolia",
+    324: "zksync",
+    480: "worldchain",
+
 }
 
 _factory_contract_addresses_v1 = {
@@ -57,6 +60,7 @@ _factory_contract_addresses_v2 = {
     "harmony_mainnet": "0xc35DADB65012eC5796536bD9864eD8773aBc74C4",
     "harmony_testnet": "0xc35DADB65012eC5796536bD9864eD8773aBc74C4",
     "sepolia": "0x7E0987E5b3a30e3f2828572Bb659A548460a3003",
+    "worldchain": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
 }
 
 _router_contract_addresses_v2 = {
@@ -71,6 +75,10 @@ _router_contract_addresses_v2 = {
     # SushiSwap on Harmony
     "harmony_mainnet": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
     "harmony_testnet": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+    #sepolia tesnet router address
+    "sepolia": "0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008",
+    "worldchain": "0x541aB7c31A119441eF3575F6973277DE0eF460bd",
+
 }
 
 MAX_UINT_128 = (2**128) - 1

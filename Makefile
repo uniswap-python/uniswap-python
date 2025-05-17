@@ -22,3 +22,6 @@ precommit:
 
 docs:
 	cd docs/ && make html
+
+install-editable:
+    pip install -e .

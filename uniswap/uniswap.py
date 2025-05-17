@@ -44,7 +44,6 @@ from .constants import (
 )
 from .decorators import check_approval, supports
 from .exceptions import InsufficientBalance, InvalidToken
-from .fee import validate_fee_tier
 from .token import ERC20Token
 from .types import AddressLike
 from .util import (
@@ -60,6 +59,7 @@ from .util import (
     nearest_tick,
     realised_fee_percentage,
 )
+from .tokens import get_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +111,7 @@ class Uniswap:
             private_key
             or "0x0000000000000000000000000000000000000000000000000000000000000000"
         )
+        self.address_string = address
 
         self.version = version
         if self.version not in [1, 2, 3]:
@@ -181,24 +182,53 @@ class Uniswap:
             )
         elif self.version == 3:
             # https://github.com/Uniswap/uniswap-v3-periphery/blob/main/deploys.md
-            factory_contract_address = _str_to_addr(
-                "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+            if self.netname == "zksync":
+                factory_contract_address = _str_to_addr(
+                    "0x8FdA5a7a8dCA67BBcDd10F02Fa0649A937215422"
+                )
+                self.router_address = _str_to_addr(
+                    "0x091AD9e2e6e5eD44c1c66dB50e49A601F9f36cF6"
+                )
+                quoter_addr = _str_to_addr("0x8Cb537fc92E26d8EBBb760E632c95484b6Ea3e28")
+                self.positionManager_addr = _str_to_addr(
+                    "0x0616e5762c1E7Dc3723c50663dF10a162D690a86"
+                )
+            elif self.netname == "worldchain":
+                factory_contract_address = _str_to_addr(
+                    "0x7a5028BDa40e7B173C278C5342087826455ea25a"
+                )
+                self.router_address = _str_to_addr(
+                    "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+                )
+                quoter_addr = _str_to_addr("0x10158D43e6cc414deE1Bd1eB0EfC6a5cBCfF244c")
+                self.positionManager_addr = _str_to_addr(
+                    "0xec12a9F9a09f50550686363766Cc153D03c27b5e"
+                )
+            else:
+                factory_contract_address = _str_to_addr(
+                    "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+                )
+                self.router_address = _str_to_addr(
+                    "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+                )
+                quoter_addr = _str_to_addr("0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6")
+
+                self.positionManager_addr = _str_to_addr(
+                    "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+                )
+            if self.netname == "zksync":
+                self.quoter = _load_contract(
+                self.w3, abi_name="uniswap-v3/quoterv2", address=quoter_addr
             )
+            else:
+                self.quoter = _load_contract(
+                    self.w3, abi_name="uniswap-v3/quoter", address=quoter_addr
+                )
             self.factory_contract = _load_contract(
                 self.w3, abi_name="uniswap-v3/factory", address=factory_contract_address
             )
-            quoter_addr = _str_to_addr("0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6")
-            self.router_address = _str_to_addr(
-                "0xE592427A0AEce92De3Edee1F18E0157C05861564"
-            )
-            self.quoter = _load_contract(
-                self.w3, abi_name="uniswap-v3/quoter", address=quoter_addr
-            )
             self.router = _load_contract(
                 self.w3, abi_name="uniswap-v3/router", address=self.router_address
-            )
-            self.positionManager_addr = _str_to_addr(
-                "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
             )
             self.nonFungiblePositionManager = _load_contract(
                 self.w3,
@@ -208,6 +238,10 @@ class Uniswap:
             if self.netname == "arbitrum":
                 multicall2_addr = _str_to_addr(
                     "0x50075F151ABC5B6B448b1272A0a1cFb5CFA25828"
+                )
+            elif self.netname == "zksync":
+                multicall2_addr = _str_to_addr(
+                    "0x0c68a7C72f074d1c45C16d41fa74eEbC6D16a65C"
                 )
             else:
                 multicall2_addr = _str_to_addr(
@@ -220,7 +254,6 @@ class Uniswap:
             raise Exception(
                 f"Invalid version '{self.version}', only 1, 2 or 3 supported"
             )
-
         if hasattr(self, "factory_contract"):
             logger.info(f"Using factory contract: {self.factory_contract}")
 
@@ -235,7 +268,10 @@ class Uniswap:
         route: Optional[List[AddressLike]] = None,
     ) -> int:
         """Given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`."""
-        fee = validate_fee_tier(fee=fee, version=self.version)
+        if fee is None:
+            fee = 3000
+            if self.version == 3:
+                logger.warning("No fee set, assuming 0.3%")
 
         if token0 == ETH_ADDRESS:
             return self._get_eth_token_input_price(token1, Wei(qty), fee)
@@ -253,7 +289,10 @@ class Uniswap:
         route: Optional[List[AddressLike]] = None,
     ) -> int:
         """Returns the minimum amount of `token0` required to buy `qty` amount of `token1`."""
-        fee = validate_fee_tier(fee=fee, version=self.version)
+        if fee is None:
+            fee = 3000
+            if self.version == 3:
+                logger.warning("No fee set, assuming 0.3%")
 
         if is_same_address(token0, ETH_ADDRESS):
             return self._get_eth_token_output_price(token1, qty, fee)
@@ -341,9 +380,20 @@ class Uniswap:
 
             # FIXME: How to calculate this properly? See https://docs.uniswap.org/reference/libraries/SqrtPriceMath
             sqrtPriceLimitX96 = 0
-            price = self.quoter.functions.quoteExactInputSingle(
-                token0, token1, fee, qty, sqrtPriceLimitX96
-            ).call()
+            if self.netname=='zksync':
+                params = {
+                    'tokenIn': token0,
+                    'tokenOut': token1,
+                    'fee': fee,
+                    'amountIn': qty,
+                    'sqrtPriceLimitX96': sqrtPriceLimitX96
+                }
+                amountOut, sqrtPriceX96After, initializedTicksCrossed, gasEstimate = self.quoter.functions.quoteExactInputSingle(params).call()
+                price = amountOut
+            else:
+                price = self.quoter.functions.quoteExactInputSingle(
+                    token0, token1, fee, qty, sqrtPriceLimitX96
+                ).call()
         else:
             raise ValueError("function not supported for this version of Uniswap")
         return price
@@ -355,7 +405,6 @@ class Uniswap:
         fee: Optional[int] = None,
     ) -> Wei:
         """Public price (i.e. amount of ETH needed) for ETH to token trades with an exact output."""
-        fee = validate_fee_tier(fee=fee, version=self.version)
         if self.version == 1:
             ex = self._exchange_contract(token)
             price: Wei = ex.functions.getEthToTokenOutputPrice(qty).call()
@@ -363,6 +412,9 @@ class Uniswap:
             route = [self.get_weth_address(), token]
             price = self.router.functions.getAmountsIn(qty, route).call()[0]
         elif self.version == 3:
+            if fee is None:
+                logger.warning("No fee set, assuming 0.3%")
+                fee = 3000
             price = Wei(
                 self._get_token_token_output_price(
                     self.get_weth_address(), token, qty, fee=fee
@@ -376,7 +428,6 @@ class Uniswap:
         self, token: AddressLike, qty: Wei, fee: Optional[int] = None  # input token
     ) -> int:
         """Public price (i.e. amount of input token needed) for token to ETH trades with an exact output."""
-        fee = validate_fee_tier(fee=fee, version=self.version)
         if self.version == 1:
             ex = self._exchange_contract(token)
             price: int = ex.functions.getTokenToEthOutputPrice(qty).call()
@@ -384,6 +435,9 @@ class Uniswap:
             route = [token, self.get_weth_address()]
             price = self.router.functions.getAmountsIn(qty, route).call()[0]
         elif self.version == 3:
+            if not fee:
+                logger.warning("No fee set, assuming 0.3%")
+                fee = 3000
             price = self._get_token_token_output_price(
                 token, self.get_weth_address(), qty, fee=fee
             )
@@ -405,7 +459,6 @@ class Uniswap:
 
         :param fee: (v3 only) The pool's fee in hundredths of a bip, i.e. 1e-6 (3000 is 0.3%)
         """
-        fee = validate_fee_tier(fee=fee, version=self.version)
         if not route:
             if self.version == 2:
                 # If one of the tokens are WETH, delegate to appropriate call.
@@ -421,6 +474,9 @@ class Uniswap:
         if self.version == 2:
             price: int = self.router.functions.getAmountsIn(qty, route).call()[0]
         elif self.version == 3:
+            if not fee:
+                logger.warning("No fee set, assuming 0.3%")
+                fee = 3000
             if route:
                 # NOTE: to support custom routes we need to support the Path data encoding: https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/Path.sol
                 # result: tuple = self.quoter.functions.quoteExactOutput(route, qty).call()
@@ -453,7 +509,10 @@ class Uniswap:
         if not isinstance(qty, int):
             raise TypeError("swapped quantity must be an integer")
 
-        fee = validate_fee_tier(fee=fee, version=self.version)
+        if fee is None:
+            fee = 3000
+            if self.version == 3:
+                logger.warning("No fee set, assuming 0.3%")
 
         if slippage is None:
             slippage = self.default_slippage
@@ -491,7 +550,10 @@ class Uniswap:
         slippage: Optional[float] = None,
     ) -> HexBytes:
         """Make a trade by defining the qty of the output token."""
-        fee = validate_fee_tier(fee=fee, version=self.version)
+        if fee is None:
+            fee = 3000
+            if self.version == 3:
+                logger.warning("No fee set, assuming 0.3%")
 
         if slippage is None:
             slippage = self.default_slippage
@@ -1165,6 +1227,248 @@ class Uniswap:
         receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
         return receipt
 
+    # @supports([3])
+    # def mint_liquidity_raw_transaction(
+    #     self,
+    #     pool: Contract,
+    #     amount_0: int,
+    #     amount_1: int,
+    #     tick_lower: int,
+    #     tick_upper: int,
+    #     deadline: int = 2**64,
+    # ) -> TxReceipt:
+    #     """
+    #     add liquidity to pool and mint position nft
+    #     """
+
+    #     token_0 = pool.functions.token0().call()
+    #     token_1 = pool.functions.token1().call()
+    #     token_0_instance = _load_contract(self.w3, abi_name="erc20", address=token_0)
+    #     token_1_instance = _load_contract(self.w3, abi_name="erc20", address=token_1)
+
+    #     balance_0 = self.get_token_balance(token_0)
+    #     balance_1 = self.get_token_balance(token_1)
+
+    #     assert balance_0 > amount_0, f"Have {balance_0}, need {amount_0}: {token_0}"
+    #     assert balance_1 > amount_1, f"Have {balance_1}, need {amount_1}: {token_1}"
+
+    #     fee = pool.functions.fee().call()
+    #     tick_lower = nearest_tick(tick_lower, fee)
+    #     tick_upper = nearest_tick(tick_upper, fee)
+    #     assert tick_lower < tick_upper, "Invalid tick range"
+
+    #     *_, isInit = pool.functions.slot0().call()
+    #     # If pool is not initialized, init pool w/ sqrt_price_x96 encoded from amount_0 & amount_1
+    #     if isInit is False:
+    #         sqrt_pricex96 = encode_sqrt_ratioX96(amount_0, amount_1)
+    #         init_tx = pool.functions.initialize(sqrt_pricex96).build_transaction({
+    #             'from': self.address_string,
+    #             'nonce':  self.w3.eth.get_transaction_count(self.address_string, 'pending')
+    #         })
+    #         signed_init_tx = self.w3.eth.account.signTransaction(init_tx, private_key=self.private_key)
+    #         self.w3.eth.send_raw_transaction(signed_init_tx.rawTransaction)
+    #         self.w3.eth.wait_for_transaction_receipt(signed_init_tx.hash)
+    #     if (token_0 != "ETH") and (token_1 != "ETH"):
+    #         nft_manager = self.nonFungiblePositionManager
+    #         approve_0_tx = token_0_instance.functions.approve(nft_manager.address, amount_0).build_transaction({
+    #             'from':self.address_string,
+    #             'nonce':  self.w3.eth.get_transaction_count(self.address_string, 'pending')
+    #         })
+    #         signed_approve_0_tx = self.w3.eth.account.sign_transaction(approve_0_tx, private_key=self.private_key)
+    #         self.w3.eth.send_raw_transaction(signed_approve_0_tx.rawTransaction)
+    #         self.w3.eth.wait_for_transaction_receipt(signed_approve_0_tx.hash)
+
+    #         approve_1_tx = token_1_instance.functions.approve(nft_manager.address, amount_1).build_transaction({
+    #             'from': self.address_string,
+    #             'nonce':  self.w3.eth.get_transaction_count(self.address_string, 'pending')
+    #         })
+    #         signed_approve_1_tx = self.w3.eth.account.sign_transaction(approve_1_tx, private_key=self.private_key)
+    #         self.w3.eth.send_raw_transaction(signed_approve_1_tx.rawTransaction)
+    #         self.w3.eth.wait_for_transaction_receipt(signed_approve_1_tx.hash)
+
+    #         mint_tx = nft_manager.functions.mint(
+    #             (
+    #                 token_0,
+    #                 token_1,
+    #                 fee,
+    #                 tick_lower,
+    #                 tick_upper,
+    #                 amount_0,
+    #                 amount_1,
+    #                 0,
+    #                 0,
+    #                 self.address,
+    #                 deadline,
+    #             )
+    #         ).build_transaction({
+    #             'from': self.address_string,
+    #             'nonce':  self.w3.eth.get_transaction_count(self.address_string, 'pending'),
+    #             'gas': 3000000,  # Estimated gas limit
+    #             'gasPrice': self.w3.eth.gas_price
+    #         })
+    #         signed_mint_tx = self.w3.eth.account.sign_transaction(mint_tx, private_key=self.private_key)
+    #         tx_hash = self.w3.eth.send_raw_transaction(signed_mint_tx.rawTransaction)
+    #         receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+    #         return receipt
+        
+    #     elif (token_0 == "ETH") or (token_1 == "ETH"):
+    #         if token_0 == "ETH":
+    #             token = token_1
+    #             amount = amount_1
+    #         else:
+    #             token = token_0
+    #             amount = amount_0
+    #         approve_tx = token_1_instance.functions.approve(nft_manager.address, amount).build_transaction({
+    #             'from': self.address_string,
+    #             'nonce':  self.w3.eth.get_transaction_count(self.address_string, 'pending')
+    #         })
+    #         signed_approve_tx = self.w3.eth.account.sign_transaction(approve_tx, private_key=self.private_key)
+    #         self.w3.eth.send_raw_transaction(signed_approve_tx.rawTransaction)
+    #         self.w3.eth.wait_for_transaction_receipt(signed_approve_tx.hash)
+
+    #         mint_tx = nft_manager.functions.mint(
+    #             (
+    #                 token_0,
+    #                 token_1,
+    #                 fee,
+    #                 tick_lower,
+    #                 tick_upper,
+    #                 amount_0,
+    #                 amount_1,
+    #                 0,
+    #                 0,
+    #                 self.address,
+    #                 deadline,
+    #             )
+    #         ).build_transaction({
+    #             'from': self.address_string,
+    #             'nonce':  self.w3.eth.get_transaction_count(self.address_string, 'pending'),
+    #             'gas': 3000000,  # Estimated gas limit
+    #             'gasPrice': self.w3.eth.gas_price
+    #         })
+    #         signed_mint_tx = self.w3.eth.account.sign_transaction(mint_tx, private_key=self.private_key)
+    #         tx_hash = self.w3.eth.send_raw_transaction(signed_mint_tx.rawTransaction)
+    #         receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+    #         return receipt
+    @supports([3])
+    def mint_liquidity_raw_transaction(
+        self,
+        pool: Contract,
+        amount_0: int,
+        amount_1: int,
+        tick_lower: int,
+        tick_upper: int,
+        deadline: int = 2**64,
+    ) -> TxReceipt:
+        """
+        Add liquidity to pool and mint position NFT for ERC-20/ETH pairs or ERC-20/ERC-20 pairs.
+        """
+
+        token_0 = pool.functions.token0().call()
+        token_1 = pool.functions.token1().call()
+
+        weth_address = self.w3.to_checksum_address(WETH9_ADDRESS)
+
+        if token_0 == weth_address or token_1 == weth_address:
+            is_eth_pair = True
+            if token_0 == weth_address:
+                eth_amount = amount_0
+                erc20_amount = amount_1
+                erc20_address = token_1
+            else:
+                eth_amount = amount_1
+                erc20_amount = amount_0
+                erc20_address = token_0
+        else:
+            is_eth_pair = False
+
+        if not is_eth_pair:
+            token_0_instance = _load_contract(self.w3, abi_name="erc20", address=token_0)
+            token_1_instance = _load_contract(self.w3, abi_name="erc20", address=token_1)
+
+            balance_0 = self.get_token_balance(token_0)
+            balance_1 = self.get_token_balance(token_1)
+
+            assert balance_0 >= amount_0, f"Have {balance_0}, need {amount_0}: {token_0}"
+            assert balance_1 >= amount_1, f"Have {balance_1}, need {amount_1}: {token_1}"
+        else:
+            token_instance = _load_contract(self.w3, abi_name="erc20", address=erc20_address)
+            erc20_balance = self.get_token_balance(erc20_address)
+            assert erc20_balance >= erc20_amount, f"Have {erc20_balance}, need {erc20_amount}: {erc20_address}"
+
+        fee = pool.functions.fee().call()
+        tick_lower = nearest_tick(tick_lower, fee)
+        tick_upper = nearest_tick(tick_upper, fee)
+        assert tick_lower < tick_upper, "Invalid tick range"
+
+        *_, isInit = pool.functions.slot0().call()
+        # If pool is not initialized, init pool w/ sqrt_price_x96 encoded from amount_0 & amount_1
+        if not isInit:
+            sqrt_pricex96 = encode_sqrt_ratioX96(amount_0, amount_1)
+            init_tx = pool.functions.initialize(sqrt_pricex96).build_transaction({
+                'from': self.address_string,
+                'nonce': self.w3.eth.get_transaction_count(self.address_string, 'pending')
+            })
+            signed_init_tx = self.w3.eth.account.signTransaction(init_tx, private_key=self.private_key)
+            self.w3.eth.send_raw_transaction(signed_init_tx.rawTransaction)
+            self.w3.eth.wait_for_transaction_receipt(signed_init_tx.hash)
+
+        nft_manager = self.nonFungiblePositionManager
+
+        if not is_eth_pair:
+            approve_0_tx = token_0_instance.functions.approve(nft_manager.address, amount_0).build_transaction({
+                'from': self.address_string,
+                'nonce': self.w3.eth.get_transaction_count(self.address_string, 'pending')
+            })
+            signed_approve_0_tx = self.w3.eth.account.sign_transaction(approve_0_tx, private_key=self.private_key)
+            self.w3.eth.send_raw_transaction(signed_approve_0_tx.rawTransaction)
+            self.w3.eth.wait_for_transaction_receipt(signed_approve_0_tx.hash)
+
+            approve_1_tx = token_1_instance.functions.approve(nft_manager.address, amount_1).build_transaction({
+                'from': self.address_string,
+                'nonce': self.w3.eth.get_transaction_count(self.address_string, 'pending')
+            })
+            signed_approve_1_tx = self.w3.eth.account.sign_transaction(approve_1_tx, private_key=self.private_key)
+            self.w3.eth.send_raw_transaction(signed_approve_1_tx.rawTransaction)
+            self.w3.eth.wait_for_transaction_receipt(signed_approve_1_tx.hash)
+
+        else:
+            approve_tx = token_instance.functions.approve(nft_manager.address, erc20_amount).build_transaction({
+                'from': self.address_string,
+                'nonce': self.w3.eth.get_transaction_count(self.address_string, 'pending')
+            })
+            signed_approve_tx = self.w3.eth.account.sign_transaction(approve_tx, private_key=self.private_key)
+            self.w3.eth.send_raw_transaction(signed_approve_tx.rawTransaction)
+            self.w3.eth.wait_for_transaction_receipt(signed_approve_tx.hash)
+
+        mint_tx = nft_manager.functions.mint(
+            (
+                token_0,
+                token_1,
+                fee,
+                tick_lower,
+                tick_upper,
+                amount_0,
+                amount_1,
+                0,
+                0,
+                self.address,
+                deadline,
+            )
+        ).build_transaction({
+            'from': self.address_string,
+            'nonce': self.w3.eth.get_transaction_count(self.address_string, 'pending'),
+            'gas': 3000000,  # Estimated gas limit
+            'gasPrice': self.w3.eth.gas_price,
+            'value': eth_amount if is_eth_pair else 0  # Send ETH along with the transaction if it's an ETH pair
+        })
+
+        signed_mint_tx = self.w3.eth.account.sign_transaction(mint_tx, private_key=self.private_key)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_mint_tx.rawTransaction)
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+        return receipt
+
+
     # TODO: should this be multiple functions?
     @supports([3])
     def close_position(
@@ -1206,6 +1510,74 @@ class Uniswap:
             {"from": _addr_to_str(self.address)}
         )
         receipt = self.w3.eth.wait_for_transaction_receipt(tx_burn)
+
+        return receipt
+
+    @supports([3])
+    def close_position_raw_transaction(
+        self,
+        tokenId: int,
+        amount0Min: int = 0,
+        amount1Min: int = 0,
+        deadline: Optional[int] = None,
+    ) -> TxReceipt:
+        """
+        remove all liquidity from the position associated w/ tokenId, collect fees, and burn token.
+        """
+        position = self.nonFungiblePositionManager.functions.positions(tokenId).call()
+
+        if deadline is None:
+            deadline = self._deadline()
+
+        # If collecting fees in ETH, fees must be precomputed to protect against reentrancy
+        # source: https://docs.uniswap.org/sdk/guides/liquidity/removing
+
+        if position[2] == WETH9_ADDRESS or position[3] == WETH9_ADDRESS:
+            amount0Min, amount1Min = self.nonFungiblePositionManager.functions.collect(
+                (tokenId, _addr_to_str(self.address), MAX_UINT_128, MAX_UINT_128)
+            ).call()
+
+        # Decrease Liquidity
+        decrease_liquidity_tx = self.nonFungiblePositionManager.functions.decreaseLiquidity(
+            (tokenId, position[7], amount0Min, amount1Min, deadline)
+        ).build_transaction({
+            'from': self.address_string,
+            'nonce': self.w3.eth.get_transaction_count(self.address_string, 'pending'),
+            'gas': 500000,  # Estimated gas limit for decreasing liquidity
+            'gasPrice': self.w3.eth.gas_price
+        })
+
+        signed_decrease_liquidity_tx = self.w3.eth.account.sign_transaction(
+            decrease_liquidity_tx, private_key=self.private_key)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_decrease_liquidity_tx.rawTransaction)
+        self.w3.eth.wait_for_transaction_receipt(tx_hash)
+
+        # Collect Fees
+        collect_fees_tx = self.nonFungiblePositionManager.functions.collect(
+            (tokenId, _addr_to_str(self.address), MAX_UINT_128, MAX_UINT_128)
+        ).build_transaction({
+            'from': self.address_string,
+            'nonce': self.w3.eth.get_transaction_count(self.address_string, 'pending'),
+            'gas': 400000,  # Estimated gas limit for collecting fees
+            'gasPrice': self.w3.eth.gas_price
+        })
+
+        signed_collect_fees_tx = self.w3.eth.account.sign_transaction(
+            collect_fees_tx, private_key=self.private_key)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_collect_fees_tx.rawTransaction)
+        self.w3.eth.wait_for_transaction_receipt(tx_hash)
+
+        # Burn token
+        burn_tx = self.nonFungiblePositionManager.functions.burn(tokenId).build_transaction({
+            'from': self.address_string,
+            'nonce': self.w3.eth.get_transaction_count(self.address_string, 'pending'),
+            'gas': 350000,  # Estimated gas limit for burning token
+            'gasPrice': self.w3.eth.gas_price
+        })
+        
+        signed_burn_tx = self.w3.eth.account.sign_transaction(burn_tx, private_key=self.private_key)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_burn_tx.rawTransaction)
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
 
         return receipt
 
@@ -1403,7 +1775,7 @@ class Uniswap:
         tx = self._build_and_send_tx(function)
         self.w3.eth.wait_for_transaction_receipt(tx, timeout=6000)
 
-        # Add extra sleep to let tx propagate correctly
+        # Add extra sleep to let tx propogate correctly
         time.sleep(1)
 
     def _is_approved(self, token: AddressLike) -> bool:
@@ -1413,8 +1785,6 @@ class Uniswap:
             contract_addr = self._exchange_address_from_token(token)
         elif self.version in [2, 3]:
             contract_addr = self.router_address
-        else:
-            raise ValueError
         amount = (
             _load_contract_erc20(self.w3, token)
             .functions.allowance(self.address, contract_addr)
@@ -1621,7 +1991,8 @@ class Uniswap:
             # Contract calls should always return checksummed addresses
             address: ChecksumAddress = self.router.functions.WETH().call()
         elif self.version == 3:
-            address = self.router.functions.WETH9().call()
+            # address = self.router.functions.WETH9().call()
+            address: ChecksumAddress = get_tokens(self.netname)['WETH']
         else:
             raise ValueError  # pragma: no cover
 
@@ -1631,9 +2002,34 @@ class Uniswap:
 
         return address
 
+    # @supports([3])
+    # def get_pool_instance(
+    #     self, token_0: AddressLike, token_1: AddressLike, fee: int = 3_000
+    # ) -> Contract:
+    #     """
+    #     Returns an instance of a pool contract for a given token pair and fee.
+    #     Requires pair [token_in, token_out, fee] has a direct pool.
+    #     Will return 0x0 address if pool does not exist.
+    #     """
+
+    #     assert token_0 != token_1, "Token addresses cannot be the same"
+    #     assert fee in list(
+    #         _tick_spacing.keys()
+    #     ), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
+
+    #     pool_address = self.factory_contract.functions.getPool(
+    #         token_0, token_1, fee
+    #     ).call()
+    #     assert pool_address != ETH_ADDRESS, "0 address returned. Pool does not exist"
+    #     pool_instance = _load_contract(
+    #         self.w3, abi_name="uniswap-v3/pool", address=pool_address
+    #     )
+
+    #     return pool_instance
+
     @supports([3])
     def get_pool_instance(
-        self, token_0: AddressLike, token_1: AddressLike, fee: int = 3_000
+        self, token_0: AddressLike, token_1: AddressLike, fee: int = 500
     ) -> Contract:
         """
         Returns an instance of a pool contract for a given token pair and fee.
@@ -1642,28 +2038,44 @@ class Uniswap:
         """
 
         assert token_0 != token_1, "Token addresses cannot be the same"
-        fee = validate_fee_tier(fee=fee, version=self.version)
+        assert fee in list(
+            _tick_spacing.keys()
+        ), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
+    
+        weth_address = self.get_weth_address()
+
+        # Convert ETH to WETH9 if either token is ETH
+        if token_0 == ETH_ADDRESS:
+            token_0 = weth_address
+        elif token_1 == ETH_ADDRESS:
+            token_1 = weth_address
 
         pool_address = self.factory_contract.functions.getPool(
             token_0, token_1, fee
         ).call()
-        assert pool_address != ETH_ADDRESS, "0 address returned. Pool does not exist"
+
+        if pool_address == "0x0000000000000000000000000000000000000000" or pool_address == ETH_ADDRESS:
+            raise ValueError("0 address returned. Pool does not exist for the given pair and fee.")
+        
         pool_instance = _load_contract(
             self.w3, abi_name="uniswap-v3/pool", address=pool_address
         )
 
         return pool_instance
 
+
     @supports([3])
     def create_pool_instance(
-        self, token_0: AddressLike, token_1: AddressLike, fee: int = 3_000
+        self, token_0: AddressLike, token_1: AddressLike, fee: int = 500
     ) -> Contract:
         """
         Creates and returns UniswapV3 Pool instance. Requires that fee is valid and no similar pool already exists.
         """
         address = _addr_to_str(self.address)
         assert token_0 != token_1, "Token addresses cannot be the same"
-        fee = validate_fee_tier(fee=fee, version=self.version)
+        assert fee in list(
+            _tick_spacing.keys()
+        ), "Uniswap V3 only supports three levels of fees: 0.05%, 0.3%, 1%"
 
         tx = self.factory_contract.functions.createPool(token_0, token_1, fee).transact(
             {"from": address}
@@ -1812,7 +2224,10 @@ class Uniswap:
         Parameter `fee` is required for V3 only, can be omitted for V2
         Requires pair [token_in, token_out] having direct pool
         """
-        fee = validate_fee_tier(fee=fee, version=self.version)
+        if not fee:
+            fee = 3000
+            if self.version == 3:
+                logger.warning("No fee set, assuming 0.3%")
 
         if token_in == ETH_ADDRESS:
             token_in = self.get_weth_address()
@@ -1989,3 +2404,7 @@ class Uniswap:
             token = self.get_token(address)
             tokens.append(token)
         return tokens
+
+
+if __name__ == "__main__":
+    uniswap = UniswapV3()
