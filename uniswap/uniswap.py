@@ -187,11 +187,22 @@ class Uniswap:
                     "0x8FdA5a7a8dCA67BBcDd10F02Fa0649A937215422"
                 )
                 self.router_address = _str_to_addr(
-                    "0x28731BCC616B5f51dD52CF2e4dF0E78dD1136C06"
+                    "0x091AD9e2e6e5eD44c1c66dB50e49A601F9f36cF6"
                 )
                 quoter_addr = _str_to_addr("0x8Cb537fc92E26d8EBBb760E632c95484b6Ea3e28")
                 self.positionManager_addr = _str_to_addr(
                     "0x0616e5762c1E7Dc3723c50663dF10a162D690a86"
+                )
+            elif self.netname == "worldchain":
+                factory_contract_address = _str_to_addr(
+                    "0x7a5028BDa40e7B173C278C5342087826455ea25a"
+                )
+                self.router_address = _str_to_addr(
+                    "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+                )
+                quoter_addr = _str_to_addr("0x10158D43e6cc414deE1Bd1eB0EfC6a5cBCfF244c")
+                self.positionManager_addr = _str_to_addr(
+                    "0xec12a9F9a09f50550686363766Cc153D03c27b5e"
                 )
             else:
                 factory_contract_address = _str_to_addr(

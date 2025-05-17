@@ -46,6 +46,15 @@ tokens_zksync: Dict[str, ChecksumAddress] = {
     }.items()
 }
 
+tokens_worldchain: Dict[str, ChecksumAddress] = {
+    k: Web3.to_checksum_address(v)
+    for k, v in {
+        "WLD":"0x2cFc85d8E48F8EAB294be644d9E25C3030863003",
+        "USDC":"0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+        "ETH":"0x0000000000000000000000000000000000000000",
+        "WETH":"0x4200000000000000000000000000000000000006",
+    }.items()
+}
 
 def get_tokens(netname: str) -> Dict[str, ChecksumAddress]:
     """
@@ -60,5 +69,7 @@ def get_tokens(netname: str) -> Dict[str, ChecksumAddress]:
         return tokens_arbitrum
     elif netname == "zksync":
         return tokens_zksync
+    elif netname == "worldchain":
+        return tokens_worldchain
     else:
         raise Exception(f"Unknown net '{netname}'")
