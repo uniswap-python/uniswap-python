@@ -1456,7 +1456,7 @@ class Uniswap:
         # TODO: This needs to get more complicated if we want to support replacing a transaction
         # FIXME: This does not play nice if transactions are sent from other places using the same wallet.
         try:
-            return self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            return self.w3.eth.send_raw_transaction(signed_txn.raw_transaction)
         finally:
             logger.debug(f"nonce: {tx_params['nonce']}")
             self.last_nonce = Nonce(tx_params["nonce"] + 1)
