@@ -7,7 +7,9 @@ on:
     branches: [ master, dev/v4, dev/v4-fin ]
 
 env:
-  PROVIDER_MAINNET: ${{ secrets.MAINNET_PROVIDER || 'https://ethereum.publicnode.com' }}
+  # The repo secret still points at a rate-limited Infura URL, so CI must use
+  # the public endpoint directly instead of preferring the secret on push runs.
+  PROVIDER_MAINNET: 'https://ethereum.publicnode.com'
   PROVIDER_ARBITRUM: 'https://arb1.arbitrum.io/rpc'
   PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
 
