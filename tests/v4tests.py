@@ -4,6 +4,7 @@ from colorama import Fore, Style
 from web3 import Web3
 
 from uniswap import Uniswap4, V4pools
+from uniswap.types import PoolKey
 
 
 def pool_tests():
@@ -63,16 +64,36 @@ def pool_tests():
 def quoter_tests():
     # get_token_token_spot_price() tests
     print(f"Testing getSlot0() for {Fore.GREEN}ETH-USDC{Style.RESET_ALL}")
-    test_result = str(uniV4_test.get_token_token_spot_price(test_token0, test_token1))
+    test_result = str(uniV4_test.get_token_token_spot_price(test_ETH, test_USDC))
     print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL}")
 
     print(f"Testing getSlot0() for {Fore.GREEN}USDC-ETH{Style.RESET_ALL}")
-    test_result = str(uniV4_test.get_token_token_spot_price(test_token1, test_token0))
+    test_result = str(uniV4_test.get_token_token_spot_price(test_USDC, test_ETH))
     print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL}")
     print("")
     print("")
 
-    ##get_quote_exact_input_single() and get_quote_exact_output_single() tests
+    test_pool_key1 = PoolKey(
+        test_ETH,
+        test_USDC,
+        default_test_fee,
+        default_test_tick_spacing,
+        default_test_hooks,
+    )
+    test_pool_key2 = PoolKey(
+        test_USDT,
+        test_USDC,
+        test_pool2_fee,
+        test_pool2_tick_spacing,
+        default_test_hooks,
+    )
+    test_path_1hop = list()
+    test_path_1hop.append(test_pool_key1)
+    test_path_2hop = list()
+    test_path_2hop.append(test_pool_key1)
+    test_path_2hop.append(test_pool_key2)
+
+    # Testing get_quote_exact_input_single()
     test_volume = 1
     print(
         "Testing exactInputSingle() for "
@@ -81,11 +102,12 @@ def quoter_tests():
     )
     test_result = str(
         uniV4_test.get_quote_exact_input_single(
-            test_token0, test_token1, test_volume * test_d0
+            test_ETH, test_USDC, test_volume * test_d0
         )
         / test_d1
     )
     print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDC")
+
     test_volume = 3000
     print(
         "Testing exactInputSingle() for "
@@ -94,7 +116,7 @@ def quoter_tests():
     )
     test_result = str(
         uniV4_test.get_quote_exact_input_single(
-            test_token1, test_token0, test_volume * test_d1
+            test_USDC, test_ETH, test_volume * test_d1
         )
         / test_d0
     )
@@ -102,6 +124,54 @@ def quoter_tests():
     print("")
     print("")
 
+    # Testing get_quote_exact_input()
+    test_volume = 1
+    print(
+        "Testing exactInput() for "
+        + str(test_volume)
+        + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDC{Style.RESET_ALL}"
+    )
+    test_result = str(
+        uniV4_test.get_quote_exact_input(
+            test_ETH, test_volume * test_d0, test_path_1hop
+        )
+        / test_d1
+    )
+    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDC")
+
+    test_volume = 3000
+    print(
+        "Testing exactInput() for "
+        + str(test_volume)
+        + f" {Fore.GREEN}USDC{Style.RESET_ALL} to {Fore.GREEN}ETH{Style.RESET_ALL}"
+    )
+    test_result = str(
+        uniV4_test.get_quote_exact_input(
+            test_USDC, test_volume * test_d1, test_path_1hop
+        )
+        / test_d0
+    )
+    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} ETH")
+
+    # 2-hop test
+    test_volume = 1
+    print(
+        "Testing 2-hop exactInput() for "
+        + str(test_volume)
+        + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDT{Style.RESET_ALL}"
+    )
+    test_result = str(
+        uniV4_test.get_quote_exact_input(
+            test_ETH, test_volume * test_d0, test_path_2hop
+        )
+        / test_d2
+    )
+    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDT")
+
+    print("")
+    print("")
+
+    # Testing get_quote_exact_output_single()
     test_volume = 3000
     print(
         "Testing exactOutputSingle() for "
@@ -110,11 +180,12 @@ def quoter_tests():
     )
     test_result = str(
         uniV4_test.get_quote_exact_output_single(
-            test_token0, test_token1, test_volume * test_d1
+            test_ETH, test_USDC, test_volume * test_d1
         )
         / test_d0
     )
     print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} ETH")
+
     test_volume = 1
     print(
         "Testing exactOutputSingle() for "
@@ -123,11 +194,56 @@ def quoter_tests():
     )
     test_result = str(
         uniV4_test.get_quote_exact_output_single(
-            test_token1, test_token0, test_volume * test_d0
+            test_USDC, test_ETH, test_volume * test_d0
         )
         / test_d1
     )
     print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDC")
+
+    # Testing get_quote_exact_output()
+    test_volume = 3000
+    print(
+        "Testing exactOutput() one hop for "
+        + str(test_volume)
+        + f" {Fore.GREEN}USDC{Style.RESET_ALL} to {Fore.GREEN}ETH{Style.RESET_ALL}"
+    )
+    test_result = str(
+        uniV4_test.get_quote_exact_output(
+            test_USDC, test_volume * test_d1, test_path_1hop
+        )
+        / test_d0
+    )
+    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} ETH")
+
+    test_volume = 1
+    print(
+        "Testing exactOutput() for "
+        + str(test_volume)
+        + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDC{Style.RESET_ALL}"
+    )
+    test_result = str(
+        uniV4_test.get_quote_exact_output(
+            test_ETH, test_volume * test_d0, test_path_1hop
+        )
+        / test_d1
+    )
+    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDC")
+
+    # 2-hop test
+    test_volume = 1
+    print(
+        "Testing 2-hop exactOutput() for "
+        + str(test_volume)
+        + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDT{Style.RESET_ALL}"
+    )
+    reversed_test_path_2hop = list(reversed(test_path_2hop))
+    test_result = str(
+        uniV4_test.get_quote_exact_output(
+            test_ETH, test_volume * test_d0, reversed_test_path_2hop
+        )
+        / test_d2
+    )
+    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDT")
 
     print("")
     print("")
@@ -142,9 +258,7 @@ def price_impact_tests():
         + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDC{Style.RESET_ALL}"
     )
     test_result = str(
-        uniV4_test.estimate_price_impact(
-            test_token0, test_token1, test_volume * test_d0
-        )
+        uniV4_test.estimate_price_impact(test_ETH, test_USDC, test_volume * test_d0)
     )
     print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} %")
     test_volume = 10
@@ -154,9 +268,7 @@ def price_impact_tests():
         + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDC{Style.RESET_ALL}"
     )
     test_result = str(
-        uniV4_test.estimate_price_impact(
-            test_token0, test_token1, test_volume * test_d0
-        )
+        uniV4_test.estimate_price_impact(test_ETH, test_USDC, test_volume * test_d0)
     )
     print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} %")
     test_volume = 100
@@ -166,9 +278,7 @@ def price_impact_tests():
         + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDC{Style.RESET_ALL}"
     )
     test_result = str(
-        uniV4_test.estimate_price_impact(
-            test_token0, test_token1, test_volume * test_d0
-        )
+        uniV4_test.estimate_price_impact(test_ETH, test_USDC, test_volume * test_d0)
     )
     print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} %")
     test_volume = 1000
@@ -178,9 +288,7 @@ def price_impact_tests():
         + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDC{Style.RESET_ALL}"
     )
     test_result = str(
-        uniV4_test.estimate_price_impact(
-            test_token0, test_token1, test_volume * test_d0
-        )
+        uniV4_test.estimate_price_impact(test_ETH, test_USDC, test_volume * test_d0)
     )
     print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} %")
 
@@ -194,8 +302,8 @@ def state_view_tests():
         f"Testing get_liquidity() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
     test_result = uniV4_test.get_liquidity_stateview(
-        test_token0,
-        test_token1,
+        test_ETH,
+        test_USDC,
         default_test_fee,
         default_test_tick_spacing,
         default_test_hooks,
@@ -206,8 +314,8 @@ def state_view_tests():
         f"Testing get_slot0() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
     test_result1 = uniV4_test.get_slot0_stateview(
-        test_token0,
-        test_token1,
+        test_ETH,
+        test_USDC,
         default_test_fee,
         default_test_tick_spacing,
         default_test_hooks,
@@ -219,8 +327,8 @@ def state_view_tests():
         f"Testing get_fee_growth_globals() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
     test_result2 = uniV4_test.get_fee_growth_globals_stateview(
-        test_token0,
-        test_token1,
+        test_ETH,
+        test_USDC,
         default_test_fee,
         default_test_tick_spacing,
         default_test_hooks,
@@ -231,8 +339,8 @@ def state_view_tests():
         f"Testing get_fee_growth_inside() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
     test_result3 = uniV4_test.get_fee_growth_inside_stateview(
-        test_token0,
-        test_token1,
+        test_ETH,
+        test_USDC,
         default_test_fee,
         default_test_tick_spacing,
         default_test_hooks,
@@ -272,8 +380,8 @@ def state_view_tests():
         f"Testing get_tick_bitmap() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
     test_result5 = uniV4_test.get_tick_bitmap_stateview(
-        test_token0,
-        test_token1,
+        test_ETH,
+        test_USDC,
         default_test_fee,
         default_test_tick_spacing,
         default_test_hooks,
@@ -285,8 +393,8 @@ def state_view_tests():
         f"Testing get_tick_fee_growth_outside() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
     test_result6 = uniV4_test.get_tick_fee_growth_outside_stateview(
-        test_token0,
-        test_token1,
+        test_ETH,
+        test_USDC,
         default_test_fee,
         default_test_tick_spacing,
         default_test_hooks,
@@ -298,8 +406,8 @@ def state_view_tests():
         f"Testing get_tick_pool_info() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
     test_result7 = uniV4_test.get_tick_pool_info_stateview(
-        test_token0,
-        test_token1,
+        test_ETH,
+        test_USDC,
         default_test_fee,
         default_test_tick_spacing,
         default_test_hooks,
@@ -312,18 +420,22 @@ def state_view_tests():
 
 
 if __name__ == "__main__":
-    test_token0 = "0x0000000000000000000000000000000000000000"
-    test_token1 = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    test_ETH = "0x0000000000000000000000000000000000000000"
+    test_USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    test_USDT = Web3.to_checksum_address("0xdac17f958d2ee523a2206206994597c13d831ec7")
     test_zero_hook = "0x0000000000000000000000000000000000000000"
     test_d0 = 10**18
     test_d1 = 10**6
+    test_d2 = 10**6
     test_fee = 500
     default_test_fee = 500
     default_test_tick_spacing = 10
+    test_pool2_fee = 10
+    test_pool2_tick_spacing = 1
     default_test_hooks = test_zero_hook
     _TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    rpc_endpoint = "https://eth.drpc.org"  # "https://go.getblock.us/27eb23f40b964c9bb71b62f721e594e7"
+    rpc_endpoint = "https://eth.drpc.org"
     address = "0x94e3361495bD110114ac0b6e35Ed75E77E6a6cFA"
     w3_test = Web3(Web3.HTTPProvider(rpc_endpoint, request_kwargs={"timeout": 60}))
 
