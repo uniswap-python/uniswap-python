@@ -261,7 +261,7 @@ class Uniswap4:
         """
         Retrieves the global fee growth of a pool.
         """
-        if token0 > token1:
+        if token0.lower() > token1.lower():
             (token0, token1) = (token1, token0)
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
@@ -288,7 +288,7 @@ class Uniswap4:
         """
         Calculates the fee growth inside a tick range of a pool
         """
-        if token0 > token1:
+        if token0.lower() > token1.lower():
             token0, token1 = token1, token0
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
@@ -311,7 +311,7 @@ class Uniswap4:
         hooks: str,
     ) -> int:
         """Retrieves the total liquidity of a pool."""
-        if token0 > token1:
+        if token0.lower() > token1.lower():
             token0, token1 = token1, token0
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
@@ -336,7 +336,7 @@ class Uniswap4:
         Retrieves position info in a pool.
         :param token_id is TokenID of the correspoding NFT
         """
-        if token0 > token1:
+        if token0.lower() > token1.lower():
             token1, token0 = token0, token1
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
@@ -364,7 +364,7 @@ class Uniswap4:
         """
         Returns current state of the pool.
         """
-        if token0 > token1:
+        if token0.lower() > token1.lower():
             token1, token0 = token0, token1
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
@@ -392,7 +392,7 @@ class Uniswap4:
         Retrieves the tick bitmap of a pool at a specific tick.
         :param tick MUST be int16
         """
-        if token0 > token1:
+        if token0.lower() > token1.lower():
             token1, token0 = token0, token1
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
@@ -413,7 +413,7 @@ class Uniswap4:
         """
         Retrieves the fee growth outside a tick range of a pool
         """
-        if token0 > token1:
+        if token0.lower() > token1.lower():
             token1, token0 = token0, token1
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
@@ -439,7 +439,7 @@ class Uniswap4:
         """
         Retrieves the tick information of a pool at a specific tick.
         """
-        if token0 > token1:
+        if token0.lower() > token1.lower():
             token1, token0 = token0, token1
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
@@ -777,7 +777,6 @@ class Uniswap4:
         """
         Unlocks Uniswap v4 PoolManager and batches actions for modifying liquidity
         """
-        # TODO: Need to implement plain increase/decrease and burn liquidity methods
         function = self.position_manager.functions.modifyLiquidities(
             unlock_data, deadline
         )
@@ -826,7 +825,6 @@ class Uniswap4:
         """
         Approve of a specific token ID for spending by spender via signature
         """
-        # TODO: implement get_signature() method to generate the signature parameter for such functions
         function = self.position_manager.functions.permit(
             spender, token_id, deadline, nonce, signature
         )
@@ -1389,12 +1387,7 @@ class Uniswap4:
         """
         Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
         """
-        # FIXME: This function should always return the same output for the
-        # same input
-        #        and would therefore benefit from caching
         if address == ETH_ADDRESS or address == _str_to_addr(ETH_ADDRESS):
-            # This isn't exactly right, but for all intents and purposes,
-            # ETH is treated as a ERC20 by Uniswap.
             return ERC20Token(
                 address=address,
                 name="ETH",
@@ -1437,9 +1430,6 @@ class Uniswap4:
     ) -> float:
         """
         Returns the estimated price impact as a positive float (0.01 = 1%).
-
-        NOTE: Work-in-progress.
-
         See ``examples/price_impact.py`` for an example which uses this.
         """
 
@@ -1516,7 +1506,7 @@ class Uniswap4:
             path_key: PathKey = PathKey(
                 currency_in, pool_key.fee, pool_key.tick_spacing, pool_key.hooks, b""
             )
-            encoded_path.append(path_key)
+            encoded_path.insert(0, path_key)
             currency_out = currency_in
         return encoded_path
 
@@ -1533,11 +1523,11 @@ class Uniswap4:
         hook_data: bytes = bytes(),
     ) -> int:
         """Quote for token to token single hop trades with an exact input."""
-        if token0 < token1:
+        if token0.lower() < token1.lower():
             zero_for_one = True
         else:
             zero_for_one = False
-            (token0, token1) = (token1, token0)
+            token0, token1 = token1, token0
         pool_key = (token0, token1, fee, tick_spacing, hooks)
         # [0]=The output quote [1]=estimated gas units used for the swap
         quote_amount: int = self.quoter.functions.quoteExactInputSingle(
@@ -1552,9 +1542,9 @@ class Uniswap4:
         path: List[PoolKey],
     ) -> int:
         """Quote for token to token multi-hop trades with an exact input."""
-        # [0]=The output quote [1]=estimated gas units used for the swap
         encoded_path = self.encode_path_keys_input(path, token_exact)
 
+        # [0]=The output quote [1]=estimated gas units used for the swap
         quote_amount: int = self.quoter.functions.quoteExactInput(
             (
                 token_exact,
@@ -1575,11 +1565,11 @@ class Uniswap4:
         hook_data: bytes = bytes(),
     ) -> int:
         """Quote for token to token single hop trades with an exact output."""
-        if token0 < token1:
+        if token0.lower() < token1.lower():
             zero_for_one = True
         else:
             zero_for_one = False
-            (token1, token0) = (token0, token1)
+            token1, token0 = token0, token1
 
         pool_key = (
             token0,
@@ -1647,12 +1637,12 @@ class Uniswap4:
 
         # SETTING PARAMS
         # pool_key = (input_token, output_token, fee, tick_spacing, hooks)
-        if input_token < output_token:
+        if input_token.lower() < output_token.lower():
             zero_for_one = True
-            (token0, token1) = (input_token, output_token)
+            token0, token1 = input_token, output_token
         else:
             zero_for_one = False
-            (token0, token1) = (output_token, input_token)
+            token0, token1 = output_token, input_token
         exact_input_single_params = encode(
             ["((address,address,uint24,int24,address),bool,int128,uint128,bytes)"],
             [
@@ -1722,12 +1712,12 @@ class Uniswap4:
         )
         # SETTING PARAMS
         # pool_key = (input_token, output_token, fee, tick_spacing, hooks,)
-        if input_token < output_token:
+        if input_token.lower() < output_token.lower():
             zero_for_one = True
-            (token0, token1) = (input_token, output_token)
+            token0, token1 = input_token, output_token
         else:
             zero_for_one = False
-            (token0, token1) = (output_token, input_token)
+            token0, token1 = output_token, input_token
         exact_output_single_params = encode(
             ["((address,address,uint24,int24,address),bool,int128,uint128,bytes)"],
             [
@@ -1820,7 +1810,6 @@ class Uniswap4:
         qtycap: int,
         swap_pool_key: PoolKey,
         recipient: Optional[str] = None,
-        fee: int = 3000,
     ) -> HexBytes:
 
         return self._token_to_token_swap_input(
@@ -1842,7 +1831,6 @@ class Uniswap4:
         qtycap: int,
         swap_pool_key: PoolKey,
         recipient: Optional[str] = None,
-        fee: int = 3000,
     ) -> HexBytes:
 
         return self._token_to_token_swap_output(
