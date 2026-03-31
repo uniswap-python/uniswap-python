@@ -1512,7 +1512,7 @@ class Uniswap4:
             path_key: PathKey = PathKey(
                 currency_in, pool_key.fee, pool_key.tick_spacing, pool_key.hooks, b""
             )
-            encoded_path.insert(0, path_key)
+            encoded_path.append(path_key)
             currency_out = currency_in
         return encoded_path
 
@@ -1543,19 +1543,18 @@ class Uniswap4:
 
     def get_quote_exact_input(
         self,
-        token0: str,
-        token1: str,
+        token_exact: str,
         qty: int,
         path: List[PoolKey],
     ) -> int:
         """Quote for token to token multi-hop trades with an exact input."""
         # [0]=The output quote [1]=estimated gas units used for the swap
-        encoded_path = self.encode_path_keys_input(path, token0)
+        encoded_path = self.encode_path_keys_input(path, token_exact)
 
         quote_amount: int = self.quoter.functions.quoteExactInput(
             (
-                token0,
-                encoded_path,
+                token_exact,
+                [astuple(path_key) for path_key in encoded_path],
                 qty,
             )
         ).call()[0]
@@ -1593,18 +1592,17 @@ class Uniswap4:
 
     def get_quote_exact_output(
         self,
-        token0: str,
-        token1: str,
+        token_exact: str,
         qty: int,
         path: List[PoolKey],
     ) -> int:
         """Quote for token to token multi-hop trades with an exact output."""
 
-        encoded_path = self.encode_path_keys_output(path, token1)
+        encoded_path = self.encode_path_keys_output(path, token_exact)
         quote_amount: int = self.quoter.functions.quoteExactOutput(
             (
-                token1,
-                encoded_path,
+                token_exact,
+                [astuple(path_key) for path_key in encoded_path],
                 qty,
             )
         ).call()[0]
