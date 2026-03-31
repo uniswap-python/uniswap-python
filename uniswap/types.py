@@ -17,6 +17,15 @@ class PoolKey:
 
 
 @dataclass
+class PathKey:
+    intermediate_currency: str
+    fee: int
+    tick_spacing: int
+    hooks: str
+    hook_data: bytes
+
+
+@dataclass
 class PermitDetails:
     token: str
     amount: int
