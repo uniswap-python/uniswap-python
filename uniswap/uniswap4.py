@@ -2053,7 +2053,7 @@ class Uniswap4:
         """
         Make a trade by defining the qty of the input token.
          If `route` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap."""
-        result: HexBytes = 0
+        result: Optional[HexBytes] = None
         if route is None:
             if swap_pool_key is None:
                 raise ValueError("swap_pool_key must be provided for single hop swaps")
@@ -2069,11 +2069,12 @@ class Uniswap4:
                 recipient,
             )
         else:
+            encoded_route = self.encode_path_keys_input(route, input_token)
             result = self.token_to_token_swap_input(
                 input_token,
                 qty,
                 qtycap,
-                route,  # type: ignore[arg-type]
+                encoded_route,
                 recipient,
             )
         return result
@@ -2093,7 +2094,7 @@ class Uniswap4:
         Make a trade by defining the qty of the output token.
          If `route` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap.
         """
-        result: HexBytes = 0
+        result: Optional[HexBytes] = None
         if route is None:
             if swap_pool_key is None:
                 raise ValueError("swap_pool_key must be provided for single hop swaps")
@@ -2109,11 +2110,12 @@ class Uniswap4:
                 recipient,
             )
         else:
+            encoded_route = self.encode_path_keys_output(route, output_token)
             result = self.token_to_token_swap_output(
-                input_token,
+                output_token,
                 qty,
                 qtycap,
-                route,  # type: ignore[arg-type]
+                encoded_route,
                 recipient,
             )
         return result

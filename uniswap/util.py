@@ -244,7 +244,7 @@ class V4pools:
             last_block_number = self.web3.eth.get_block_number()
         else:
             last_block_number = min(
-                max(first_block, last_block), self.web3.eth.get_block_number()
+                max(first_block, last_block), int(self.web3.eth.get_block_number())
             )
 
         chunks_amount = int((last_block_number - first_block_number) // chunk_size)
@@ -268,10 +268,6 @@ class V4pools:
                 flush=True,
             )
             try:
-                # filter_params = {
-                #     "fromBlock": str(start_block),
-                #     "toBlock": str(end_block),
-                # }
                 logs = pool_manager_contract.events.Initialize().get_logs(
                     fromBlock=start_block, toBlock=end_block
                 )
