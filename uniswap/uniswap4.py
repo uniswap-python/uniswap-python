@@ -249,6 +249,13 @@ class Uniswap4:
     def set_gas_priorityfee(self, priority_fee: float) -> None:
         self.priority_fee = priority_fee
 
+    # Slippage
+    def get_max_slippage(self) -> float:
+        return self.max_slippage
+
+    def set_max_slippage(self, max_slippage: float) -> None:
+        self.max_slippage = max_slippage
+
     # StateView methods
     def get_fee_growth_globals_stateview(
         self,
@@ -262,7 +269,7 @@ class Uniswap4:
         Retrieves the global fee growth of a pool.
         """
         if token0.lower() > token1.lower():
-            (token0, token1) = (token1, token0)
+            token0, token1 = token1, token0
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
         pool_id = self.get_pool_id(pool)
@@ -334,7 +341,8 @@ class Uniswap4:
     ) -> Dict:
         """
         Retrieves position info in a pool.
-        :param token_id is TokenID of the correspoding NFT
+
+        :param token_id: TokenID of the correspoding NFT
         """
         if token0.lower() > token1.lower():
             token1, token0 = token0, token1
@@ -390,7 +398,8 @@ class Uniswap4:
     ) -> int:
         """
         Retrieves the tick bitmap of a pool at a specific tick.
-        :param tick MUST be int16
+
+        :param tick: MUST be int16
         """
         if token0.lower() > token1.lower():
             token1, token0 = token0, token1
@@ -696,7 +705,7 @@ class Uniswap4:
         interface_id: bytes,
     ) -> bool:
         """
-        :param interface_id: The interface ID to check; should be bytes4
+        :param interface_id: The interface ID to check; should be 'bytes4'
         :returns: True if specifeid interface is supported by the PositionManager contract
         """
         if len(interface_id) != 4:
@@ -751,7 +760,7 @@ class Uniswap4:
     def approve_position_manager(self, spender: str, token_id: int) -> HexBytes:
         """
         Change or reaffirm the approved address for an NFT
-        The zero address removes existing approval.
+        Zero address removes existing approval.
         """
         function = self.position_manager.functions.approve(spender, token_id)
         tx = self._build_and_send_tx(function, self._get_tx_params())
@@ -843,7 +852,7 @@ class Uniswap4:
         payable_amount: int,
     ) -> HexBytes:
         """
-        allows forwarding a single permit to permit2
+        Allows forwarding a single permit to permit2
         """
         function = self.position_manager.functions.permit(
             owner, astuple(permit_single), signature
@@ -1098,7 +1107,8 @@ class Uniswap4:
     def get_supports_interface_pool_manager(self, interface_id: bytes) -> bool:
         """
         Checks if a given interface ID is supported by the contract
-        :param interface_id: The interface ID to check; should be bytes4
+
+        :param interface_id: The interface ID to check; should be `bytes4`
         :returns: True if specifeid interface is supported by the PoolManager contract
         """
         if len(interface_id) != 4:
@@ -1292,7 +1302,7 @@ class Uniswap4:
         self, sender: str, receiver: str, token_id: int, amount: int
     ) -> HexBytes:
         """
-        Transfers an amount of an id from a sender to a receiver..
+        Transfers an amount of an id from a sender to a receiver.
         """
         function = self.pool_manager.functions.transferFrom(
             sender, receiver, token_id, amount
@@ -1351,13 +1361,8 @@ class Uniswap4:
             zero_for_one = False
 
         if token0.lower() > token1.lower():
-            (token1, token0) = (token0, token1)
+            token1, token0 = token0, token1
 
-        # pool = pool_key(token0, token1, fee, tick_spacing, hooks)
-        # pool_id = self.get_pool_id(pool)
-
-        # spot_price_x96 : int =
-        # self.stateview.functions.getSlot0(pool_id).call()[0]
         spot_price_x96: int = self.get_slot0_stateview(
             token0, token1, fee, tick_spacing, hooks
         )["sqrtPriceX96"]
@@ -1370,6 +1375,7 @@ class Uniswap4:
         return spot_price
 
     def get_pool_id(self, pool: PoolKey) -> HexBytes:
+        """Computes the pool ID for a given PoolKey by hashing its parameters."""
         pool_data = eth_abi.abi.encode(
             types=["address", "address", "uint24", "int24", "address"],
             args=[
@@ -1425,7 +1431,8 @@ class Uniswap4:
         route: Optional[List[str]] = None,
     ) -> float:
         """
-        Returns the estimated price impact as a positive float (0.01 = 1%).
+        :return: the estimated price impact as a positive float (0.01 = 1%).
+
         See ``examples/price_impact.py`` for an example which uses this.
         """
 
@@ -1466,19 +1473,29 @@ class Uniswap4:
         self,
         path: List[PoolKey],
         currency_in: str,
+        hook_data_list: Optional[List[bytes]] = None,
     ) -> List[PathKey]:
         """
         Encodes a list of PoolKeys into the format expected by the quoter for multi-hop ExactInput quotes.
         """
         encoded_path: List[PathKey] = []
-        for pool_key in path:
+        if hook_data_list is None:
+            hook_data_list = [b""] * len(path)
+        else:
+            if len(hook_data_list) != len(path):
+                raise ValueError("Length of hook_data_list must match length of path")
+        for pool_key, hook_data in zip(path, hook_data_list):
             currency_out: str = (
                 pool_key.currency1
                 if currency_in.lower() == pool_key.currency0.lower()
                 else pool_key.currency0
             )
             path_key: PathKey = PathKey(
-                currency_out, pool_key.fee, pool_key.tick_spacing, pool_key.hooks, b""
+                currency_out,
+                pool_key.fee,
+                pool_key.tick_spacing,
+                pool_key.hooks,
+                hook_data,
             )
             encoded_path.append(path_key)
             currency_in = currency_out
@@ -1488,19 +1505,29 @@ class Uniswap4:
         self,
         path: List[PoolKey],
         currency_out: str,
+        hook_data_list: Optional[List[bytes]] = None,
     ) -> List[PathKey]:
         """
         Encodes a list of PoolKeys into the format expected by the quoter for multi-hop ExactOutput quotes.
         """
         encoded_path: List[PathKey] = []
-        for pool_key in reversed(path):
+        if hook_data_list is None:
+            hook_data_list = [b""] * len(path)
+        else:
+            if len(hook_data_list) != len(path):
+                raise ValueError("Length of hook_data_list must match length of path")
+        for pool_key, hook_data in zip(reversed(path), reversed(hook_data_list)):
             currency_in: str = (
                 pool_key.currency1
                 if currency_out.lower() == pool_key.currency0.lower()
                 else pool_key.currency0
             )
             path_key: PathKey = PathKey(
-                currency_in, pool_key.fee, pool_key.tick_spacing, pool_key.hooks, b""
+                currency_in,
+                pool_key.fee,
+                pool_key.tick_spacing,
+                pool_key.hooks,
+                hook_data,
             )
             encoded_path.insert(0, path_key)
             currency_out = currency_in
@@ -1513,12 +1540,12 @@ class Uniswap4:
         token0: str,
         token1: str,
         qty: int,
-        fee: int = 500,
-        tick_spacing: int = 10,
+        fee: int,
+        tick_spacing: int,
         hooks: str = ZERO_HOOK,
-        hook_data: bytes = bytes(),
+        hook_data: bytes = b"",
     ) -> int:
-        """Quote for token to token single hop trades with an exact input."""
+        """:return: Quote for token to token single hop trades with an exact input."""
         if token0.lower() < token1.lower():
             zero_for_one = True
         else:
@@ -1537,7 +1564,7 @@ class Uniswap4:
         qty: int,
         path: List[PoolKey],
     ) -> int:
-        """Quote for token to token multi-hop trades with an exact input."""
+        """:return: Quote for token to token multi-hop trades with an exact input."""
         encoded_path = self.encode_path_keys_input(path, token_exact)
 
         # [0]=The output quote [1]=estimated gas units used for the swap
@@ -1555,12 +1582,12 @@ class Uniswap4:
         token0: str,
         token1: str,
         qty: int,
-        fee: int = 500,
-        tick_spacing: int = 10,
+        fee: int,
+        tick_spacing: int,
         hooks: str = ZERO_HOOK,
-        hook_data: bytes = bytes(),
+        hook_data: bytes = b"",
     ) -> int:
-        """Quote for token to token single hop trades with an exact output."""
+        """:return: Quote for token to token single hop trades with an exact output."""
         if token0.lower() < token1.lower():
             zero_for_one = True
         else:
@@ -1586,7 +1613,7 @@ class Uniswap4:
         qty: int,
         path: List[PoolKey],
     ) -> int:
-        """Quote for token to token multi-hop trades with an exact output."""
+        """:return: Quote for token to token multi-hop trades with an exact output."""
 
         encoded_path = self.encode_path_keys_output(path, token_exact)
         quote_amount: int = self.quoter.functions.quoteExactOutput(
@@ -1598,8 +1625,76 @@ class Uniswap4:
         ).call()[0]
         return quote_amount
 
+    # market price functions for selling `qty` amount of `token0` to buy `token1`
+    def get_price_input(
+        self,
+        token0: str,
+        token1: str,
+        qty: int,
+        fee: Optional[int] = None,
+        tick_spacing: Optional[int] = None,
+        hooks: Optional[str] = ZERO_HOOK,
+        hook_data: Optional[bytes] = b"",
+        route: Optional[List[PoolKey]] = None,
+    ) -> int:
+        """
+        Given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
+        If `route` is provided, it will be used for the quote. Otherwise, `fee` and `tick_spacing` must be provided for a single hop quote."""
+        result: int = 0
+        if route is None:
+            if fee is None or tick_spacing is None:
+                raise ValueError(
+                    "fee and tick_spacing parameters must be provided for single hop quotes"
+                )
+            result = self.get_quote_exact_input_single(
+                token0,
+                token1,
+                qty,
+                fee,
+                tick_spacing,
+                hooks,  # type: ignore[arg-type]
+                hook_data,  # type: ignore[arg-type]
+            )
+        else:
+            result = self.get_quote_exact_input(token0, qty, route)
+        return result
+
+    def get_price_output(
+        self,
+        token0: str,
+        token1: str,
+        qty: int,
+        fee: Optional[int] = None,
+        tick_spacing: Optional[int] = None,
+        hooks: Optional[str] = ZERO_HOOK,
+        hook_data: Optional[bytes] = b"",
+        route: Optional[List[PoolKey]] = None,
+    ) -> int:
+        """
+        Returns the minimum amount of `token0` required to buy `qty` amount of `token1`.
+        If `route` is provided, it will be used for the quote. Otherwise, `fee` and `tick_spacing` must be provided for a single hop quote.
+        """
+        result: int = 0
+        if route is None:
+            if fee is None or tick_spacing is None or hooks is None:
+                raise ValueError(
+                    "fee, tick_spacing, and hooks parameters must be provided for single hop quotes"
+                )
+            result = self.get_quote_exact_output_single(
+                token0,
+                token1,
+                qty,
+                fee,
+                tick_spacing,
+                hooks,
+                hook_data,  # type: ignore[arg-type]
+            )
+        else:
+            result = self.get_quote_exact_output(token0, qty, route)
+        return result
+
     # Swap functions
-    def _token_to_token_swap_input(
+    def token_to_token_swap_exact_input(
         self,
         input_token: str,
         qty: int,
@@ -1608,38 +1703,42 @@ class Uniswap4:
         fee: int,
         tick_spacing: int,
         hooks: str,
+        hook_data: bytes = b"",
         recipient: Optional[str] = None,
     ) -> HexBytes:
+        """
+        Swaps an exact amount of `input_token` for a minimum amount of `output_token`,
+        reverting if the amount of `output_token` received is less than `qtycap`.
+        """
         if recipient is None:
             recipient = str(self.address)
 
-        min_tokens_bought = int((1 - self.max_slippage) * qtycap)
+        min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
 
-        ether_amount = 0
+        ether_amount: int = 0
         if input_token == ETH_ADDRESS:
             ether_amount = qty
 
-        # V4_SWAP // Encode swap actions
-        commands = encode_packed(
+        # V4_SWAP // Encode swap commands and actions
+        commands: bytes = encode_packed(
             ["uint8"],
             args=[0x10],
         )
 
         # SWAP_EXACT_IN_SINGLE, SETTLE_ALL, TAKE_ALL
-        actions = encode_packed(
+        actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             [0x06, 0x0C, 0x0F],
         )
 
         # SETTING PARAMS
-        # pool_key = (input_token, output_token, fee, tick_spacing, hooks)
         if input_token.lower() < output_token.lower():
             zero_for_one = True
             token0, token1 = input_token, output_token
         else:
             zero_for_one = False
             token0, token1 = output_token, input_token
-        exact_input_single_params = encode(
+        exact_input_single_params: bytes = encode(
             ["((address,address,uint24,int24,address),bool,int128,uint128,bytes)"],
             [
                 (
@@ -1647,15 +1746,15 @@ class Uniswap4:
                     zero_for_one,
                     qty,
                     min_tokens_bought,
-                    bytes(0),
+                    hook_data,
                 )
             ],
         )
-        settle_all_params = encode(
+        settle_all_params: bytes = encode(
             ["address", "uint128"],
             [input_token, qty],
         )
-        take_all_params = encode(
+        take_all_params: bytes = encode(
             ["address", "uint128"],
             [output_token, min_tokens_bought],
         )
@@ -1675,7 +1774,75 @@ class Uniswap4:
             self._get_tx_params(value=ether_amount),
         )
 
-    def _token_to_token_swap_output(
+    def token_to_token_swap_input(
+        self,
+        input_token: str,
+        qty: int,
+        qtycap: int,
+        route: List[PathKey],
+        recipient: Optional[str] = None,
+    ) -> HexBytes:
+        """Swaps an exact amount of `input_token` for a minimum amount of `output_token` through a specified multi-hop route,
+        reverting if the amount of `output_token` received is less than `qtycap`.
+        """
+        if recipient is None:
+            recipient = str(self.address)
+
+        min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
+
+        ether_amount: int = 0
+        if input_token == ETH_ADDRESS:
+            ether_amount = qty
+
+        # V4_SWAP // Encode swap commands and actions
+        commands: bytes = encode_packed(
+            ["uint8"],
+            args=[0x10],
+        )
+
+        # SWAP_EXACT_IN, SETTLE_ALL, TAKE_ALL
+        actions: bytes = encode_packed(
+            ["uint8", "uint8", "uint8"],
+            [0x07, 0x0C, 0x0F],
+        )
+
+        # SETTING PARAMS
+        exact_input_params: bytes = encode(
+            ["(address,tuple[],uint128,int128)"],
+            [
+                (
+                    input_token,
+                    [astuple(path_key) for path_key in route],
+                    qty,
+                    min_tokens_bought,
+                )
+            ],
+        )
+        settle_all_params: bytes = encode(
+            ["address", "uint128"],
+            [input_token, qty],
+        )
+        take_all_params: bytes = encode(
+            ["address", "uint128"],
+            [str(route[-1].intermediate_currency), min_tokens_bought],
+        )
+
+        # ENCODING DATA
+        params = [exact_input_params, settle_all_params, take_all_params]
+        inputs = []
+        inputs.append(
+            encode(
+                ["bytes", "bytes[]"],
+                [actions, params],
+            )
+        )
+
+        return self._build_and_send_tx(
+            self.router.functions.execute(commands, inputs, self._deadline()),
+            self._get_tx_params(value=ether_amount),
+        )
+
+    def token_to_token_swap_exact_output(
         self,
         input_token: str,
         qty: int,
@@ -1684,30 +1851,33 @@ class Uniswap4:
         fee: int,
         tick_spacing: int,
         hooks: str,
+        hook_data: bytes = b"",
         recipient: Optional[str] = None,
     ) -> HexBytes:
+        """Swaps a maximum amount of `input_token` for an exact amount of `output_token`,
+        reverting if the amount of `input_token` required is more than `qtycap`.
+        """
         if recipient is None:
             recipient = str(self.address)
 
-        amount_in_max = int((1 + self.max_slippage) * qtycap)
+        amount_in_max: int = int((1 + self.max_slippage) * qtycap)
 
-        ether_amount = 0
+        ether_amount: int = 0
         if input_token == ETH_ADDRESS:
             ether_amount = amount_in_max
 
-        # V4_SWAP // Encode swap actions
-        commands = encode_packed(
+        # V4_SWAP // Encode swap commands and actions
+        commands: bytes = encode_packed(
             ["uint8"],
             args=[0x10],
         )
 
         # SWAP_EXACT_OUT_SINGLE, SETTLE_ALL, TAKE_ALL
-        actions = encode_packed(
+        actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
-            args=[0x09, 0x0C, 0x0F],
+            args=[0x8, 0x0C, 0x0F],
         )
         # SETTING PARAMS
-        # pool_key = (input_token, output_token, fee, tick_spacing, hooks,)
         if input_token.lower() < output_token.lower():
             zero_for_one = True
             token0, token1 = input_token, output_token
@@ -1728,7 +1898,7 @@ class Uniswap4:
                     zero_for_one,
                     qty,
                     amount_in_max,
-                    bytes(0),
+                    hook_data,
                 )
             ],
         )
@@ -1756,6 +1926,73 @@ class Uniswap4:
             self._get_tx_params(value=ether_amount),
         )
 
+    def token_to_token_swap_output(
+        self,
+        output_token: str,
+        qty: int,
+        qtycap: int,
+        route: List[PathKey],
+        recipient: Optional[str] = None,
+    ) -> HexBytes:
+        """Swaps a maximum amount of `input_token` for an exact amount of `output_token` through a specified multi-hop route,
+        reverting if the amount of `input_token` required is more than `qtycap`.
+        """
+        if recipient is None:
+            recipient = str(self.address)
+
+        amount_in_max: int = int((1 + self.max_slippage) * qtycap)
+        input_token: str = route[0].intermediate_currency
+        ether_amount: int = 0
+        if input_token == ETH_ADDRESS:
+            ether_amount = amount_in_max
+
+        # V4_SWAP // Encode swap commands and actions
+        commands: bytes = encode_packed(
+            ["uint8"],
+            args=[0x10],
+        )
+
+        # SWAP_EXACT_OUT, SETTLE_ALL, TAKE_ALL
+        actions: bytes = encode_packed(
+            ["uint8", "uint8", "uint8"],
+            args=[0x09, 0x0C, 0x0F],
+        )
+        # SETTING PARAMS
+        exact_output_params: bytes = encode(
+            ["(address,tuple[],uint128,int128)"],
+            [
+                (
+                    input_token,
+                    [astuple(path_key) for path_key in route],
+                    qty,
+                    amount_in_max,
+                )
+            ],
+        )
+        settle_all_params: bytes = encode(
+            ["address", "uint128"],
+            [input_token, amount_in_max],
+        )
+        take_all_params: bytes = encode(
+            ["address", "uint128"],
+            [output_token, qty],
+        )
+
+        # ENCODING DATA
+        params = [exact_output_params, settle_all_params, take_all_params]
+        inputs = []
+        inputs.append(
+            encode(
+                ["bytes", "bytes[]"],
+                [actions, params],
+            )
+        )
+
+        return self._build_and_send_tx(
+            self.router.functions.execute(commands, inputs, self._deadline()),
+            self._get_tx_params(value=ether_amount),
+        )
+
     def drop_txn(
         self,
         address_to: AddressLike,
@@ -1764,8 +2001,11 @@ class Uniswap4:
     ) -> HexBytes:
         """
         Replaces pending transaction with zero-value ETH transfer
-        :param address_to Own address
-        Params gas_price and priority_fee are Gas Price and Max Priority Fee respectively; MUST be at least 20% higher than values original tx has.
+
+        :param address_to: Own address
+
+        Params `gas_price` and `priority_fee` are Gas Price and Max Priority Fee respectively;
+        MUST be at least 20% higher than values the original transaction has.
         """
         # This one is for legacy transactions
         signed_txn = self.w3.eth.account.sign_transaction(
@@ -1779,7 +2019,7 @@ class Uniswap4:
             ),
             self.private_key,
         )
-        # This one is for post-Merge
+        # This one is for post-Merge transactions
         signed_txn_london = self.w3.eth.account.sign_transaction(
             dict(
                 chainId=int(self.w3.net.version),
@@ -1798,26 +2038,45 @@ class Uniswap4:
         else:
             return self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
 
+    # market functions for swapping `qty` amount of `token0` to buy `token1`
     def make_swap_input(
         self,
         input_token: str,
         output_token: str,
         qty: int,
         qtycap: int,
-        swap_pool_key: PoolKey,
+        swap_pool_key: Optional[PoolKey] = None,
+        hook_data: Optional[bytes] = b"",
+        route: Optional[List[PoolKey]] = None,
         recipient: Optional[str] = None,
     ) -> HexBytes:
-
-        return self._token_to_token_swap_input(
-            input_token,
-            qty,
-            qtycap,
-            output_token,
-            swap_pool_key.fee,
-            swap_pool_key.tick_spacing,
-            swap_pool_key.hooks,
-            recipient,
-        )
+        """
+        Make a trade by defining the qty of the input token.
+         If `route` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap."""
+        result: HexBytes = 0
+        if route is None:
+            if swap_pool_key is None:
+                raise ValueError("swap_pool_key must be provided for single hop swaps")
+            result = self.token_to_token_swap_exact_input(
+                input_token,
+                qty,
+                qtycap,
+                output_token,
+                swap_pool_key.fee,
+                swap_pool_key.tick_spacing,
+                swap_pool_key.hooks,
+                hook_data,  # type: ignore[arg-type]
+                recipient,
+            )
+        else:
+            result = self.token_to_token_swap_input(
+                input_token,
+                qty,
+                qtycap,
+                route,  # type: ignore[arg-type]
+                recipient,
+            )
+        return result
 
     def make_swap_output(
         self,
@@ -1825,23 +2084,42 @@ class Uniswap4:
         output_token: str,
         qty: int,
         qtycap: int,
-        swap_pool_key: PoolKey,
+        swap_pool_key: Optional[PoolKey] = None,
+        hook_data: Optional[bytes] = b"",
+        route: Optional[List[PoolKey]] = None,
         recipient: Optional[str] = None,
     ) -> HexBytes:
-
-        return self._token_to_token_swap_output(
-            input_token,
-            qty,
-            qtycap,
-            output_token,
-            swap_pool_key.fee,
-            swap_pool_key.tick_spacing,
-            swap_pool_key.hooks,
-            recipient,
-        )
+        """
+        Make a trade by defining the qty of the output token.
+         If `route` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap.
+        """
+        result: HexBytes = 0
+        if route is None:
+            if swap_pool_key is None:
+                raise ValueError("swap_pool_key must be provided for single hop swaps")
+            result = self.token_to_token_swap_exact_output(
+                input_token,
+                qty,
+                qtycap,
+                output_token,
+                swap_pool_key.fee,
+                swap_pool_key.tick_spacing,
+                swap_pool_key.hooks,
+                hook_data,  # type: ignore[arg-type]
+                recipient,
+            )
+        else:
+            result = self.token_to_token_swap_output(
+                input_token,
+                qty,
+                qtycap,
+                route,  # type: ignore[arg-type]
+                recipient,
+            )
+        return result
 
     def get_token_balance(self, erc20: AddressLike) -> Decimal:
-
+        """Get the balance of an ERC20 token for your address."""
         contract = _load_contract(self.w3, abi_name="erc20", address=erc20)
         decimals: int = contract.functions.decimals().call()
         balance: int = contract.functions.balanceOf(self.address).call()
@@ -1868,10 +2146,6 @@ class Uniswap4:
         signed_txn = self.w3.eth.account.sign_transaction(
             transaction, private_key=self.private_key
         )
-        # TODO: This needs to get more complicated if we want to support
-        # replacing a transaction
-        # FIXME: This does not play nice if transactions are sent from other
-        # places using the same wallet.
         try:
             return self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
         finally:

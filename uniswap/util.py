@@ -6,6 +6,7 @@ from typing import (
     Any,
     Generator,
     List,
+    Optional,
     Sequence,
     Tuple,
     Union,
@@ -194,6 +195,8 @@ def realised_fee_percentage(fee: int, amount_in: int) -> float:
 class V4pools:
     """Uniswap V4 pools handler"""
 
+    poolkeys_list: List[PoolKey]
+
     def __init__(
         self,
         web3: Web3,
@@ -212,14 +215,16 @@ class V4pools:
 
     def fetch_poolkey_data(
         self,
-        first_block_number: int,
+        first_block: int,
         chunk_size: int = 500,
         clear_list: bool = True,
+        last_block: Optional[int] = None,
     ) -> None:
         """
-        :param first_block_number Starting block for the scanning process
+        :param first_block: Starting block for scanning process
         :param chunk_size Defines amount of blocks per single log request
         :param clear_list When True, clears pool list before log scanning, when False - new entries will be added to the end of the list.
+        :param last_block Optional parameter defining the last block for scanning process. If None, current block number will be used.
         """
         # Scans PoolManager contract' Initialize() event logs in order to get
         # list of all pools.  See documentation for suggested starting blocks.
@@ -234,7 +239,13 @@ class V4pools:
             "uniswap-v4/poolmanager",
             _str_to_addr(pool_manager_contract_address),
         )
-        last_block_number = self.web3.eth.get_block_number()
+        first_block_number: int = first_block
+        if last_block is None:
+            last_block_number = self.web3.eth.get_block_number()
+        else:
+            last_block_number = min(
+                max(first_block, last_block), self.web3.eth.get_block_number()
+            )
 
         chunks_amount = int((last_block_number - first_block_number) // chunk_size)
         start_block = first_block_number
@@ -265,8 +276,8 @@ class V4pools:
                     fromBlock=start_block, toBlock=end_block
                 )
             except Exception as e:
-                # Exception occurs when chunk size value is too big so RPC rejects
-                # requests OR endpoint is down.
+                # Exception occurs when chunk size value is too big so RPC endpoint rejects
+                # requests OR RPC endpoint is down.
                 print(
                     "Couldn't retrieve logs; check chunk size and RPC availability. Aborted.              "
                 )
@@ -278,7 +289,7 @@ class V4pools:
                         log_item.transactionHash
                     )
                 except Exception as e:
-                    # Exception occurs when endpoint is down.
+                    # Exception occurs when RPC endpoint is down.
                     print(
                         "Couldn't retrieve transaction receipt; check RPC availability."
                     )
@@ -303,7 +314,8 @@ class V4pools:
                         pool_tick_spacing,
                         pool_hooks,
                     )
-                    self.poolkeys_list.append(pool)
+                    if pool not in self.poolkeys_list:
+                        self.poolkeys_list.append(pool)
                 except Exception:
                     continue
             self.set_last_block(end_block)
@@ -376,9 +388,9 @@ class V4pools:
     def get_poolkeys_sublist(self, currency0: str, currency1: str) -> List[PoolKey]:
         """Returns all pools for the (currency0, currency1) pair"""
         if currency0 < currency1:
-            (c0, c1) = (currency0, currency1)
+            c0, c1 = currency0, currency1
         else:
-            (c0, c1) = (currency1, currency0)
+            c0, c1 = currency1, currency0
         result_list = [
             x for x in self.poolkeys_list if c0 == x.currency0 and c1 == x.currency1
         ]
