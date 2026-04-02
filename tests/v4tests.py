@@ -102,11 +102,31 @@ def quoter_tests():
     )
     test_result = str(
         uniV4_test.get_quote_exact_input_single(
-            test_ETH, test_USDC, test_volume * test_d0
+            test_ETH,
+            test_USDC,
+            test_volume * test_d0,
+            default_test_fee,
+            default_test_tick_spacing,
         )
         / test_d1
     )
-    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDC")
+    test_result_alt = str(
+        uniV4_test.get_price_input(
+            test_ETH,
+            test_USDC,
+            test_volume * test_d0,
+            default_test_fee,
+            default_test_tick_spacing,
+        )
+        / test_d1
+    )
+    print(
+        f"Result: {Fore.GREEN}"
+        + test_result
+        + " / "
+        + test_result_alt
+        + f"{Style.RESET_ALL} USDC"
+    )
 
     test_volume = 3000
     print(
@@ -116,11 +136,31 @@ def quoter_tests():
     )
     test_result = str(
         uniV4_test.get_quote_exact_input_single(
-            test_USDC, test_ETH, test_volume * test_d1
+            test_USDC,
+            test_ETH,
+            test_volume * test_d1,
+            default_test_fee,
+            default_test_tick_spacing,
         )
         / test_d0
     )
-    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} ETH")
+    test_result_alt = str(
+        uniV4_test.get_price_input(
+            test_USDC,
+            test_ETH,
+            test_volume * test_d1,
+            default_test_fee,
+            default_test_tick_spacing,
+        )
+        / test_d0
+    )
+    print(
+        f"Result: {Fore.GREEN}"
+        + test_result
+        + " / "
+        + test_result_alt
+        + f"{Style.RESET_ALL} ETH"
+    )
     print("")
     print("")
 
@@ -137,7 +177,19 @@ def quoter_tests():
         )
         / test_d1
     )
-    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDC")
+    test_result_alt = str(
+        uniV4_test.get_price_input(
+            test_ETH, test_USDC, test_volume * test_d0, route=test_path_1hop
+        )
+        / test_d1
+    )
+    print(
+        f"Result: {Fore.GREEN}"
+        + test_result
+        + " / "
+        + test_result_alt
+        + f"{Style.RESET_ALL} USDC"
+    )
 
     test_volume = 3000
     print(
@@ -151,7 +203,19 @@ def quoter_tests():
         )
         / test_d0
     )
-    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} ETH")
+    test_result_alt = str(
+        uniV4_test.get_price_input(
+            test_USDC, test_ETH, test_volume * test_d1, route=test_path_1hop
+        )
+        / test_d0
+    )
+    print(
+        f"Result: {Fore.GREEN}"
+        + test_result
+        + " / "
+        + test_result_alt
+        + f"{Style.RESET_ALL} ETH"
+    )
 
     # 2-hop test
     test_volume = 1
@@ -166,7 +230,19 @@ def quoter_tests():
         )
         / test_d2
     )
-    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDT")
+    test_result_alt = str(
+        uniV4_test.get_price_input(
+            test_ETH, test_USDT, test_volume * test_d0, route=test_path_2hop
+        )
+        / test_d2
+    )
+    print(
+        f"Result: {Fore.GREEN}"
+        + test_result
+        + " / "
+        + test_result_alt
+        + f"{Style.RESET_ALL} USDT"
+    )
 
     print("")
     print("")
@@ -180,11 +256,31 @@ def quoter_tests():
     )
     test_result = str(
         uniV4_test.get_quote_exact_output_single(
-            test_ETH, test_USDC, test_volume * test_d1
+            test_ETH,
+            test_USDC,
+            test_volume * test_d1,
+            default_test_fee,
+            default_test_tick_spacing,
         )
         / test_d0
     )
-    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} ETH")
+    test_result_alt = str(
+        uniV4_test.get_price_output(
+            test_ETH,
+            test_USDC,
+            test_volume * test_d1,
+            default_test_fee,
+            default_test_tick_spacing,
+        )
+        / test_d0
+    )
+    print(
+        f"Result: {Fore.GREEN}"
+        + test_result
+        + " / "
+        + test_result_alt
+        + f"{Style.RESET_ALL} ETH"
+    )
 
     test_volume = 1
     print(
@@ -194,11 +290,31 @@ def quoter_tests():
     )
     test_result = str(
         uniV4_test.get_quote_exact_output_single(
-            test_USDC, test_ETH, test_volume * test_d0
+            test_USDC,
+            test_ETH,
+            test_volume * test_d0,
+            default_test_fee,
+            default_test_tick_spacing,
         )
         / test_d1
     )
-    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDC")
+    test_result_alt = str(
+        uniV4_test.get_price_output(
+            test_USDC,
+            test_ETH,
+            test_volume * test_d0,
+            default_test_fee,
+            default_test_tick_spacing,
+        )
+        / test_d1
+    )
+    print(
+        f"Result: {Fore.GREEN}"
+        + test_result
+        + " / "
+        + test_result_alt
+        + f"{Style.RESET_ALL} USDC"
+    )
 
     # Testing get_quote_exact_output()
     test_volume = 3000
@@ -213,7 +329,19 @@ def quoter_tests():
         )
         / test_d0
     )
-    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} ETH")
+    test_result_alt = str(
+        uniV4_test.get_price_output(
+            test_USDC, test_ETH, test_volume * test_d1, route=test_path_1hop
+        )
+        / test_d0
+    )
+    print(
+        f"Result: {Fore.GREEN}"
+        + test_result
+        + " / "
+        + test_result_alt
+        + f"{Style.RESET_ALL} ETH"
+    )
 
     test_volume = 1
     print(
@@ -227,7 +355,19 @@ def quoter_tests():
         )
         / test_d1
     )
-    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDC")
+    test_result_alt = str(
+        uniV4_test.get_price_output(
+            test_ETH, test_USDC, test_volume * test_d0, route=test_path_1hop
+        )
+        / test_d1
+    )
+    print(
+        f"Result: {Fore.GREEN}"
+        + test_result
+        + " / "
+        + test_result_alt
+        + f"{Style.RESET_ALL} USDC"
+    )
 
     # 2-hop test
     test_volume = 1
@@ -243,7 +383,20 @@ def quoter_tests():
         )
         / test_d2
     )
-    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDT")
+    test_result_alt = str(
+        uniV4_test.get_price_output(
+            test_ETH, test_USDT, test_volume * test_d0, route=reversed_test_path_2hop
+        )
+        / test_d2
+    )
+
+    print(
+        f"Result: {Fore.GREEN}"
+        + test_result
+        + " / "
+        + test_result_alt
+        + f"{Style.RESET_ALL} USDT"
+    )
 
     print("")
     print("")
