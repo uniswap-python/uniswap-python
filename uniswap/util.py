@@ -241,7 +241,7 @@ class V4pools:
         )
         first_block_number: int = first_block
         if last_block is None:
-            last_block_number = self.web3.eth.get_block_number()
+            last_block_number: int = int(self.web3.eth.get_block_number())
         else:
             last_block_number = min(
                 max(first_block, last_block), int(self.web3.eth.get_block_number())
