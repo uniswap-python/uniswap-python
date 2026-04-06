@@ -1410,12 +1410,16 @@ class Uniswap4:
         try:
             name = _name.decode()
         except Exception:
-            name = _name
+            name = str(_name)
         try:
             symbol = _symbol.decode()
         except Exception as e:
-            logger.warning(f"Error occurred while decoding symbol for {address}: {e}")
-            symbol = _symbol
+            logger.warning(
+                "Error occurred while decoding symbol for %s: %s",
+                _addr_to_str(address),
+                e,
+            )
+            symbol = str(_symbol)
         return ERC20Token(symbol, address, name, decimals)
 
     # Estimates slippage for the given amount of token0
