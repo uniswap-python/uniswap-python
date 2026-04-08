@@ -201,6 +201,7 @@ class V4pools:
         self,
         web3: Web3,
     ):
+        """:param web3: Web3 instance connected to the network for which pool data is being fetched."""
         self.poolkeys_list: List[PoolKey] = list()
         self.web3 = web3
         self.last_block = 0
@@ -208,9 +209,11 @@ class V4pools:
     def get_last_block(
         self,
     ) -> int:
+        """Returns last block number processed by fetch_poolkey_data() method."""
         return self.last_block
 
     def set_last_block(self, value: int) -> None:
+        """Sets last block number processed by fetch_poolkey_data() method."""
         self.last_block = value
 
     def fetch_poolkey_data(
@@ -222,9 +225,9 @@ class V4pools:
     ) -> None:
         """
         :param first_block: Starting block for scanning process
-        :param chunk_size Defines amount of blocks per single log request
-        :param clear_list When True, clears pool list before log scanning, when False - new entries will be added to the end of the list.
-        :param last_block Optional parameter defining the last block for scanning process. If None, current block number will be used.
+        :param chunk_size: Defines amount of blocks per single log request
+        :param clear_list: When True, clears pool list before log scanning, when False - new entries will be added to the end of the list.
+        :param last_block: Optional parameter defining the last block for scanning process. If None, current block number will be used.
         """
         # Scans PoolManager contract' Initialize() event logs in order to get
         # list of all pools.  See documentation for suggested starting blocks.
@@ -241,7 +244,7 @@ class V4pools:
         )
         first_block_number: int = first_block
         if last_block is None:
-            last_block_number = self.web3.eth.get_block_number()
+            last_block_number: int = int(self.web3.eth.get_block_number())
         else:
             last_block_number = min(
                 max(first_block, last_block), int(self.web3.eth.get_block_number())
@@ -268,7 +271,7 @@ class V4pools:
                 flush=True,
             )
             try:
-                logs = pool_manager_contract.events.Initialize().get_logs(
+                logs = pool_manager_contract.events.Initialize().get_logs(  # type: ignore [attr-defined]
                     fromBlock=start_block, toBlock=end_block
                 )
             except Exception as e:
@@ -292,12 +295,12 @@ class V4pools:
                     print(f"Error details: {e}")
                     continue
 
-                if (
-                    txn["to"].lower() != pool_manager_contract_address.lower()
-                    or int(txn["status"]) == 0
-                ):
-                    continue
                 try:
+                    if (
+                        txn["to"].lower() != pool_manager_contract_address.lower()
+                        or int(txn["status"]) == 0
+                    ):
+                        continue
                     pool_currency0 = str(log_item.args.currency0)
                     pool_currency1 = str(log_item.args.currency1)
                     pool_fee = int(str(log_item.args.fee))
