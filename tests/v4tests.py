@@ -1,4 +1,5 @@
 import os
+from decimal import Decimal
 
 from colorama import Fore, Style
 from web3 import Web3
@@ -62,6 +63,8 @@ def pool_tests():
 
 
 def quoter_tests():
+    # price functions tests
+
     # get_token_token_spot_price() tests
     print(f"Testing getSlot0() for {Fore.GREEN}ETH-USDC{Style.RESET_ALL}")
     test_result = str(uniV4_test.get_token_token_spot_price(test_ETH, test_USDC))
@@ -451,6 +454,7 @@ def price_impact_tests():
 
 def state_view_tests():
     ##StateView tests
+    # get_liquidity() test
     print(
         f"Testing get_liquidity() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
@@ -462,7 +466,7 @@ def state_view_tests():
         default_test_hooks,
     )
     print(f"Result: {Fore.GREEN}" + str(test_result) + f"{Style.RESET_ALL}")
-    #
+    # get_slot0() test
     print(
         f"Testing get_slot0() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
@@ -475,7 +479,7 @@ def state_view_tests():
     )
     test_tick: int = int(test_result1["tick"])
     print(f"Result: {Fore.GREEN}" + str(test_result1) + f"{Style.RESET_ALL}")
-    #
+    # get_fee_growth_globals() test
     print(
         f"Testing get_fee_growth_globals() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
@@ -487,7 +491,7 @@ def state_view_tests():
         default_test_hooks,
     )
     print(f"Result: {Fore.GREEN}" + str(test_result2) + f"{Style.RESET_ALL}")
-    #
+    # get_fee_growth_inside() test
     print(
         f"Testing get_fee_growth_inside() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
@@ -502,9 +506,9 @@ def state_view_tests():
     )
     print(f"Result: {Fore.GREEN}" + str(test_result3) + f"{Style.RESET_ALL}")
     #
-    # get_position_info !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # get_position_info_stateview() test
     print(
-        f"Testing get_position_info() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
+        f"Testing get_position_info_stateview() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
     # taken from 0xe529044f9cb8526c9b4d635f81889d991d217a6fb859b3e4f446cbe0ba988e31 as sample data
     pos_inf_token0 = "0x6c76de483f1752ac8473e2b4983a873991e70da7"
@@ -528,9 +532,9 @@ def state_view_tests():
         pos_inf_token_id,
     )
     print(f"Result: {Fore.GREEN}" + str(test_result4) + f"{Style.RESET_ALL}")
-    #
+    # get_tick_bitmap_stateview() test
     print(
-        f"Testing get_tick_bitmap() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
+        f"Testing get_tick_bitmap()_stateview() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
     test_result5 = uniV4_test.get_tick_bitmap_stateview(
         test_ETH,
@@ -541,9 +545,9 @@ def state_view_tests():
         -30000,  # must be int16
     )
     print(f"Result: {Fore.GREEN}" + str(test_result5) + f"{Style.RESET_ALL}")
-    #
+    # get_tick_fee_growth_outside_stateview() test
     print(
-        f"Testing get_tick_fee_growth_outside() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
+        f"Testing get_tick_fee_growth_outside()_stateview() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
     test_result6 = uniV4_test.get_tick_fee_growth_outside_stateview(
         test_ETH,
@@ -554,9 +558,9 @@ def state_view_tests():
         test_tick,
     )
     print(f"Result: {Fore.GREEN}" + str(test_result6) + f"{Style.RESET_ALL}")
-    #
+    # get_tick_pool_info_stateview() test
     print(
-        f"Testing get_tick_pool_info() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
+        f"Testing get_tick_pool_info()_stateview() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
     test_result7 = uniV4_test.get_tick_pool_info_stateview(
         test_ETH,
@@ -570,6 +574,259 @@ def state_view_tests():
     #
     print("")
     print("")
+
+
+def swap_tests():
+    # swap functions tests
+
+    test_pool_key1 = PoolKey(
+        test_ETH,
+        test_USDC,
+        default_test_fee,
+        default_test_tick_spacing,
+        default_test_hooks,
+    )
+    test_pool_key2 = PoolKey(
+        test_USDT,
+        test_USDC,
+        test_pool2_fee,
+        test_pool2_tick_spacing,
+        default_test_hooks,
+    )
+    test_path_1hop = list()
+    test_path_1hop.append(test_pool_key1)
+    test_path_2hop = list()
+    test_path_2hop.append(test_pool_key1)
+    test_path_2hop.append(test_pool_key2)
+
+    # Testing make_swap_input(), single hop, token0 is ETH
+    test_volume_in = 1
+    print(
+        "Testing make_swap_input() for "
+        + str(test_volume_in)
+        + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDC{Style.RESET_ALL}, single hop"
+    )
+    test_volume_out = uniV4_test.get_price_input(
+        test_ETH,
+        test_USDC,
+        test_volume_in * test_d0,
+        test_pool_key1.fee,
+        test_pool_key1.tick_spacing,
+        test_pool_key1.hooks,
+    )
+    test_volume_out_min: int = int(
+        test_volume_out * Decimal(1 - uniV4_test.max_slippage)
+    )
+
+    test_result = uniV4_test.make_swap_input(
+        test_ETH,
+        test_USDC,
+        test_volume_in * test_d0,
+        test_volume_out_min,
+        test_pool_key1,
+    )
+    print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
+
+    # Testing make_swap_input(), single hop, token0 is non-ETH
+    test_volume_in = 1
+    print(
+        "Testing make_swap_input() for "
+        + str(test_volume_in)
+        + f" {Fore.GREEN}USDC{Style.RESET_ALL} to {Fore.GREEN}ETH{Style.RESET_ALL}, single hop"
+    )
+    test_volume_out = uniV4_test.get_price_input(
+        test_USDC,
+        test_ETH,
+        test_volume_in * test_d1,
+        test_pool_key1.fee,
+        test_pool_key1.tick_spacing,
+        test_pool_key1.hooks,
+    )
+    test_volume_out_min = int(test_volume_out * Decimal(1 - uniV4_test.max_slippage))
+
+    test_result = uniV4_test.make_swap_input(
+        test_USDC,
+        test_ETH,
+        test_volume_in * test_d1,
+        test_volume_out_min,
+        test_pool_key1,
+    )
+    print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
+    print("")
+    print("")
+
+    # Testing make_swap_input(), 2-hop test, token0 is ETH
+    test_volume_in = 1
+    print(
+        "Testing 2-hop make_swap_input() for "
+        + str(test_volume_in)
+        + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDT{Style.RESET_ALL}, 2-hop"
+    )
+    test_volume_out = uniV4_test.get_price_input(
+        test_ETH, test_USDT, test_volume_in * test_d0, route=test_path_2hop
+    )
+    test_volume_out_min = int(test_volume_out * Decimal(1 - uniV4_test.max_slippage))
+
+    test_result = uniV4_test.make_swap_input(
+        test_ETH,
+        test_USDT,
+        test_volume_in * test_d0,
+        test_volume_out_min,
+        route=test_path_2hop,
+    )
+    print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
+
+    # Testing make_swap_input(), 2-hop test, token0 is non-ETH
+    test_volume_in = 1
+    print(
+        "Testing 2-hop make_swap_input() for "
+        + str(test_volume_in)
+        + f" {Fore.GREEN}USDT{Style.RESET_ALL} to {Fore.GREEN}ETH{Style.RESET_ALL}, 2-hop"
+    )
+    test_volume_out = uniV4_test.get_price_input(
+        test_USDT,
+        test_ETH,
+        test_volume_in * test_d1,
+        route=list(reversed(test_path_2hop)),
+    )
+    test_volume_out_min = int(test_volume_out * Decimal(1 - uniV4_test.max_slippage))
+    test_result = uniV4_test.make_swap_input(
+        test_USDT,
+        test_ETH,
+        test_volume_in * test_d1,
+        test_volume_out_min,
+        route=list(reversed(test_path_2hop)),
+    )
+    print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
+
+    print("")
+    print("")
+
+    # Testing make_swap_output(), single hop, token0 is ETH
+    test_volume_out = 1
+    print(
+        "Testing make_swap_output() for "
+        + str(test_volume_out)
+        + f" {Fore.GREEN}USDC{Style.RESET_ALL} to {Fore.GREEN}ETH{Style.RESET_ALL}, single hop"
+    )
+    test_volume_in = uniV4_test.get_price_output(
+        test_ETH,
+        test_USDC,
+        test_volume_out * test_d1,
+        test_pool_key1.fee,
+        test_pool_key1.tick_spacing,
+    )
+    test_volume_in_max = int(test_volume_in * Decimal(1 + uniV4_test.max_slippage))
+    test_result = uniV4_test.make_swap_output(
+        test_ETH,
+        test_USDC,
+        test_volume_out * test_d1,
+        test_volume_in_max,
+        test_pool_key1,
+    )
+    print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
+
+    # Testing make_swap_output(), single hop, token0 is non-ETH
+    test_volume_out = 1
+    print(
+        "Testing make_swap_output() for "
+        + str(test_volume_out)
+        + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDC{Style.RESET_ALL}, single hop"
+    )
+    test_volume_in = uniV4_test.get_price_output(
+        test_USDC,
+        test_ETH,
+        test_volume_out * test_d1,
+        test_pool_key1.fee,
+        test_pool_key1.tick_spacing,
+    )
+    test_volume_in_max = int(test_volume_in * Decimal(1 + uniV4_test.max_slippage))
+    test_result = uniV4_test.make_swap_output(
+        test_USDC,
+        test_ETH,
+        test_volume_out * test_d1,
+        test_volume_in_max,
+        test_pool_key1,
+    )
+    print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
+
+    # Testing make_swap_output(), 2-hop, token0 is ETH
+    test_volume_out = 1
+    print(
+        "Testing 2-hop exactOutput() for "
+        + str(test_volume_out)
+        + f" {Fore.GREEN}ETH{Style.RESET_ALL} to {Fore.GREEN}USDT{Style.RESET_ALL}, 2-hop"
+    )
+    reversed_test_path_2hop = list(reversed(test_path_2hop))
+    test_volume_in = uniV4_test.get_price_output(
+        test_ETH, test_USDT, test_volume_out * test_d0, route=reversed_test_path_2hop
+    )
+    test_volume_in_max = int(test_volume_in * Decimal(1 + uniV4_test.max_slippage))
+    test_result = uniV4_test.make_swap_output(
+        test_ETH,
+        test_USDT,
+        test_volume_out * test_d2,
+        test_volume_in_max,
+        route=reversed_test_path_2hop,
+    )
+
+    print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
+
+    # Testing make_swap_output(), 2-hop, token0 is non-ETH
+    test_volume_out = 1
+    print(
+        "Testing 2-hop exactOutput() for "
+        + str(test_volume_out)
+        + f" {Fore.GREEN}USDT{Style.RESET_ALL} to {Fore.GREEN}ETH{Style.RESET_ALL}, 2-hop"
+    )
+    test_volume_in = uniV4_test.get_price_output(
+        test_USDT, test_ETH, test_volume_out * test_d0, route=test_path_2hop
+    )
+    test_volume_in_max = int(test_volume_in * Decimal(1 + uniV4_test.max_slippage))
+
+    test_result = uniV4_test.make_swap_output(
+        test_USDT,
+        test_ETH,
+        test_volume_out * test_d2,
+        test_volume_in_max,
+        route=test_path_2hop,
+    )
+
+    print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
+
+    print("")
+    print("")
+
+
+def liquidity_tests():
+    ##liquidity management functions tests
+    # get_position_info() test
+    test_token_id: int = 1
+    print(
+        f"Testing get_position_info() for token ID ({Fore.GREEN}{test_token_id} {Style.RESET_ALL}"
+    )
+    test_result1 = uniV4_test.get_position_info(test_token_id)
+    test_pool_id_result: int = int.from_bytes(test_result1["poolID"], byteorder="big")
+    test_pool_id_check = uniV4_test.get_pool_id(
+        PoolKey(
+            test_result1["currency0"],
+            test_result1["currency1"],
+            test_result1["fee"],
+            test_result1["tickSpacing"],
+            test_result1["hooks"],
+        )
+    )
+    print(
+        "Result: "
+        + str(test_result1)
+        + f"; truncated pool ID: {Fore.GREEN}"
+        + hex(test_pool_id_result)
+        + f"{Style.RESET_ALL}"
+        + f"; full pool ID: {Fore.GREEN}"
+        + f"{test_pool_id_check.hex()}"
+        + f"{Style.RESET_ALL}"
+    )
+    #
 
 
 if __name__ == "__main__":
@@ -608,5 +865,7 @@ if __name__ == "__main__":
     quoter_tests()
     price_impact_tests()
     state_view_tests()
+    liquidity_tests()
+    # swap_tests()
 
     print("Done.")
