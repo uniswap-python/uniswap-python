@@ -748,7 +748,7 @@ def swap_tests():
         test_volume_in_max,
         test_pool_key1,
     )
-    print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} USDC")
+    print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
 
     # Testing make_swap_output(), 2-hop, token0 is ETH
     test_volume_out = 1
