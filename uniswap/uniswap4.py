@@ -571,9 +571,7 @@ class Uniswap4:
         return_value = operator
         return return_value
 
-    def get_pool_and_position_info_position_manager(
-        self, token_id: int
-    ) -> Dict[str, Union[PoolKey, int]]:
+    def get_pool_and_position_info_position_manager(self, token_id: int) -> Dict:
         """
         :returns: The PoolKey class object and position info of a position
         """
@@ -665,17 +663,18 @@ class Uniswap4:
         self,
     ) -> str:
         """
-        :returns: The owner of the position for a given token ID
+        :returns: The Permit2 contract to forward approvals
         """
         permit2: str = str(self.position_manager.functions.permit2().call())
         return_value = permit2
         return return_value
 
-    def get_pool_keys_position_manager(self, token_id: int) -> PoolKey:
+    def get_pool_keys_position_manager(self, pool_id_trunc: bytes) -> PoolKey:
         """
+        :param pool_id_trunc: The truncated ID of the pool, first 25 bytes of common pool_id
         :returns: The PoolKey class object for a given token ID
         """
-        pool_keys_tuple = self.position_manager.functions.poolKeys(token_id).call()
+        pool_keys_tuple = self.position_manager.functions.poolKeys(pool_id_trunc).call()
         pool_keys: PoolKey = PoolKey(*pool_keys_tuple)
         return_value = pool_keys
         return return_value
@@ -2123,6 +2122,83 @@ class Uniswap4:
                 recipient,
             )
         return result
+
+    # Liquidity management functions
+    def get_position_info(self, token_id: int) -> Dict:
+        """
+                Get information about a liquidity position given its token ID.
+                :return: A dictionary with the following keys:
+
+        - currency0: The address of the first token in the pool
+        - currency1: The address of the second token in the pool
+        - fee: The fee tier of the pool
+        - tickSpacing: The tick spacing of the pool
+        - hooks: The hooks address of the pool
+        - poolID: The truncated pool ID of the position, which is the first 25 bytes of the full pool ID
+        - tickLower: The lower tick of the position
+        - tickUpper: The upper tick of the position
+        - hasSubscriber: A boolean indicating whether the position has a subscriber
+        - owner: The address of the owner of the position
+        """
+        position_info = self.get_pool_and_position_info_position_manager(token_id)
+
+        pool_key: PoolKey = position_info["poolKey"]
+        pool_info = position_info["info"]
+        pool_info_decoded = self.decode_position_info(pool_info)
+        owner_of = self.get_owner_of_position_manager(token_id)
+        return_value: Dict = {
+            "currency0": pool_key.currency0,
+            "currency1": pool_key.currency1,
+            "fee": pool_key.fee,
+            "tickSpacing": pool_key.tick_spacing,
+            "hooks": pool_key.hooks,
+            "poolID": pool_info_decoded["poolID"],
+            "tickLower": pool_info_decoded["tickLower"],
+            "tickUpper": pool_info_decoded["tickUpper"],
+            "hasSubscriber": pool_info_decoded["hasSubscriber"],
+            "owner": owner_of,
+        }
+        return return_value
+
+    # Helper functions
+    def decode_position_info(self, position_info: int) -> Dict:
+        """
+
+                :return:
+        A dictionary with the following keys:
+        - tickLower: The lower tick of the position.
+        - tickUpper: The upper tick of the position.
+        - poolID: The pool ID of the position.
+        - hasSubscriber: A boolean indicating whether the position has a subscriber.
+        """
+        tick_lower_offset = 8
+        tick_upper_offset = 32
+        pool_id_offset = 56
+        sign_bit = 0x800000
+
+        mask = 0xFF
+        has_subscriber: bool = (position_info & mask) != 0
+        # The tick values are stored as signed 24-bit integers, so we need to check the sign bit and cast to python signed.
+        tick_lower: int = (position_info >> tick_lower_offset) & 0xFFFFFF
+        if tick_lower & sign_bit:
+            tick_lower = tick_lower - 0x1000000
+        tick_upper: int = (position_info >> tick_upper_offset) & 0xFFFFFF
+        if tick_upper & sign_bit:
+            tick_upper = tick_upper - 0x1000000
+        # The pool ID is stored in the remaining bits, so we shift the position info to the right by the pool ID offset to get the pool ID.
+        rest_part: int = position_info >> pool_id_offset
+        pool_id_raw_length = (rest_part.bit_length() + 7) // 8
+        pool_id_raw: bytes = rest_part.to_bytes(pool_id_raw_length, byteorder="big")
+        pool_id: bytes = bytes(25)
+        copy_bytes: int = min(len(pool_id_raw), 25)
+        pool_id = pool_id_raw[:copy_bytes]
+        return_value = {
+            "tickLower": tick_lower,
+            "tickUpper": tick_upper,
+            "poolID": pool_id,
+            "hasSubscriber": has_subscriber,
+        }
+        return return_value
 
     def get_token_balance(self, erc20: AddressLike) -> Decimal:
         """Get the balance of an ERC20 token for your address."""
