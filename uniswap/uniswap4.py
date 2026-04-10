@@ -1431,7 +1431,6 @@ class Uniswap4:
         tick_spacing: int = 10,
         hooks: str = ZERO_HOOK,
         hook_data: bytes = bytes(),
-        route: Optional[List[str]] = None,
     ) -> float:
         """
         :return: the estimated price impact as a positive float (0.01 = 1%).
@@ -2168,7 +2167,7 @@ class Uniswap4:
         A dictionary with the following keys:
         - tickLower: The lower tick of the position.
         - tickUpper: The upper tick of the position.
-        - poolID: The pool ID of the position.
+        - poolID: The truncated pool ID of the position, which is the first 25 bytes of the full pool ID.
         - hasSubscriber: A boolean indicating whether the position has a subscriber.
         """
         tick_lower_offset = 8
@@ -2176,22 +2175,32 @@ class Uniswap4:
         pool_id_offset = 56
         sign_bit = 0x800000
 
+        # The hasSubscriber flag is stored in the least significant byte of the position info, so we can use a bitwise AND operation with a mask of 0xFF to extract it.
         mask = 0xFF
         has_subscriber: bool = (position_info & mask) != 0
-        # The tick values are stored as signed 24-bit integers, so we need to check the sign bit and cast to python signed.
-        tick_lower: int = (position_info >> tick_lower_offset) & 0xFFFFFF
+
+        # The tick lower and tick upper values are stored in the next 3 bytes each, so we shift the position info to the right by the respective offsets and use a bitwise AND operation with a mask of 0xFFFFFF to extract them. We also check if the sign bit is set to determine if the tick values are negative, and if so, we subtract 0x1000000 from them to get the correct negative value.
+        mask = 0xFFFFFF
+        tick_lower: int = (position_info >> tick_lower_offset) & mask
         if tick_lower & sign_bit:
             tick_lower = tick_lower - 0x1000000
-        tick_upper: int = (position_info >> tick_upper_offset) & 0xFFFFFF
+
+        tick_upper: int = (position_info >> tick_upper_offset) & mask
         if tick_upper & sign_bit:
             tick_upper = tick_upper - 0x1000000
-        # The pool ID is stored in the remaining bits, so we shift the position info to the right by the pool ID offset to get the pool ID.
+
+        # The pool ID is stored in the remaining bytes, so we shift the position info to the right by the pool ID offset to get the pool ID.
         rest_part: int = position_info >> pool_id_offset
         pool_id_raw_length = (rest_part.bit_length() + 7) // 8
+        if pool_id_raw_length < 25:
+            raise ContractLogicError(
+                f"Invalid return: truncated pool ID is too short. Expected at least 25 bytes, got {pool_id_raw_length} bytes."
+            ) from None
         pool_id_raw: bytes = rest_part.to_bytes(pool_id_raw_length, byteorder="big")
         pool_id: bytes = bytes(25)
         copy_bytes: int = min(len(pool_id_raw), 25)
         pool_id = pool_id_raw[:copy_bytes]
+
         return_value = {
             "tickLower": tick_lower,
             "tickUpper": tick_upper,

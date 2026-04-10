@@ -386,11 +386,13 @@ class V4pools:
 
     def get_poolkeys_sublist(self, currency0: str, currency1: str) -> List[PoolKey]:
         """Returns all pools for the (currency0, currency1) pair"""
-        if currency0 < currency1:
-            c0, c1 = currency0, currency1
+        if currency0.lower() < currency1.lower():
+            c0, c1 = currency0.lower(), currency1.lower()
         else:
-            c0, c1 = currency1, currency0
+            c0, c1 = currency1.lower(), currency0.lower()
         result_list = [
-            x for x in self.poolkeys_list if c0 == x.currency0 and c1 == x.currency1
+            x
+            for x in self.poolkeys_list
+            if c0 == x.currency0.lower() and c1 == x.currency1.lower()
         ]
         return result_list
