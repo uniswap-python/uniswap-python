@@ -2191,15 +2191,16 @@ class Uniswap4:
 
         # The pool ID is stored in the remaining bytes, so we shift the position info to the right by the pool ID offset to get the pool ID.
         rest_part: int = position_info >> pool_id_offset
-        pool_id_raw_length = (rest_part.bit_length() + 7) // 8
-        if pool_id_raw_length < 25:
-            raise ContractLogicError(
-                f"Invalid return: truncated pool ID is too short. Expected at least 25 bytes, got {pool_id_raw_length} bytes."
-            ) from None
-        pool_id_raw: bytes = rest_part.to_bytes(pool_id_raw_length, byteorder="big")
-        pool_id: bytes = bytes(25)
-        copy_bytes: int = min(len(pool_id_raw), 25)
-        pool_id = pool_id_raw[:copy_bytes]
+        # pool_id_raw_length = (rest_part.bit_length() + 7) // 8
+        # if pool_id_raw_length < 25:
+        #     raise ContractLogicError(
+        #         f"Invalid return: truncated pool ID is too short. Expected at least 25 bytes, got {pool_id_raw_length} bytes."
+        #     ) from None
+        # pool_id_raw: bytes = rest_part.to_bytes(pool_id_raw_length, byteorder="big")
+        # pool_id: bytes = bytes(25)
+        # copy_bytes: int = min(len(pool_id_raw), 25)
+        # pool_id = pool_id_raw[:copy_bytes]
+        pool_id: bytes = rest_part.to_bytes(25, byteorder="big")
 
         return_value = {
             "tickLower": tick_lower,
