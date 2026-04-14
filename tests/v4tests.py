@@ -803,7 +803,7 @@ def liquidity_tests():
     # get_position_info() test
     test_token_id: int = 1
     print(
-        f"Testing get_position_info() for token ID ({Fore.GREEN}{test_token_id} {Style.RESET_ALL}"
+        f"Testing get_position_info() for token ID {Fore.GREEN}{test_token_id} {Style.RESET_ALL}"
     )
     test_result1 = uniV4_test.get_position_info(test_token_id)
     test_pool_id_result: int = int.from_bytes(test_result1["poolID"], byteorder="big")
@@ -826,6 +826,50 @@ def liquidity_tests():
         + f"{test_pool_id_check.hex()}"
         + f"{Style.RESET_ALL}"
     )
+    print("")
+    print("")
+
+    # get_position_info() test
+    print(
+        f"Testing get_position_value() for token ID {Fore.GREEN}{test_token_id} {Style.RESET_ALL}"
+    )
+    test_result1 = uniV4_test.get_position_value(test_token_id, 18, 6)
+    print("Result: " + str(test_result1))
+    print("")
+    print("")
+
+    test_token_id = 206788
+    print(
+        f"Testing get_position_info() for token ID {Fore.GREEN}{test_token_id} {Style.RESET_ALL}"
+    )
+    test_result1 = uniV4_test.get_position_value(test_token_id, 18, 8)
+    print("Result: " + str(test_result1))
+    print("")
+    print("")
+
+    test_transaction_hash: str = (
+        "0xb30d3dde98f715e5880da9f8833f99823623229e193e04661cb7ce193e4028f8"
+    )
+
+    print(
+        f"Testing get_minted_token_id() for transaction {Fore.GREEN}{test_transaction_hash} {Style.RESET_ALL}"
+    )
+    test_result_token_id = uniV4_test.get_minted_token_id(test_transaction_hash)
+    print("Result: " + str(test_result_token_id))
+    print("")
+    print("")
+
+    test_transaction_hash = (
+        "0xfe0389d167acbe1bb10f2ef0487ae123beab8a5b334799d68632957e3d16ff6e"
+    )
+
+    print(
+        f"Testing get_minted_token_id() for transaction {Fore.GREEN}{test_transaction_hash} {Style.RESET_ALL}"
+    )
+    test_result_token_id = uniV4_test.get_minted_token_id(test_transaction_hash)
+    print("Result: " + str(test_result_token_id))
+    print("")
+    print("")
     #
 
 
