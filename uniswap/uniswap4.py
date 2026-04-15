@@ -21,6 +21,7 @@ from web3.types import (
 
 from .constants import (
     ETH_ADDRESS,
+    Q96,
     ZERO_HOOK,
     _netid_to_name,
     _permit2_contract_addresses_v4,
@@ -104,8 +105,7 @@ class Uniswap4:
         # max_approval_check checks that current approval is above a reasonable
         # number
         # The program cannot check for max_approval each time because it
-        # decreases
-        # with each trade.
+        # decreases with each trade.
         self.max_approval_hex = f"0x{64 * 'f'}"
         self.max_approval_int = int(self.max_approval_hex, 16)
         self.max_approval_check_hex = f"0x{15 * '0'}{49 * 'f'}"
@@ -167,16 +167,13 @@ class Uniswap4:
             address=self.position_manager_address,
         )
 
-    def load_contract_with_abi(self, abi_name: str, address: AddressLike) -> Contract:
-        return self.w3.eth.contract(address=address, abi=_load_abi(abi_name))
-
-    def erc20_contract(self, token_addr: AddressLike) -> Contract:
-        return self.load_contract_with_abi(abi_name="erc20", address=token_addr)
-
+    # Approvals
     def approve(
         self, token: AddressLike, max_approval: Optional[int] = None
     ) -> HexBytes:
-        """Give an PERMIT2 approval of a token."""
+        """Approve a `token` for trading on the exchange. Only needs to be done once per token, unless you want to set a different max approval."""
+
+        # If the token is not ETH, approve the router to spend it. For ETH, the router can pull from the user's wallet directly, so no approval is necessary.
         if _addr_to_str(token) != ETH_ADDRESS:
             max_approval = self.max_approval_int if not max_approval else max_approval
             function = self.erc20_contract(token).functions.approve(
@@ -185,7 +182,7 @@ class Uniswap4:
             logger.info(f"Approving {_addr_to_str(token)} for PERMIT2...")
             tx = self._build_and_send_tx(function)
             time.sleep(7)
-        # Give an exchange/router max approval of a token.
+        # Give an exchange/router max approval for a token.
         max_approval = 2**100 - 1
         expiration: int = int(10**12)
         logger.info(f"Setting permit for {_addr_to_str(token)} at router contract...")
@@ -197,63 +194,50 @@ class Uniswap4:
         return tx
 
     def approval(self, token: AddressLike) -> int:
+        """Returns the current allowance for the router to spend a token on the user's behalf. Note that this is not the allowance of the token itself, but the allowance set in the Permit2 contract for the router to spend the token."""
         # [0]=current allowance, [1]=allowance expiration [2]=current nonce
         result = int(
             self.permit2.functions.allowance(
                 self.address, token, self.router.address
-            ).call()[0]
+            ).call()
         )
         return result
-
-    def _get_tx_params(self, value: int = 0, gas: int = 250000) -> TxParams:
-        """Get generic transaction parameters."""
-        if not self.post_merge:
-            return {
-                "from": _addr_to_str(self.address),
-                "value": Wei(value),
-                "gas": int(self.gas_limit),
-                "gasPrice": Web3.to_wei(self.gas_price, "gwei"),
-                "nonce": Nonce(max(self.last_nonce, 0)),
-            }
-        else:
-            return {
-                "from": _addr_to_str(self.address),
-                "gas": int(self.gas_limit),
-                "maxPriorityFeePerGas": Web3.to_wei(self.priority_fee, "gwei"),
-                "maxFeePerGas": Web3.to_wei(self.gas_price, "gwei"),
-                "type": 2,
-                "chainId": self.w3.eth.chain_id,
-                "value": Wei(value),
-                "nonce": Nonce(max(self.last_nonce, 0)),
-            }
 
     # Gas customization
     # Gas limit
     def get_gas_limit(self) -> float:
+        """Returns the current gas limit for transactions."""
         return self.gas_limit
 
     def set_gas_limit(self, gas_limit: float) -> None:
+        """Sets the gas limit for transactions."""
         self.gas_limit = gas_limit
 
     # Gas price in GWei
     def get_gas_price(self) -> float:
+        """Returns the current gas price in GWei."""
         return self.gas_price
 
     def set_gas_price(self, gas_price: float) -> None:
+        """Sets the gas price in GWei."""
         self.gas_price = gas_price
 
     # Priority fee in GWei
     def get_gas_priorityfee(self) -> float:
+        """Returns the current priority fee in GWei."""
         return self.priority_fee
 
     def set_gas_priorityfee(self, priority_fee: float) -> None:
+        """Sets the priority fee in GWei."""
         self.priority_fee = priority_fee
 
     # Slippage
     def get_max_slippage(self) -> float:
+        """Returns the current maximum slippage as a float (0.01 is 1%)."""
         return self.max_slippage
 
     def set_max_slippage(self, max_slippage: float) -> None:
+        """Sets the maximum slippage as a float (0.01 is 1%)."""
         self.max_slippage = max_slippage
 
     # StateView methods
@@ -587,7 +571,7 @@ class Uniswap4:
 
     def get_position_liquidity_position_manager(self, token_id: int) -> int:
         """
-        :returns: True if the operator is allowed to manage all of the assets of owner
+        :returns: The liquidity of a position
         """
         position_liquidity: int = int(
             self.position_manager.functions.getPositionLiquidity(token_id).call()
@@ -611,7 +595,7 @@ class Uniswap4:
         self,
     ) -> str:
         """
-                :returns: address considered executor of the actions
+        :returns: address considered executor of the actions
 
         The other context functions, _msgData and _msgValue, are not supported by this contract.
         In many contracts this will be the address that calls the initial entry point
@@ -1373,54 +1357,6 @@ class Uniswap4:
             spot_price = 1 / spot_price
         return spot_price
 
-    def get_pool_id(self, pool: PoolKey) -> HexBytes:
-        """Computes the pool ID for a given PoolKey by hashing its parameters."""
-        pool_data = eth_abi.abi.encode(
-            types=["address", "address", "uint24", "int24", "address"],
-            args=[
-                pool.currency0,
-                pool.currency1,
-                pool.fee,
-                pool.tick_spacing,
-                pool.hooks,
-            ],
-        )
-        pool_id = Web3.keccak(pool_data)
-        return pool_id
-
-    def get_token(self, address: AddressLike, abi_name: str = "erc20") -> ERC20Token:
-        """
-        Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
-        """
-        if address == ETH_ADDRESS or address == _str_to_addr(ETH_ADDRESS):
-            return ERC20Token(
-                address=address,
-                name="ETH",
-                symbol="ETH",
-                decimals=18,
-            )
-        token_contract = _load_contract(self.w3, abi_name, address=address)
-        try:
-            _name = token_contract.functions.name().call()
-            _symbol = token_contract.functions.symbol().call()
-            decimals = token_contract.functions.decimals().call()
-        except Exception:
-            raise InvalidToken(address)
-        try:
-            name = _name.decode()
-        except Exception:
-            name = str(_name)
-        try:
-            symbol = _symbol.decode()
-        except Exception as e:
-            logger.warning(
-                "Error occurred while decoding symbol for %s: %s",
-                _addr_to_str(address),
-                e,
-            )
-            symbol = str(_symbol)
-        return ERC20Token(symbol, address, name, decimals)
-
     # Estimates slippage for the given amount of token0
     def estimate_price_impact(
         self,
@@ -1470,70 +1406,6 @@ class Uniswap4:
         fee_realised_percentage: float = realised_fee_percentage(fee, qty)
         price_impact_real: float = price_impact_with_fees - fee_realised_percentage
         return price_impact_real
-
-    def encode_path_keys_input(
-        self,
-        path: List[PoolKey],
-        currency_in: str,
-        hook_data_list: Optional[List[bytes]] = None,
-    ) -> List[PathKey]:
-        """
-        Encodes a list of PoolKeys into the format expected by the quoter for multi-hop ExactInput quotes.
-        """
-        encoded_path: List[PathKey] = []
-        if hook_data_list is None:
-            hook_data_list = [b""] * len(path)
-        else:
-            if len(hook_data_list) != len(path):
-                raise ValueError("Length of hook_data_list must match length of path")
-        for pool_key, hook_data in zip(path, hook_data_list):
-            currency_out: str = (
-                pool_key.currency1
-                if currency_in.lower() == pool_key.currency0.lower()
-                else pool_key.currency0
-            )
-            path_key: PathKey = PathKey(
-                currency_out,
-                pool_key.fee,
-                pool_key.tick_spacing,
-                pool_key.hooks,
-                hook_data,
-            )
-            encoded_path.append(path_key)
-            currency_in = currency_out
-        return encoded_path
-
-    def encode_path_keys_output(
-        self,
-        path: List[PoolKey],
-        currency_out: str,
-        hook_data_list: Optional[List[bytes]] = None,
-    ) -> List[PathKey]:
-        """
-        Encodes a list of PoolKeys into the format expected by the quoter for multi-hop ExactOutput quotes.
-        """
-        encoded_path: List[PathKey] = []
-        if hook_data_list is None:
-            hook_data_list = [b""] * len(path)
-        else:
-            if len(hook_data_list) != len(path):
-                raise ValueError("Length of hook_data_list must match length of path")
-        for pool_key, hook_data in zip(reversed(path), reversed(hook_data_list)):
-            currency_in: str = (
-                pool_key.currency1
-                if currency_out.lower() == pool_key.currency0.lower()
-                else pool_key.currency0
-            )
-            path_key: PathKey = PathKey(
-                currency_in,
-                pool_key.fee,
-                pool_key.tick_spacing,
-                pool_key.hooks,
-                hook_data,
-            )
-            encoded_path.insert(0, path_key)
-            currency_out = currency_in
-        return encoded_path
 
     # Quoter methods
     # Read methods
@@ -2159,16 +2031,365 @@ class Uniswap4:
         }
         return return_value
 
+    def get_position_value(
+        self, token_id: int, token0_decimals: int, token1_decimals: int
+    ) -> Dict:
+        """
+        Get the value of a liquidity position given its token ID.
+        """
+        liquidity: int = self.get_position_liquidity_position_manager(token_id)
+        position_info = self.get_position_info(token_id)
+        slot0 = self.get_slot0_stateview(
+            position_info["currency0"],
+            position_info["currency1"],
+            position_info["fee"],
+            position_info["tickSpacing"],
+            position_info["hooks"],
+        )
+        # price: Decimal = Decimal(
+        #     Decimal(
+        #         decode_sqrt_ratioX96(
+        #             slot0["sqrtPriceX96"],
+        #         )
+        #     )
+        #     / Decimal(10 ** (token1_decimals - token0_decimals))
+        # )
+        sqrt_price = int(slot0["sqrtPriceX96"])
+        raw_price: Decimal = (sqrt_price / Decimal(Q96)) ** 2
+        decimal_factor: Decimal = 10**token1_decimals / Decimal(10**token0_decimals)
+        price: Decimal = raw_price / decimal_factor
+        amounts = self.get_amounts_for_liquidity_by_ticks(
+            slot0["sqrtPriceX96"],
+            position_info["tickLower"],
+            position_info["tickUpper"],
+            liquidity,
+        )
+        amount0: Decimal = Decimal(amounts["amount0"]) / Decimal(10**token0_decimals)
+        amount1: Decimal = Decimal(amounts["amount1"]) / Decimal(10**token1_decimals)
+        return_value: Dict = {
+            "amount0": amounts["amount0"],
+            "amount1": amounts["amount1"],
+            # NOTE: unclaimed fees are not yet computed; total values equal principal only
+            "unclaimed_fees0": 0,
+            "unclaimed_fees1": 0,
+            "total_amount0": amounts["amount0"],
+            "total_amount1": amounts["amount1"],
+            "value_in_token0": amount0 + amount1 / price,
+            "value_in_token1": amount1 + amount0 * price,
+        }
+        return return_value
+
+    def create_pool(
+        self,
+        pool_key: PoolKey,
+        sqrt_price_x96: int,
+    ) -> HexBytes:
+        """
+        Creates a new liquidity pool without initial liquidity with the specified parameters and a starting price.
+        """
+        function = self.position_manager.functions.initializePool(
+            astuple(pool_key),
+            sqrt_price_x96,
+        )
+        tx = self._build_and_send_tx(function, self._get_tx_params())
+        return tx
+
+    def mint_position(self) -> HexBytes:
+        """
+        Mints a new liquidity position with the specified parameters.
+        """
+        # This is a placeholder function. The actual implementation would depend on the specific parameters required for minting a position, such as the pool key, tick lower, tick upper, and liquidity amount.
+        function = self.pool_manager.functions.mint()
+        tx = self._build_and_send_tx(function, self._get_tx_params())
+        return tx
+
+    def increase_liquidity(self) -> HexBytes:
+        """
+        Increases the liquidity of an existing position.
+        """
+        # This is a placeholder function. The actual implementation would depend on the specific parameters required for increasing liquidity, such as the token ID of the position and the additional liquidity amount.
+        function = self.position_manager.functions.increaseLiquidity()
+        tx = self._build_and_send_tx(function, self._get_tx_params())
+        return tx
+
+    def decrease_liquidity(self) -> HexBytes:
+        """
+        Decreases the liquidity of an existing position.
+        """
+        # This is a placeholder function. The actual implementation would depend on the specific parameters required for decreasing liquidity, such as the token ID of the position and the amount of liquidity to remove.
+        function = self.position_manager.functions.decreaseLiquidity()
+        tx = self._build_and_send_tx(function, self._get_tx_params())
+        return tx
+
+    def collect_fees(self) -> HexBytes:
+        """
+        Collects the fees accrued by an existing positions specified in list.
+        """
+        # This is a placeholder function. The actual implementation would depend on the specific parameters required for collecting fees, such as the token ID of the position and the recipient address for the collected fees.
+        function = self.position_manager.functions.collect()
+        tx = self._build_and_send_tx(function, self._get_tx_params())
+        return tx
+
+    def burn_position(self) -> HexBytes:
+        """
+        Burns an existing liquidity position.
+        """
+        # This is a placeholder function. The actual implementation would depend on the specific parameters required for burning a position.
+        function = self.position_manager.functions.burn()
+        tx = self._build_and_send_tx(function, self._get_tx_params())
+        return tx
+
     # Helper functions
+    def get_liquidity_for_amount0(
+        self, sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, amount0: int
+    ) -> int:
+        """
+        Helper function to calculate the amount of liquidity that can be provided for a given amount of `token0` and price range defined by `sqrt_  ratio_a_x96` and `sqrt_ratio_b_x96`.
+        """
+        if sqrt_ratio_a_x96 > sqrt_ratio_b_x96:
+            sqrt_ratio_a_x96, sqrt_ratio_b_x96 = sqrt_ratio_b_x96, sqrt_ratio_a_x96
+
+        liquidity: int = (amount0 * (sqrt_ratio_a_x96 * sqrt_ratio_b_x96 // Q96)) // (
+            sqrt_ratio_b_x96 - sqrt_ratio_a_x96
+        )
+        return liquidity
+
+    def get_liquidity_for_amount1(
+        self, sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, amount1: int
+    ) -> int:
+        """
+        Helper function to calculate the amount of liquidity that can be provided for a given amount of `token1` and price range defined by `sqrt_ratio_a_x96` and `sqrt_ratio_b_x96`.
+        """
+        if sqrt_ratio_a_x96 > sqrt_ratio_b_x96:
+            sqrt_ratio_a_x96, sqrt_ratio_b_x96 = sqrt_ratio_b_x96, sqrt_ratio_a_x96
+
+        liquidity: int = (amount1 * Q96) // (sqrt_ratio_b_x96 - sqrt_ratio_a_x96)
+        return liquidity
+
+    def get_liquidity_for_amounts(
+        self,
+        sqrt_ratio_a_x96: int,
+        sqrt_ratio_b_x96: int,
+        sqrt_ratio_current_x96: int,
+        amount0: int,
+        amount1: int,
+    ) -> int:
+        """
+        Helper function to calculate the amount of liquidity that can be provided for given amounts of `token0` and `token1` and price range defined by `sqrt_ratio_a_x96` and `sqrt_ratio_b_x96`.
+        """
+        if sqrt_ratio_a_x96 > sqrt_ratio_b_x96:
+            sqrt_ratio_a_x96, sqrt_ratio_b_x96 = sqrt_ratio_b_x96, sqrt_ratio_a_x96
+
+        if sqrt_ratio_current_x96 <= sqrt_ratio_a_x96:
+            liquidity: int = self.get_liquidity_for_amount0(
+                sqrt_ratio_a_x96, sqrt_ratio_b_x96, amount0
+            )
+        elif sqrt_ratio_current_x96 < sqrt_ratio_b_x96:
+            liquidity0: int = self.get_liquidity_for_amount0(
+                sqrt_ratio_current_x96, sqrt_ratio_b_x96, amount0
+            )
+            liquidity1: int = self.get_liquidity_for_amount1(
+                sqrt_ratio_a_x96, sqrt_ratio_current_x96, amount1
+            )
+            liquidity = min(liquidity0, liquidity1)
+        else:
+            liquidity = self.get_liquidity_for_amount1(
+                sqrt_ratio_a_x96, sqrt_ratio_b_x96, amount1
+            )
+        return liquidity
+
+    def get_amount0_for_liquidity(
+        self, sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, liquidity: int
+    ) -> int:
+        """
+        Helper function to calculate the amount of `token0` that can be provided for a given amount of liquidity and price range defined by `sqrt_ratio_a_x96` and `sqrt_ratio_b_x96`.
+        """
+        if sqrt_ratio_a_x96 > sqrt_ratio_b_x96:
+            sqrt_ratio_a_x96, sqrt_ratio_b_x96 = sqrt_ratio_b_x96, sqrt_ratio_a_x96
+
+        amount0: int = (
+            (liquidity * Q96 * (sqrt_ratio_b_x96 - sqrt_ratio_a_x96))
+            // sqrt_ratio_b_x96
+            // sqrt_ratio_a_x96
+        )
+        return amount0
+
+    def get_amount1_for_liquidity(
+        self, sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, liquidity: int
+    ) -> int:
+        """
+        Helper function to calculate the amount of `token1` that can be provided for a given amount of liquidity and price range defined by `sqrt_ratio_a_x96` and `sqrt_ratio_b_x96`.
+        """
+        if sqrt_ratio_a_x96 > sqrt_ratio_b_x96:
+            sqrt_ratio_a_x96, sqrt_ratio_b_x96 = sqrt_ratio_b_x96, sqrt_ratio_a_x96
+
+        amount1: int = (liquidity * (sqrt_ratio_b_x96 - sqrt_ratio_a_x96)) // Q96
+        return amount1
+
+    def get_amounts_for_liquidity(
+        self,
+        sqrt_ratio_a_x96: int,
+        sqrt_ratio_b_x96: int,
+        sqrt_ratio_current_x96: int,
+        liquidity: int,
+    ) -> Dict:
+        """
+        Helper function to calculate the amounts of `token0` and `token1` that can be provided for a given amount of liquidity and price range defined by `sqrt_ratio_a_x96` and `sqrt_ratio_b_x96`.
+        """
+        if sqrt_ratio_a_x96 > sqrt_ratio_b_x96:
+            sqrt_ratio_a_x96, sqrt_ratio_b_x96 = sqrt_ratio_b_x96, sqrt_ratio_a_x96
+
+        amount0: int = 0
+        amount1: int = 0
+        if sqrt_ratio_current_x96 <= sqrt_ratio_a_x96:
+            amount0 = self.get_amount0_for_liquidity(
+                sqrt_ratio_a_x96, sqrt_ratio_b_x96, liquidity
+            )
+        elif sqrt_ratio_current_x96 < sqrt_ratio_b_x96:
+            amount0 = self.get_amount0_for_liquidity(
+                sqrt_ratio_current_x96, sqrt_ratio_b_x96, liquidity
+            )
+            amount1 = self.get_amount1_for_liquidity(
+                sqrt_ratio_a_x96, sqrt_ratio_current_x96, liquidity
+            )
+        else:
+            amount1 = self.get_amount1_for_liquidity(
+                sqrt_ratio_a_x96, sqrt_ratio_b_x96, liquidity
+            )
+        return_value: Dict = {
+            "amount0": amount0,
+            "amount1": amount1,
+        }
+        return return_value
+
+    def get_amounts_for_liquidity_by_ticks(
+        self, ratio_current_x96: int, tick_lower: int, tick_upper: int, liquidity: int
+    ) -> Dict:
+        sqrt_ratio_a_x96 = self.get_sqrt_ratio_at_tick(tick_lower)
+        sqrt_ratio_b_x96 = self.get_sqrt_ratio_at_tick(tick_upper)
+        return_value: Dict = self.get_amounts_for_liquidity(
+            sqrt_ratio_a_x96, sqrt_ratio_b_x96, ratio_current_x96, liquidity
+        )
+        return return_value
+
+    def get_liquidity_for_amounts_by_ticks(
+        self,
+        ratio_current_x96: int,
+        tick_lower: int,
+        tick_upper: int,
+        amount0: int,
+        amount1: int,
+    ) -> int:
+        sqrt_ratio_a_x96 = self.get_sqrt_ratio_at_tick(tick_lower)
+        sqrt_ratio_b_x96 = self.get_sqrt_ratio_at_tick(tick_upper)
+        liquidity = self.get_liquidity_for_amounts(
+            sqrt_ratio_a_x96, sqrt_ratio_b_x96, ratio_current_x96, amount0, amount1
+        )
+        return liquidity
+
+    def get_sqrt_ratio_at_tick(self, tick: int) -> int:
+        """
+        Helper function to calculate the square root price ratio at a given tick.
+        """
+
+        # NOTE See https://github.com/Uniswap/sdks/blob/main/sdks/v3-sdk/src/utils/tickMath.ts
+        min_tick: int = -887272
+        max_tick: int = 887272
+
+        if tick < min_tick or tick > max_tick:
+            raise ValueError("Tick out of bounds.")
+
+        abs_tick: int = abs(tick)
+        ratio: int = (
+            0xFFFCB933BD6FAD37AA2D162D1A594001
+            if (abs_tick & 0x1) != 0
+            else 0x100000000000000000000000000000000
+        )
+        if (abs_tick & 0x2) != 0:
+            ratio = self._mul_shift(ratio, 0xFFF97272373D413259A46990580E213A)
+        if (abs_tick & 0x4) != 0:
+            ratio = self._mul_shift(ratio, 0xFFF2E50F5F656932EF12357CF3C7FDCC)
+        if (abs_tick & 0x8) != 0:
+            ratio = self._mul_shift(ratio, 0xFFE5CACA7E10E4E61C3624EAA0941CD0)
+        if (abs_tick & 0x10) != 0:
+            ratio = self._mul_shift(ratio, 0xFFCB9843D60F6159C9DB58835C926644)
+        if (abs_tick & 0x20) != 0:
+            ratio = self._mul_shift(ratio, 0xFF973B41FA98C081472E6896DFB254C0)
+        if (abs_tick & 0x40) != 0:
+            ratio = self._mul_shift(ratio, 0xFF2EA16466C96A3843EC78B326B52861)
+        if (abs_tick & 0x80) != 0:
+            ratio = self._mul_shift(ratio, 0xFE5DEE046A99A2A811C461F1969C3053)
+        if (abs_tick & 0x100) != 0:
+            ratio = self._mul_shift(ratio, 0xFCBE86C7900A88AEDCFFC83B479AA3A4)
+        if (abs_tick & 0x200) != 0:
+            ratio = self._mul_shift(ratio, 0xF987A7253AC413176F2B074CF7815E54)
+        if (abs_tick & 0x400) != 0:
+            ratio = self._mul_shift(ratio, 0xF3392B0822B70005940C7A398E4B70F3)
+        if (abs_tick & 0x800) != 0:
+            ratio = self._mul_shift(ratio, 0xE7159475A2C29B7443B29C7FA6E889D9)
+        if (abs_tick & 0x1000) != 0:
+            ratio = self._mul_shift(ratio, 0xD097F3BDFD2022B8845AD8F792AA5825)
+        if (abs_tick & 0x2000) != 0:
+            ratio = self._mul_shift(ratio, 0xA9F746462D870FDF8A65DC1F90E061E5)
+        if (abs_tick & 0x4000) != 0:
+            ratio = self._mul_shift(ratio, 0x70D869A156D2A1B890BB3DF62BAF32F7)
+        if (abs_tick & 0x8000) != 0:
+            ratio = self._mul_shift(ratio, 0x31BE135F97D08FD981231505542FCFA6)
+        if (abs_tick & 0x10000) != 0:
+            ratio = self._mul_shift(ratio, 0x9AA508B5B7A84E1C677DE54F3E99BC9)
+        if (abs_tick & 0x20000) != 0:
+            ratio = self._mul_shift(ratio, 0x5D6AF8DEDB81196699C329225EE604)
+        if (abs_tick & 0x40000) != 0:
+            ratio = self._mul_shift(ratio, 0x2216E584F5FA1EA926041BEDFE98)
+        if (abs_tick & 0x80000) != 0:
+            ratio = self._mul_shift(ratio, 0x48A170391F7DC42444E8FA2)
+
+        if tick > 0:
+            ratio = (
+                0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+                // ratio
+            )
+
+        return_value = (ratio // (1 << 32)) + (0 if (ratio % (1 << 32)) == 0 else 1)
+
+        return return_value
+
+    def _mul_shift(self, x: int, y: int) -> int:
+        """
+        Helper function to perform multiplication followed by a right shift.
+        """
+        product: int = x * y
+        shifted: int = product >> 128
+        return shifted
+
+    def get_minted_token_id(self, tx_hash: str) -> int:
+        """
+        Helper function to extract the token ID of a newly minted position from the transaction receipt of the minting transaction.
+
+        :return: The token ID of the newly minted position, or -1 if it cannot be extracted from the transaction receipt.
+        """
+        transaction_receipt = self.w3.eth.get_transaction_receipt(tx_hash)  # type: ignore [arg-type]
+        logs = self.position_manager.events.Transfer().process_receipt(
+            transaction_receipt
+        )
+        try:
+            minted_token_id: int = logs[0].args.id
+            return minted_token_id
+        except IndexError:
+            print(
+                f"Could not extract minted token ID from transaction receipt for transaction hash: {tx_hash}."
+            )
+            return -1
+
     def decode_position_info(self, position_info: int) -> Dict:
         """
 
                 :return:
         A dictionary with the following keys:
-        - tickLower: The lower tick of the position.
-        - tickUpper: The upper tick of the position.
-        - poolID: The truncated pool ID of the position, which is the first 25 bytes of the full pool ID.
-        - hasSubscriber: A boolean indicating whether the position has a subscriber.
+        - `tickLower`: The lower tick of the position.
+        - `tickUpper`: The upper tick of the position.
+        - `poolID`: The truncated pool ID of the position, which is the first 25 bytes of the full pool ID.
+        - `hasSubscriber`: A boolean indicating whether the position has a subscriber.
         """
         tick_lower_offset = 8
         tick_upper_offset = 32
@@ -2210,6 +2431,118 @@ class Uniswap4:
         }
         return return_value
 
+    def encode_path_keys_input(
+        self,
+        path: List[PoolKey],
+        currency_in: str,
+        hook_data_list: Optional[List[bytes]] = None,
+    ) -> List[PathKey]:
+        """
+        Encodes a list of PoolKeys into the format expected by the quoter for multi-hop ExactInput quotes.
+        """
+        encoded_path: List[PathKey] = []
+        if hook_data_list is None:
+            hook_data_list = [b""] * len(path)
+        else:
+            if len(hook_data_list) != len(path):
+                raise ValueError("Length of hook_data_list must match length of path")
+        for pool_key, hook_data in zip(path, hook_data_list):
+            currency_out: str = (
+                pool_key.currency1
+                if currency_in.lower() == pool_key.currency0.lower()
+                else pool_key.currency0
+            )
+            path_key: PathKey = PathKey(
+                currency_out,
+                pool_key.fee,
+                pool_key.tick_spacing,
+                pool_key.hooks,
+                hook_data,
+            )
+            encoded_path.append(path_key)
+            currency_in = currency_out
+        return encoded_path
+
+    def encode_path_keys_output(
+        self,
+        path: List[PoolKey],
+        currency_out: str,
+        hook_data_list: Optional[List[bytes]] = None,
+    ) -> List[PathKey]:
+        """
+        Encodes a list of PoolKeys into the format expected by the quoter for multi-hop ExactOutput quotes.
+        """
+        encoded_path: List[PathKey] = []
+        if hook_data_list is None:
+            hook_data_list = [b""] * len(path)
+        else:
+            if len(hook_data_list) != len(path):
+                raise ValueError("Length of hook_data_list must match length of path")
+        for pool_key, hook_data in zip(reversed(path), reversed(hook_data_list)):
+            currency_in: str = (
+                pool_key.currency1
+                if currency_out.lower() == pool_key.currency0.lower()
+                else pool_key.currency0
+            )
+            path_key: PathKey = PathKey(
+                currency_in,
+                pool_key.fee,
+                pool_key.tick_spacing,
+                pool_key.hooks,
+                hook_data,
+            )
+            encoded_path.insert(0, path_key)
+            currency_out = currency_in
+        return encoded_path
+
+    def get_pool_id(self, pool: PoolKey) -> HexBytes:
+        """Computes the pool ID for a given PoolKey by hashing its parameters."""
+        pool_data = eth_abi.abi.encode(
+            types=["address", "address", "uint24", "int24", "address"],
+            args=[
+                pool.currency0,
+                pool.currency1,
+                pool.fee,
+                pool.tick_spacing,
+                pool.hooks,
+            ],
+        )
+        pool_id = Web3.keccak(pool_data)
+        return pool_id
+
+    def get_token(self, address: AddressLike, abi_name: str = "erc20") -> ERC20Token:
+        """
+        Retrieves metadata from the ERC20 contract of a given token, like its name, symbol, and decimals.
+        """
+        if address == ETH_ADDRESS or address == _str_to_addr(ETH_ADDRESS):
+            return ERC20Token(
+                address=address,
+                name="ETH",
+                symbol="ETH",
+                decimals=18,
+            )
+        token_contract = _load_contract(self.w3, abi_name, address=address)
+        try:
+            _name = token_contract.functions.name().call()
+            _symbol = token_contract.functions.symbol().call()
+            decimals = token_contract.functions.decimals().call()
+        except Exception:
+            raise InvalidToken(address)
+        try:
+            name = _name.decode()
+        except Exception:
+            name = str(_name)
+        try:
+            symbol = _symbol.decode()
+        except Exception as e:
+            logger.warning(
+                "Error occurred while decoding symbol for %s: %s",
+                _addr_to_str(address),
+                e,
+            )
+            symbol = str(_symbol)
+        return ERC20Token(symbol, address, name, decimals)
+
     def get_token_balance(self, erc20: AddressLike) -> Decimal:
         """Get the balance of an ERC20 token for your address."""
         contract = _load_contract(self.w3, abi_name="erc20", address=erc20)
@@ -2224,9 +2557,37 @@ class Uniswap4:
         return_balance: Decimal = Decimal(balance) / Decimal(10**18)
         return return_balance
 
+    def load_contract_with_abi(self, abi_name: str, address: AddressLike) -> Contract:
+        return self.w3.eth.contract(address=address, abi=_load_abi(abi_name))
+
+    def erc20_contract(self, token_addr: AddressLike) -> Contract:
+        return self.load_contract_with_abi(abi_name="erc20", address=token_addr)
+
     def _deadline(self) -> int:
         """Get a predefined deadline. 10min by default."""
         return int(time.time()) + 10 * 60
+
+    def _get_tx_params(self, value: int = 0, gas: int = 250000) -> TxParams:
+        """Get generic transaction parameters."""
+        if not self.post_merge:
+            return {
+                "from": _addr_to_str(self.address),
+                "value": Wei(value),
+                "gas": int(self.gas_limit),
+                "gasPrice": Web3.to_wei(self.gas_price, "gwei"),
+                "nonce": Nonce(max(self.last_nonce, 0)),
+            }
+        else:
+            return {
+                "from": _addr_to_str(self.address),
+                "gas": int(self.gas_limit),
+                "maxPriorityFeePerGas": Web3.to_wei(self.priority_fee, "gwei"),
+                "maxFeePerGas": Web3.to_wei(self.gas_price, "gwei"),
+                "type": 2,
+                "chainId": self.w3.eth.chain_id,
+                "value": Wei(value),
+                "nonce": Nonce(max(self.last_nonce, 0)),
+            }
 
     def _build_and_send_tx(
         self, function: ContractFunction, tx_params: Optional[TxParams] = None
