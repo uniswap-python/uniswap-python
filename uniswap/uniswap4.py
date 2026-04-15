@@ -2368,7 +2368,7 @@ class Uniswap4:
 
         :return: The token ID of the newly minted position, or -1 if it cannot be extracted from the transaction receipt.
         """
-        transaction_receipt = self.w3.eth.get_transaction_receipt(tx_hash)  # type: ignore [attr-defined]
+        transaction_receipt = self.w3.eth.get_transaction_receipt(tx_hash)  # type: ignore [attr-type]
         logs = self.position_manager.events.Transfer().process_receipt(
             transaction_receipt
         )
