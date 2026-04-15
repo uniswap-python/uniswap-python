@@ -142,10 +142,8 @@ def get_sqrt_ratio_at_tick(tick: int) -> int:
     """
 
     # NOTE See https://github.com/Uniswap/sdks/blob/main/sdks/v3-sdk/src/utils/tickMath.ts
-    min_tick: int = -887272
-    max_tick: int = 887272
 
-    if tick < min_tick or tick > max_tick:
+    if tick < MIN_TICK or tick > MAX_TICK:
         raise ValueError("Tick out of bounds.")
 
     abs_tick: int = abs(tick)
