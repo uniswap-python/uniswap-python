@@ -48,7 +48,6 @@ from .util import (
     _load_abi,
     _load_contract,
     _str_to_addr,
-    decode_sqrt_ratioX96,
     realised_fee_percentage,
 )
 
@@ -2047,14 +2046,18 @@ class Uniswap4:
             position_info["tickSpacing"],
             position_info["hooks"],
         )
-        price: Decimal = Decimal(
-            Decimal(
-                decode_sqrt_ratioX96(
-                    slot0["sqrtPriceX96"],
-                )
-            )
-            / Decimal(10 ** (token1_decimals - token0_decimals))
-        )
+        # price: Decimal = Decimal(
+        #     Decimal(
+        #         decode_sqrt_ratioX96(
+        #             slot0["sqrtPriceX96"],
+        #         )
+        #     )
+        #     / Decimal(10 ** (token1_decimals - token0_decimals))
+        # )
+        sqrt_price = int(slot0["sqrtPriceX96"])
+        raw_price: Decimal = (sqrt_price / Decimal(Q96)) ** 2
+        decimal_factor: Decimal = 10**token1_decimals / Decimal(10**token0_decimals)
+        price: Decimal = raw_price / decimal_factor
         amounts = self.get_amounts_for_liquidity_by_ticks(
             slot0["sqrtPriceX96"],
             position_info["tickLower"],
@@ -2066,6 +2069,7 @@ class Uniswap4:
         return_value: Dict = {
             "amount0": amounts["amount0"],
             "amount1": amounts["amount1"],
+            # NOTE: unclaimed fees are not yet computed; total values equal principal only
             "unclaimed_fees0": 0,
             "unclaimed_fees1": 0,
             "total_amount0": amounts["amount0"],
@@ -2287,6 +2291,8 @@ class Uniswap4:
         """
         Helper function to calculate the square root price ratio at a given tick.
         """
+
+        # NOTE See https://github.com/Uniswap/sdks/blob/main/sdks/v3-sdk/src/utils/tickMath.ts
         min_tick: int = -887272
         max_tick: int = 887272
 
@@ -2295,59 +2301,73 @@ class Uniswap4:
 
         abs_tick: int = abs(tick)
         ratio: int = (
-            79232123823359799118286999567
+            0xFFFCB933BD6FAD37AA2D162D1A594001
             if (abs_tick & 0x1) != 0
-            else 79228162514264337593543950336
+            else 0x100000000000000000000000000000000
         )
         if (abs_tick & 0x2) != 0:
-            ratio = (ratio * 79236085330515764027303304731) >> 96
+            ratio = self._mul_shift(ratio, 0xFFF97272373D413259A46990580E213A)
         if (abs_tick & 0x4) != 0:
-            ratio = (ratio * 79244008939048815603706035061) >> 96
+            ratio = self._mul_shift(ratio, 0xFFF2E50F5F656932EF12357CF3C7FDCC)
         if (abs_tick & 0x8) != 0:
-            ratio = (ratio * 79259858533276714757314932305) >> 96
+            ratio = self._mul_shift(ratio, 0xFFE5CACA7E10E4E61C3624EAA0941CD0)
         if (abs_tick & 0x10) != 0:
-            ratio = (ratio * 79291567232598584799939703904) >> 96
+            ratio = self._mul_shift(ratio, 0xFFCB9843D60F6159C9DB58835C926644)
         if (abs_tick & 0x20) != 0:
-            ratio = (ratio * 79355022692464371645785046466) >> 96
+            ratio = self._mul_shift(ratio, 0xFF973B41FA98C081472E6896DFB254C0)
         if (abs_tick & 0x40) != 0:
-            ratio = (ratio * 79482085999252804386437311141) >> 96
+            ratio = self._mul_shift(ratio, 0xFF2EA16466C96A3843EC78B326B52861)
         if (abs_tick & 0x80) != 0:
-            ratio = (ratio * 79736823300114093921829183326) >> 96
+            ratio = self._mul_shift(ratio, 0xFE5DEE046A99A2A811C461F1969C3053)
         if (abs_tick & 0x100) != 0:
-            ratio = (ratio * 80248749790819932309965073892) >> 96
+            ratio = self._mul_shift(ratio, 0xFCBE86C7900A88AEDCFFC83B479AA3A4)
         if (abs_tick & 0x200) != 0:
-            ratio = (ratio * 81282483887344747381513967011) >> 96
+            ratio = self._mul_shift(ratio, 0xF987A7253AC413176F2B074CF7815E54)
         if (abs_tick & 0x400) != 0:
-            ratio = (ratio * 83390072131320151908154831281) >> 96
+            ratio = self._mul_shift(ratio, 0xF3392B0822B70005940C7A398E4B70F3)
         if (abs_tick & 0x800) != 0:
-            ratio = (ratio * 87770609709833776024991924138) >> 96
+            ratio = self._mul_shift(ratio, 0xE7159475A2C29B7443B29C7FA6E889D9)
         if (abs_tick & 0x1000) != 0:
-            ratio = (ratio * 97234110755111693312479820773) >> 96
+            ratio = self._mul_shift(ratio, 0xD097F3BDFD2022B8845AD8F792AA5825)
         if (abs_tick & 0x2000) != 0:
-            ratio = (ratio * 119332217159966728226237229890) >> 96
+            ratio = self._mul_shift(ratio, 0xA9F746462D870FDF8A65DC1F90E061E5)
         if (abs_tick & 0x4000) != 0:
-            ratio = (ratio * 179736315981702064433883588727) >> 96
+            ratio = self._mul_shift(ratio, 0x70D869A156D2A1B890BB3DF62BAF32F7)
         if (abs_tick & 0x8000) != 0:
-            ratio = (ratio * 407748233172238350107850275304) >> 96
+            ratio = self._mul_shift(ratio, 0x31BE135F97D08FD981231505542FCFA6)
         if (abs_tick & 0x10000) != 0:
-            ratio = (ratio * 209847828474011932436660412517) >> 96
+            ratio = self._mul_shift(ratio, 0x9AA508B5B7A84E1C677DE54F3E99BC9)
         if (abs_tick & 0x20000) != 0:
-            ratio = (ratio * 55581415166113811149459800483533) >> 96
+            ratio = self._mul_shift(ratio, 0x5D6AF8DEDB81196699C329225EE604)
         if (abs_tick & 0x40000) != 0:
-            ratio = (ratio * 38992368544603139932233054999993551) >> 96
+            ratio = self._mul_shift(ratio, 0x2216E584F5FA1EA926041BEDFE98)
+        if (abs_tick & 0x80000) != 0:
+            ratio = self._mul_shift(ratio, 0x48A170391F7DC42444E8FA2)
 
         if tick > 0:
             ratio = (
-                115792089237316195423570985008687907853269984665640564039457584007913129639935
+                0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
                 // ratio
             )
 
-        return_value = (ratio >> 32) + (0 if (ratio % (1 << 32)) == 0 else 1)
+        return_value = (ratio // (1 << 32)) + (0 if (ratio % (1 << 32)) == 0 else 1)
 
         return return_value
 
-    def get_minted_token_id(self, tx_hash: str) -> Optional[int]:
-        """Helper function to extract the token ID of a newly minted position from the transaction receipt of the minting transaction."""
+    def _mul_shift(self, x: int, y: int) -> int:
+        """
+        Helper function to perform multiplication followed by a right shift.
+        """
+        product: int = x * y
+        shifted: int = product >> 128
+        return shifted
+
+    def get_minted_token_id(self, tx_hash: str) -> int:
+        """
+        Helper function to extract the token ID of a newly minted position from the transaction receipt of the minting transaction.
+
+        :return: The token ID of the newly minted position, or -1 if it cannot be extracted from the transaction receipt.
+        """
         transaction_receipt = self.w3.eth.get_transaction_receipt(tx_hash)
         logs = self.position_manager.events.Transfer().process_receipt(
             transaction_receipt
@@ -2355,11 +2375,11 @@ class Uniswap4:
         try:
             minted_token_id: int = logs[0].args.id
             return minted_token_id
-        except Exception:
+        except IndexError:
             print(
-                "Could not extract minted token ID from transaction receipt for transaction."
+                f"Could not extract minted token ID from transaction receipt for transaction hash: {tx_hash}."
             )
-            return None
+            return -1
 
     def decode_position_info(self, position_info: int) -> Dict:
         """
