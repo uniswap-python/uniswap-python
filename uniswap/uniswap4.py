@@ -2301,14 +2301,14 @@ class Uniswap4:
         return_value: List[int] = []
         for log in logs:
             try:
-                minted_token_id: int = log.args.id
-                return_value.append(minted_token_id)
+                if _addr_to_str(log.args["from"]) == ZERO_HOOK:
+                    minted_token_id: int = log.args.id
+                    return_value.append(minted_token_id)
             except (AttributeError, KeyError):
                 logger.warning(
                     "Could not extract minted token ID from transaction receipt for transaction hash: %s.",
                     tx_hash,
                 )
-            continue
         return return_value
 
     def decode_position_info(self, position_info: int) -> Dict:

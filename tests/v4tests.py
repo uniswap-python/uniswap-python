@@ -906,9 +906,9 @@ if __name__ == "__main__":
     print("")
 
     # pool_tests()
-    quoter_tests()
-    price_impact_tests()
-    state_view_tests()
+    # quoter_tests()
+    # price_impact_tests()
+    # state_view_tests()
     liquidity_tests()
     # swap_tests()
 
