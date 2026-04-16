@@ -244,7 +244,7 @@ class Uniswap4:
         self.max_slippage = max_slippage
 
     # StateView methods
-    def get_fee_growth_globals_stateview(
+    def stateview_get_fee_growth_globals(
         self,
         token0: str,
         token1: str,
@@ -269,7 +269,7 @@ class Uniswap4:
         }
         return return_value
 
-    def get_fee_growth_inside_stateview(
+    def stateview_get_fee_growth_inside(
         self,
         token0: str,
         token1: str,
@@ -296,7 +296,7 @@ class Uniswap4:
         }
         return return_value
 
-    def get_liquidity_stateview(
+    def stateview_get_liquidity(
         self,
         token0: str,
         token1: str,
@@ -314,7 +314,7 @@ class Uniswap4:
         liquidity: int = self.stateview.functions.getLiquidity(pool_id).call()
         return liquidity
 
-    def get_position_info_stateview(
+    def stateview_get_position_info(
         self,
         token0: str,
         token1: str,
@@ -348,7 +348,7 @@ class Uniswap4:
         }
         return return_value
 
-    def get_slot0_stateview(
+    def stateview_get_slot0(
         self,
         token0: str,
         token1: str,
@@ -374,7 +374,7 @@ class Uniswap4:
         }
         return return_value
 
-    def get_tick_bitmap_stateview(
+    def stateview_get_tick_bitmap(
         self,
         token0: str,
         token1: str,
@@ -397,7 +397,7 @@ class Uniswap4:
         tick_bitmap: int = self.stateview.functions.getTickBitmap(pool_id, tick).call()
         return tick_bitmap
 
-    def get_tick_fee_growth_outside_stateview(
+    def stateview_get_tick_fee_growth_outside(
         self,
         token0: str,
         token1: str,
@@ -423,7 +423,7 @@ class Uniswap4:
         }
         return return_value
 
-    def get_tick_pool_info_stateview(
+    def stateview_get_tick_pool_info(
         self,
         token0: str,
         token1: str,
@@ -450,7 +450,7 @@ class Uniswap4:
         return return_value
 
     # PositionDescriptor methods
-    def get_currency_ratio_priority_position_descriptor(self, currency: str) -> int:
+    def position_descriptor_get_currency_ratio_priority(self, currency: str) -> int:
         """
         For certain currencies on mainnet, the smaller the currency, the higher the priority.
         And those with the higher priority values (more positive values) will be in the numerator of the price ratio
@@ -463,7 +463,7 @@ class Uniswap4:
         return_value = ratio_priority
         return return_value
 
-    def get_flip_ratio_position_descriptor(
+    def position_descriptor_get_flip_ratio(
         self, currency0: str, currency1: str
     ) -> bool:
         """
@@ -475,7 +475,7 @@ class Uniswap4:
         return_value = flip_ratio
         return return_value
 
-    def get_native_currency_label_position_descriptor(self) -> str:
+    def position_descriptor_get_native_currency_label(self) -> str:
         """
         :returns: The label for the native currency as a string
         """
@@ -485,7 +485,7 @@ class Uniswap4:
         return_value = native_currency_label
         return return_value
 
-    def get_pool_manager_position_descriptor(self) -> str:
+    def position_descriptor_get_pool_manager(self) -> str:
         """
         :returns: PoolManager address as a string
         """
@@ -493,7 +493,7 @@ class Uniswap4:
         return_value = pool_manager
         return return_value
 
-    def get_token_uri_position_descriptor(self, pos_manager: str, token_id: int) -> str:
+    def position_descriptor_get_token_uri(self, pos_manager: str, token_id: int) -> str:
         """
         Produces the URI describing a particular token ID
         Note this URI may be a data: URI with the JSON contents directly inlined
@@ -506,7 +506,7 @@ class Uniswap4:
         return_value = token_uri
         return return_value
 
-    def get_wrapped_native_address_position_descriptor(self) -> str:
+    def position_descriptor_get_wrapped_native_address(self) -> str:
         """
         :returns: The wrapped native currency address as a string
         """
@@ -518,7 +518,7 @@ class Uniswap4:
 
     # PositionManager methods
     # Read methods
-    def get_domain_separator_position_manager(
+    def position_manager_get_domain_separator(
         self,
     ) -> bytes:
         """
@@ -530,7 +530,7 @@ class Uniswap4:
         return_value = domain_separator
         return return_value
 
-    def get_weth9_position_manager(
+    def position_manager_get_weth9(
         self,
     ) -> str:
         """
@@ -540,7 +540,7 @@ class Uniswap4:
         return_value = weth9
         return return_value
 
-    def get_balance_of_position_manager(self, address: str) -> int:
+    def position_manager_get_balance_of(self, address: str) -> int:
         """
         :returns: The number of tokens in owner's address.
         """
@@ -548,7 +548,7 @@ class Uniswap4:
         return_value = balance
         return return_value
 
-    def get_approved_position_manager(self, token_id: int) -> str:
+    def position_manager_get_approved(self, token_id: int) -> str:
         """
         :returns: The account approved for a token.
         """
@@ -558,7 +558,7 @@ class Uniswap4:
         return_value = operator
         return return_value
 
-    def get_pool_and_position_info_position_manager(self, token_id: int) -> Dict:
+    def position_manager_get_pool_and_position_info(self, token_id: int) -> Dict:
         """
         :returns: The PoolKey class object and position info of a position
         """
@@ -572,7 +572,7 @@ class Uniswap4:
         }
         return return_value
 
-    def get_position_liquidity_position_manager(self, token_id: int) -> int:
+    def position_manager_get_position_liquidity(self, token_id: int) -> int:
         """
         :returns: The liquidity of a position
         """
@@ -582,7 +582,7 @@ class Uniswap4:
         return_value = position_liquidity
         return return_value
 
-    def get_is_approved_for_all_position_manager(
+    def position_manager_get_is_approved_for_all(
         self, owner: str, operator: str
     ) -> bool:
         """
@@ -594,7 +594,7 @@ class Uniswap4:
         return_value = is_approved_for_all
         return return_value
 
-    def get_msg_sender_position_manager(
+    def position_manager_get_msg_sender(
         self,
     ) -> str:
         """
@@ -610,7 +610,7 @@ class Uniswap4:
         return_value = msg_sender
         return return_value
 
-    def get_name_position_manager(
+    def position_manager_get_name(
         self,
     ) -> str:
         """
@@ -620,7 +620,7 @@ class Uniswap4:
         return_value = name
         return return_value
 
-    def get_next_token_id_position_manager(
+    def position_manager_get_next_token_id(
         self,
     ) -> int:
         """
@@ -630,7 +630,7 @@ class Uniswap4:
         return_value = next_token_id
         return return_value
 
-    def get_nonces_position_manager(self, owner: str, word: int) -> int:
+    def position_manager_get_nonces(self, owner: str, word: int) -> int:
         """
         :returns: Mapping of nonces consumed by each address, where a nonce is a single bit on the 256-bit bitmap
         """
@@ -638,7 +638,7 @@ class Uniswap4:
         return_value = bitmap
         return return_value
 
-    def get_owner_of_position_manager(self, token_id: int) -> str:
+    def position_manager_get_owner_of(self, token_id: int) -> str:
         """
         :returns: The owner of the position for a given token ID
         """
@@ -646,7 +646,7 @@ class Uniswap4:
         return_value = owner
         return return_value
 
-    def get_permit2_position_manager(
+    def position_manager_get_permit2(
         self,
     ) -> str:
         """
@@ -656,7 +656,7 @@ class Uniswap4:
         return_value = permit2
         return return_value
 
-    def get_pool_keys_position_manager(self, pool_id_trunc: bytes) -> PoolKey:
+    def position_manager_get_pool_keys(self, pool_id_trunc: bytes) -> PoolKey:
         """
         :param pool_id_trunc: The truncated ID of the pool, first 25 bytes of common pool_id
         :returns: The PoolKey class object for a given token ID
@@ -666,7 +666,7 @@ class Uniswap4:
         return_value = pool_keys
         return return_value
 
-    def get_position_info_position_manager(self, token_id: int) -> int:
+    def position_manager_get_position_info(self, token_id: int) -> int:
         """
         :returns: The position info for a given token ID
         """
@@ -676,7 +676,7 @@ class Uniswap4:
         return_value = position_info
         return return_value
 
-    def get_subscriber_position_manager(self, token_id: int) -> str:
+    def position_manager_get_subscriber(self, token_id: int) -> str:
         """
         :returns: The subscriber of the position for a given token ID
         """
@@ -686,7 +686,7 @@ class Uniswap4:
         return_value = subscriber
         return return_value
 
-    def get_is_support_interface_position_manager(
+    def position_manager_get_is_support_interface(
         self,
         interface_id: bytes,
     ) -> bool:
@@ -702,7 +702,7 @@ class Uniswap4:
         return_value = is_supported
         return return_value
 
-    def get_symbol_position_manager(
+    def position_manager_get_symbol(
         self,
     ) -> str:
         """
@@ -712,7 +712,7 @@ class Uniswap4:
         return_value = symbol
         return return_value
 
-    def get_token_descriptor_position_manager(
+    def position_manager_get_token_descriptor(
         self,
     ) -> str:
         """
@@ -724,7 +724,7 @@ class Uniswap4:
         return_value = token_descriptor
         return return_value
 
-    def get_position_uri_position_manager(self, token_id: int) -> str:
+    def position_manager_get_position_uri(self, token_id: int) -> str:
         """
         :returns: The URI of the position manager's ERC721-compliant metadata for a given token ID
         """
@@ -732,7 +732,7 @@ class Uniswap4:
         return_value = uri
         return return_value
 
-    def get_unsubscribe_gas_limit_position_manager(self) -> int:
+    def position_manager_get_unsubscribe_gas_limit(self) -> int:
         """
         :returns: The gas limit used when unsubscribing from a position.
         """
@@ -743,7 +743,7 @@ class Uniswap4:
         return return_value
 
     # Write methods
-    def approve_position_manager(self, spender: str, token_id: int) -> HexBytes:
+    def position_manager_approve(self, spender: str, token_id: int) -> HexBytes:
         """
         Change or reaffirm the approved address for an NFT
         Zero address removes existing approval.
@@ -752,7 +752,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def initialize_pool_position_manager(
+    def position_manager_initialize_pool(
         self, pool_key: PoolKey, sqrt_price_x96: int, payable_amount: int
     ) -> HexBytes:
         """
@@ -766,7 +766,7 @@ class Uniswap4:
         )
         return tx
 
-    def modify_liquidities_position_manager(
+    def position_manager_modify_liquidities(
         self, unlock_data: bytes, deadline: int, payable_amount: int
     ) -> HexBytes:
         """
@@ -780,7 +780,7 @@ class Uniswap4:
         )
         return tx
 
-    def modify_liquidities_without_unlock_position_manager(
+    def position_manager_modify_liquidities_without_unlock(
         self, actions: bytes, params: List[bytes], payable_amount: int
     ) -> HexBytes:
         """
@@ -796,7 +796,7 @@ class Uniswap4:
         )
         return tx
 
-    def multicall_position_manager(
+    def position_manager_multicall(
         self, data: List[bytes], payable_amount: int
     ) -> HexBytes:
         """
@@ -808,7 +808,7 @@ class Uniswap4:
         )
         return tx
 
-    def permit_position_manager(
+    def position_manager_permit(
         self,
         spender: str,
         token_id: int,
@@ -828,7 +828,7 @@ class Uniswap4:
         )
         return tx
 
-    def permit2_single_position_manager(
+    def position_manager_permit2_single(
         self,
         owner: str,
         permit_single: PermitSingle,
@@ -848,7 +848,7 @@ class Uniswap4:
         )
         return tx
 
-    def permit2_batch_position_manager(
+    def position_manager_permit2_batch(
         self,
         owner: str,
         permit_batch: PermitBatch,
@@ -866,7 +866,7 @@ class Uniswap4:
         )
         return tx
 
-    def permit_for_all_position_manager(
+    def position_manager_permit_for_all(
         self,
         owner: str,
         operator: str,
@@ -887,7 +887,7 @@ class Uniswap4:
         )
         return tx
 
-    def revoke_nonce_position_manager(
+    def position_manager_revoke_nonce(
         self, nonce: int, payable_amount: int
     ) -> HexBytes:
         """
@@ -899,7 +899,7 @@ class Uniswap4:
         )
         return tx
 
-    def safe_transfer_from_position_manager(
+    def position_manager_safe_transfer_from(
         self, from_addr: str, to_addr: str, token_id: int, payable_amount: int
     ) -> HexBytes:
         """
@@ -913,7 +913,7 @@ class Uniswap4:
         )
         return tx
 
-    def safe_transfer_from_with_data_position_manager(
+    def position_manager_safe_transfer_from_with_data(
         self,
         from_addr: str,
         to_addr: str,
@@ -932,7 +932,7 @@ class Uniswap4:
         )
         return tx
 
-    def set_approval_for_all_position_manager(
+    def position_manager_set_approval_for_all(
         self, operator: str, approved: bool, payable_amount: int
     ) -> HexBytes:
         """
@@ -944,7 +944,7 @@ class Uniswap4:
         )
         return tx
 
-    def subscribe_position_manager(
+    def position_manager_subscribe(
         self, token_id: int, new_subscriber: str, data: bytes, payable_amount: int
     ) -> HexBytes:
         """
@@ -958,7 +958,7 @@ class Uniswap4:
         )
         return tx
 
-    def transfer_from_position_manager(
+    def position_manager_transfer_from(
         self, from_addr: str, to_addr: str, token_id: int, payable_amount: int
     ) -> HexBytes:
         """
@@ -972,7 +972,7 @@ class Uniswap4:
         )
         return tx
 
-    def unsubscribe_position_manager(
+    def position_manager_unsubscribe(
         self, token_id: int, payable_amount: int
     ) -> HexBytes:
         """
@@ -986,7 +986,7 @@ class Uniswap4:
 
     # PoolManager methods
     # Read methods
-    def get_allowance_pool_manager(
+    def pool_manager_get_allowance(
         self, owner: str, spender: str, token_id: int
     ) -> int:
         """
@@ -998,7 +998,7 @@ class Uniswap4:
         return_value = allowance
         return return_value
 
-    def get_balance_of_pool_manager(self, address: str, token_id: int) -> int:
+    def pool_manager_get_balance_of(self, address: str, token_id: int) -> int:
         """
         The number of tokens in owner's address.
         """
@@ -1008,7 +1008,7 @@ class Uniswap4:
         return_value = balance
         return return_value
 
-    def get_extsload_pool_manager(self, slot: bytes) -> bytes:
+    def pool_manager_get_extsload(self, slot: bytes) -> bytes:
         """
         Called by external contracts to access granular pool state
         """
@@ -1016,7 +1016,7 @@ class Uniswap4:
         return_value = value
         return return_value
 
-    def get_extsload_sequence_pool_manager(
+    def pool_manager_get_extsload_sequence(
         self, start_slot: bytes, slots_count: int
     ) -> List[bytes]:
         """
@@ -1028,7 +1028,7 @@ class Uniswap4:
         return_value = value
         return return_value
 
-    def get_extsload_sparse_pool_manager(self, slots: List[bytes]) -> List[bytes]:
+    def pool_manager_get_extsload_sparse(self, slots: List[bytes]) -> List[bytes]:
         """
         Called by external contracts to access a sparse set of storage slots
         """
@@ -1036,7 +1036,7 @@ class Uniswap4:
         return_value = value
         return return_value
 
-    def get_exttload_sparse_pool_manager(self, slots: List[bytes]) -> List[bytes]:
+    def pool_manager_get_exttload_sparse(self, slots: List[bytes]) -> List[bytes]:
         """
         Called by external contracts to access sparse transient pool state
         """
@@ -1044,7 +1044,7 @@ class Uniswap4:
         return_value = value
         return return_value
 
-    def get_exttload_pool_manager(self, slot: bytes) -> bytes:
+    def pool_manager_get_exttload(self, slot: bytes) -> bytes:
         """
         Called by external contracts to access transient storage of the contract
         """
@@ -1052,7 +1052,7 @@ class Uniswap4:
         return_value = value
         return return_value
 
-    def get_is_operator_pool_manager(self, owner: str, operator: str) -> bool:
+    def pool_manager_get_is_operator(self, owner: str, operator: str) -> bool:
         """
         Checks if a spender is approved by an owner as an operator
         """
@@ -1062,7 +1062,7 @@ class Uniswap4:
         return_value = is_operator
         return return_value
 
-    def get_owner_pool_manager(self) -> str:
+    def pool_manager_get_owner(self) -> str:
         """
         Retrieve the contract owner.
         """
@@ -1070,7 +1070,7 @@ class Uniswap4:
         return_value = owner
         return return_value
 
-    def get_protocol_fee_controller_pool_manager(self) -> str:
+    def pool_manager_get_protocol_fee_controller(self) -> str:
         """
         Returns the current protocol fee controller address
         """
@@ -1080,7 +1080,7 @@ class Uniswap4:
         return_value = protocol_fee_controller
         return return_value
 
-    def get_protocol_fees_accrued_pool_manager(self, address: str) -> int:
+    def pool_manager_get_protocol_fees_accrued(self, address: str) -> int:
         """
         Given a currency address, returns the protocol fees accrued in that currency.
         """
@@ -1090,7 +1090,7 @@ class Uniswap4:
         return_value = protocol_fees_accrued
         return return_value
 
-    def get_supports_interface_pool_manager(self, interface_id: bytes) -> bool:
+    def pool_manager_get_supports_interface(self, interface_id: bytes) -> bool:
         """
         Checks if a given interface ID is supported by the contract
 
@@ -1106,7 +1106,7 @@ class Uniswap4:
         return return_value
 
     # Write methods
-    def approve_pool_manager(
+    def pool_manager_approve(
         self, spender: str, token_id: int, amount: int
     ) -> HexBytes:
         """
@@ -1116,7 +1116,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def burn_pool_manager(self, from_addr: str, token_id: int, amount: int) -> HexBytes:
+    def pool_manager_burn(self, from_addr: str, token_id: int, amount: int) -> HexBytes:
         """
         Called by the user to move value from ERC6909 balance.
         """
@@ -1124,7 +1124,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def clear_pool_manager(self, currency: str, amount: int) -> HexBytes:
+    def pool_manager_clear(self, currency: str, amount: int) -> HexBytes:
         """
         !!!WARNING!!! - Any currency that is cleared, will be non-retrievable, and locked in the contract permanently.
         A call to clear will zero out a positive balance WITHOUT a corresponding transfer.
@@ -1136,7 +1136,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def collect_protocol_fees_pool_manager(
+    def pool_manager_collect_protocol_fees(
         self, recipient: str, currency: str, amount: int
     ) -> HexBytes:
         """
@@ -1149,7 +1149,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def donate_pool_manager(
+    def pool_manager_donate(
         self, pool_key: PoolKey, amount0: int, amount1: int, hook_data: bytes
     ) -> HexBytes:
         """
@@ -1161,7 +1161,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def initialize_pool_manager(
+    def pool_manager_initialize(
         self, pool_key: PoolKey, sqrt_price_x96: int
     ) -> HexBytes:
         """
@@ -1173,7 +1173,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def mint_pool_manager(self, to_addr: str, token_id: int, amount: int) -> HexBytes:
+    def pool_manager_mint(self, to_addr: str, token_id: int, amount: int) -> HexBytes:
         """
         Called by the user to move value into ERC6909 balance.
         """
@@ -1181,7 +1181,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def modify_liquidity_pool_manager(
+    def pool_manager_modify_liquidity(
         self,
         pool_key: PoolKey,
         liquidity_params: ModifyLiquidityParams,
@@ -1196,7 +1196,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def set_operator_pool_manager(self, operator: str, approved: bool) -> HexBytes:
+    def pool_manager_set_operator(self, operator: str, approved: bool) -> HexBytes:
         """
         Sets or removes an operator for the caller.
         """
@@ -1204,7 +1204,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def set_protocol_fee_pool_manager(
+    def pool_manager_set_protocol_fee(
         self, pool_key: PoolKey, new_protocol_fee: int
     ) -> HexBytes:
         """
@@ -1216,7 +1216,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def set_protocol_fee_controller_pool_manager(self, controller: str) -> HexBytes:
+    def pool_manager_set_protocol_fee_controller(self, controller: str) -> HexBytes:
         """
         Sets a new protocol fee controller.
         """
@@ -1224,7 +1224,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def settle_pool_manager(self, payable_amount: int) -> HexBytes:
+    def pool_manager_settle(self, payable_amount: int) -> HexBytes:
         """
         Called by the user to pay what is owed.
         """
@@ -1234,7 +1234,7 @@ class Uniswap4:
         )
         return tx
 
-    def settle_for_pool_manager(self, recipient: str, payable_amount: int) -> HexBytes:
+    def pool_manager_settle_for(self, recipient: str, payable_amount: int) -> HexBytes:
         """
         Called by the user to pay on behalf of another address.
         """
@@ -1244,7 +1244,7 @@ class Uniswap4:
         )
         return tx
 
-    def swap_pool_manager(
+    def pool_manager_swap(
         self, pool_key: PoolKey, params: SwapParams, hook_data: bytes
     ) -> HexBytes:
         """
@@ -1256,7 +1256,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def sync_pool_manager(self, currency: str) -> HexBytes:
+    def pool_manager_sync(self, currency: str) -> HexBytes:
         """
         Writes the current ERC20 balance of the specified currency to transient storage.
         This is used to checkpoint balances for the manager and derive deltas for the caller.
@@ -1266,7 +1266,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def take_pool_manager(self, currency: str, to_addr: str, amount: int) -> HexBytes:
+    def pool_manager_take(self, currency: str, to_addr: str, amount: int) -> HexBytes:
         """
         Called by the user to net out some value owed to the user.
         """
@@ -1274,7 +1274,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def transfer_pool_manager(
+    def pool_manager_transfer(
         self, to_addr: str, token_id: int, amount: int
     ) -> HexBytes:
         """
@@ -1284,7 +1284,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def transfer_from_pool_manager(
+    def pool_manager_transfer_from(
         self, sender: str, receiver: str, token_id: int, amount: int
     ) -> HexBytes:
         """
@@ -1296,7 +1296,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def transfer_ownership_pool_manager(self, new_owner: str) -> HexBytes:
+    def pool_manager_transfer_ownership(self, new_owner: str) -> HexBytes:
         """
         Transfers ownership of the contract to a new owner.
         """
@@ -1304,7 +1304,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def unlock_pool_manager(self, data: bytes) -> HexBytes:
+    def pool_manager_unlock(self, data: bytes) -> HexBytes:
         """
         All interactions on the contract that account deltas require unlocking.
         A caller that calls `unlock` must implement `IUnlockCallback(msg.sender).unlockCallback(data)`,
@@ -1314,7 +1314,7 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def update_dynamic_lp_fee_pool_manager(
+    def pool_manager_update_dynamic_lp_fee(
         self, pool_key: PoolKey, new_dynamic_lp_fee: int
     ) -> HexBytes:
         """
@@ -1349,7 +1349,7 @@ class Uniswap4:
         if token0.lower() > token1.lower():
             token1, token0 = token0, token1
 
-        spot_price_x96: int = self.get_slot0_stateview(
+        spot_price_x96: int = self.stateview_get_slot0(
             token0, token1, fee, tick_spacing, hooks
         )["sqrtPriceX96"]
 
@@ -2030,12 +2030,12 @@ class Uniswap4:
         - hasSubscriber: A boolean indicating whether the position has a subscriber
         - owner: The address of the owner of the position
         """
-        position_info = self.get_pool_and_position_info_position_manager(token_id)
+        position_info = self.position_manager_get_pool_and_position_info(token_id)
 
         pool_key: PoolKey = position_info["poolKey"]
         pool_info = position_info["info"]
         pool_info_decoded = self.decode_position_info(pool_info)
-        owner_of = self.get_owner_of_position_manager(token_id)
+        owner_of = self.position_manager_get_owner_of(token_id)
         return_value: Dict = {
             "currency0": pool_key.currency0,
             "currency1": pool_key.currency1,
@@ -2056,9 +2056,9 @@ class Uniswap4:
         """
         Get the value of a liquidity position given its token ID.
         """
-        liquidity: int = self.get_position_liquidity_position_manager(token_id)
+        liquidity: int = self.position_manager_get_position_liquidity(token_id)
         position_info = self.get_position_info(token_id)
-        slot0 = self.get_slot0_stateview(
+        slot0 = self.stateview_get_slot0(
             position_info["currency0"],
             position_info["currency1"],
             position_info["fee"],
