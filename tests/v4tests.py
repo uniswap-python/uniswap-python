@@ -458,7 +458,7 @@ def state_view_tests():
     print(
         f"Testing get_liquidity() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
-    test_result = uniV4_test.get_liquidity_stateview(
+    test_result = uniV4_test.stateview_get_liquidity(
         test_ETH,
         test_USDC,
         default_test_fee,
@@ -470,7 +470,7 @@ def state_view_tests():
     print(
         f"Testing get_slot0() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
-    test_result1 = uniV4_test.get_slot0_stateview(
+    test_result1 = uniV4_test.stateview_get_slot0(
         test_ETH,
         test_USDC,
         default_test_fee,
@@ -483,7 +483,7 @@ def state_view_tests():
     print(
         f"Testing get_fee_growth_globals() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
-    test_result2 = uniV4_test.get_fee_growth_globals_stateview(
+    test_result2 = uniV4_test.stateview_get_fee_growth_globals(
         test_ETH,
         test_USDC,
         default_test_fee,
@@ -495,7 +495,7 @@ def state_view_tests():
     print(
         f"Testing get_fee_growth_inside() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
-    test_result3 = uniV4_test.get_fee_growth_inside_stateview(
+    test_result3 = uniV4_test.stateview_get_fee_growth_inside(
         test_ETH,
         test_USDC,
         default_test_fee,
@@ -520,7 +520,7 @@ def state_view_tests():
     pos_inf_tick_lower = -301070
     pos_inf_tick_upper = -292859
     pos_inf_token_id = 156881
-    test_result4 = uniV4_test.get_position_info_stateview(
+    test_result4 = uniV4_test.stateview_get_position_info(
         pos_inf_token0,
         pos_inf_token1,
         pos_inf_fee,
@@ -536,7 +536,7 @@ def state_view_tests():
     print(
         f"Testing get_tick_bitmap()_stateview() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
-    test_result5 = uniV4_test.get_tick_bitmap_stateview(
+    test_result5 = uniV4_test.stateview_get_tick_bitmap(
         test_ETH,
         test_USDC,
         default_test_fee,
@@ -549,7 +549,7 @@ def state_view_tests():
     print(
         f"Testing get_tick_fee_growth_outside()_stateview() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
-    test_result6 = uniV4_test.get_tick_fee_growth_outside_stateview(
+    test_result6 = uniV4_test.stateview_get_tick_fee_growth_outside(
         test_ETH,
         test_USDC,
         default_test_fee,
@@ -562,7 +562,7 @@ def state_view_tests():
     print(
         f"Testing get_tick_pool_info()_stateview() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
     )
-    test_result7 = uniV4_test.get_tick_pool_info_stateview(
+    test_result7 = uniV4_test.stateview_get_tick_pool_info(
         test_ETH,
         test_USDC,
         default_test_fee,
@@ -906,9 +906,9 @@ if __name__ == "__main__":
     print("")
 
     # pool_tests()
-    # quoter_tests()
-    # price_impact_tests()
-    # state_view_tests()
+    quoter_tests()
+    price_impact_tests()
+    state_view_tests()
     liquidity_tests()
     # swap_tests()
 
