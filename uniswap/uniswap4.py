@@ -202,7 +202,7 @@ class Uniswap4:
         result = int(
             self.permit2.functions.allowance(
                 self.address, token, self.router.address
-            ).call()
+            ).call()[0]
         )
         return result
 
@@ -2396,7 +2396,7 @@ class Uniswap4:
             ],
         )
         take_pair_params: bytes = encode(
-            ["address", "address", " address"],
+            ["address", "address", "address"],
             [pool_key.currency0, pool_key.currency1, recipient],
         )
         params: List[bytes] = [decrease_liquidity_params, take_pair_params]
