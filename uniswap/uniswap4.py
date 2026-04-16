@@ -2164,7 +2164,7 @@ class Uniswap4:
         # Encoding params
         mint_position_params: bytes = encode(
             [
-                "((address,address,uint24,int24,address),int24,int24,int256,int128,uint128,address,bytes)"
+                "((address,address,uint24,int24,address),int24,int24,uint256,uint128,uint128,address,bytes)"
             ],
             [
                 (
