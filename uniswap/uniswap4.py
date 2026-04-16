@@ -1606,9 +1606,9 @@ class Uniswap4:
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             [
-                universal_router_commands["SWAP_EXACT_IN_SINGLE"],
-                universal_router_commands["SETTLE_ALL"],
-                universal_router_commands["TAKE_ALL"],
+                v4_actions["SWAP_EXACT_IN_SINGLE"],
+                v4_actions["SETTLE_ALL"],
+                v4_actions["TAKE_ALL"],
             ],
         )
 
@@ -1685,9 +1685,9 @@ class Uniswap4:
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             [
-                universal_router_commands["SWAP_EXACT_IN"],
-                universal_router_commands["SETTLE_ALL"],
-                universal_router_commands["TAKE_ALL"],
+                v4_actions["SWAP_EXACT_IN"],
+                v4_actions["SETTLE_ALL"],
+                v4_actions["TAKE_ALL"],
             ],
         )
 
@@ -1761,9 +1761,9 @@ class Uniswap4:
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             args=[
-                universal_router_commands["SWAP_EXACT_OUT_SINGLE"],
-                universal_router_commands["SETTLE_ALL"],
-                universal_router_commands["TAKE_ALL"],
+                v4_actions["SWAP_EXACT_OUT_SINGLE"],
+                v4_actions["SETTLE_ALL"],
+                v4_actions["TAKE_ALL"],
             ],
         )
         # SETTING PARAMS
@@ -1845,9 +1845,9 @@ class Uniswap4:
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             args=[
-                universal_router_commands["SWAP_EXACT_OUT"],
-                universal_router_commands["SETTLE_ALL"],
-                universal_router_commands["TAKE_ALL"],
+                v4_actions["SWAP_EXACT_OUT"],
+                v4_actions["SETTLE_ALL"],
+                v4_actions["TAKE_ALL"],
             ],
         )
         # SETTING PARAMS
