@@ -418,8 +418,8 @@ class Uniswap4:
             pool_id, tick
         ).call()
         return_value = {
-            "feeGrowthInside0X128": fee_growth_outside[0],
-            "feeGrowthInside1X128": fee_growth_outside[1],
+            "feeGrowthOutside0X128": fee_growth_outside[0],
+            "feeGrowthOutside1X128": fee_growth_outside[1],
         }
         return return_value
 
