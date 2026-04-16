@@ -31,6 +31,8 @@ from .constants import (
     _quoter_contract_addresses_v4,
     _router_contract_addresses_v4,
     _stateview_contract_addresses_v4,
+    universal_router_commands,
+    v4_actions,
 )
 from .exceptions import InvalidToken
 from .token import ERC20Token
@@ -1597,13 +1599,17 @@ class Uniswap4:
         # V4_SWAP // Encode swap commands and actions
         commands: bytes = encode_packed(
             ["uint8"],
-            args=[0x10],
+            args=[universal_router_commands["V4_SWAP"]],
         )
 
         # SWAP_EXACT_IN_SINGLE, SETTLE_ALL, TAKE_ALL
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
-            [0x06, 0x0C, 0x0F],
+            [
+                universal_router_commands["SWAP_EXACT_IN_SINGLE"],
+                universal_router_commands["SETTLE_ALL"],
+                universal_router_commands["TAKE_ALL"],
+            ],
         )
 
         # SETTING PARAMS
@@ -1672,13 +1678,17 @@ class Uniswap4:
         # V4_SWAP // Encode swap commands and actions
         commands: bytes = encode_packed(
             ["uint8"],
-            args=[0x10],
+            args=[universal_router_commands["V4_SWAP"]],
         )
 
         # SWAP_EXACT_IN, SETTLE_ALL, TAKE_ALL
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
-            [0x07, 0x0C, 0x0F],
+            [
+                universal_router_commands["SWAP_EXACT_IN"],
+                universal_router_commands["SETTLE_ALL"],
+                universal_router_commands["TAKE_ALL"],
+            ],
         )
 
         # SETTING PARAMS
@@ -1744,13 +1754,17 @@ class Uniswap4:
         # V4_SWAP // Encode swap commands and actions
         commands: bytes = encode_packed(
             ["uint8"],
-            args=[0x10],
+            args=[universal_router_commands["V4_SWAP"]],
         )
 
         # SWAP_EXACT_OUT_SINGLE, SETTLE_ALL, TAKE_ALL
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
-            args=[0x8, 0x0C, 0x0F],
+            args=[
+                universal_router_commands["SWAP_EXACT_OUT_SINGLE"],
+                universal_router_commands["SETTLE_ALL"],
+                universal_router_commands["TAKE_ALL"],
+            ],
         )
         # SETTING PARAMS
         if input_token.lower() < output_token.lower():
@@ -1824,13 +1838,17 @@ class Uniswap4:
         # V4_SWAP // Encode swap commands and actions
         commands: bytes = encode_packed(
             ["uint8"],
-            args=[0x10],
+            args=[universal_router_commands["V4_SWAP"]],
         )
 
         # SWAP_EXACT_OUT, SETTLE_ALL, TAKE_ALL
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
-            args=[0x09, 0x0C, 0x0F],
+            args=[
+                universal_router_commands["SWAP_EXACT_OUT"],
+                universal_router_commands["SETTLE_ALL"],
+                universal_router_commands["TAKE_ALL"],
+            ],
         )
         # SETTING PARAMS
         exact_output_params: bytes = encode(
@@ -2095,49 +2113,369 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def mint_position(self) -> HexBytes:
+    def mint_position(
+        self,
+        pool_key: PoolKey,
+        tick_lower: int,
+        tick_upper: int,
+        liquidity: int,
+        amount0: int,
+        amount1: int,
+        recipient: Optional[str] = None,
+        hook_data: Optional[bytes] = b"",
+    ) -> HexBytes:
         """
         Mints a new liquidity position with the specified parameters.
+
+        :param pool_key: The parameters of the pool for which the position is being minted.
+        :param tick_lower: The lower tick of the position.
+        :param tick_upper: The upper tick of the position.
+        :param liquidity: The amount of liquidity to mint.
+        :param amount0: The amount of token0 to provide as liquidity.
+        :param amount1: The amount of token1 to provide as liquidity.
+        :param recipient: The address that will receive excessive ETH amounts. If None, it defaults to the caller's address.
+        :param hook_data: Optional bytes that can be passed to the hooks during the minting.
+        :return: The transaction hash of the minting transaction.
         """
-        # This is a placeholder function. The actual implementation would depend on the specific parameters required for minting a position, such as the pool key, tick lower, tick upper, and liquidity amount.
-        function = self.pool_manager.functions.mint()
-        tx = self._build_and_send_tx(function, self._get_tx_params())
+
+        ether_amount: int = 0
+        if recipient is None:
+            recipient = _addr_to_str(self.address)
+        # Encoding actions: MINT_POSITION, SETTLE_PAIR, SWEEP (if ETH liquidity is being provided)
+        if pool_key.currency0 == ETH_ADDRESS:
+            ether_amount = amount0
+            actions: bytes = encode_packed(
+                ["uint8", "uint8", "uint8"],
+                [
+                    v4_actions["MINT_POSITION"],
+                    v4_actions["SETTLE_PAIR"],
+                    v4_actions["SWEEP"],
+                ],
+            )
+        else:
+            actions = encode_packed(
+                ["uint8", "uint8"],
+                [
+                    v4_actions["MINT_POSITION"],
+                    v4_actions["SETTLE_PAIR"],
+                ],
+            )
+
+        # Encoding params
+        mint_position_params: bytes = encode(
+            [
+                "((address,address,uint24,int24,address),int24,int24,int256,int128,uint128,address,bytes)"
+            ],
+            [
+                (
+                    (astuple(pool_key)),
+                    tick_lower,
+                    tick_upper,
+                    liquidity,
+                    amount0,
+                    amount1,
+                    recipient,
+                    hook_data,
+                )
+            ],
+        )
+        settle_pair_params: bytes = encode(
+            ["address", "address"],
+            [pool_key.currency0, pool_key.currency1],
+        )
+        params: List[bytes] = [mint_position_params, settle_pair_params]
+        if pool_key.currency0 == ETH_ADDRESS:
+            sweep_params: bytes = encode(
+                ["address", "address"],
+                [pool_key.currency0, recipient],
+            )
+            params.append(sweep_params)
+
+        # Encoding unlock data
+        unlock_data: bytes = encode(
+            ["bytes", "bytes[]"],
+            [actions, params],
+        )
+
+        tx: HexBytes = self._build_and_send_tx(
+            self.position_manager.functions.modifyLiquidity(
+                unlock_data, self._deadline()
+            ),
+            self._get_tx_params(value=ether_amount),
+        )
         return tx
 
-    def increase_liquidity(self) -> HexBytes:
+    def increase_liquidity(
+        self,
+        pool_key: PoolKey,
+        token_id: int,
+        amount0_max: int,
+        amount1_max: int,
+        liquidity: int,
+        recipient: Optional[str] = None,
+        hook_data: Optional[bytes] = b"",
+    ) -> HexBytes:
         """
         Increases the liquidity of an existing position.
+
+        :param pool_key: The parameters of the pool for which the position is being increased.
+        :param token_id: The token ID of the position to increase liquidity for.
+        :param amount0_max: The maximum amount of token0 to provide as liquidity.
+        :param amount1_max: The maximum amount of token1 to provide as liquidity.
+        :param liquidity: The amount of liquidity to add to the position.
+        :param recipient: The address that will receive excessive ETH amounts. If None, it defaults to the caller's address.
+        :param hook_data: Optional bytes that can be passed to the hooks during the liquidity increase.
+        :return: The transaction hash of the liquidity increase transaction.
         """
-        # This is a placeholder function. The actual implementation would depend on the specific parameters required for increasing liquidity, such as the token ID of the position and the additional liquidity amount.
-        function = self.position_manager.functions.increaseLiquidity()
-        tx = self._build_and_send_tx(function, self._get_tx_params())
+
+        ether_amount: int = 0
+        if recipient is None:
+            recipient = _addr_to_str(self.address)
+        # Encoding actions: INCREASE_LIQUIDITY, SETTLE_PAIR, SWEEP (if ETH liquidity is being provided)
+        if pool_key.currency0 == ETH_ADDRESS:
+            ether_amount = amount0_max
+            actions: bytes = encode_packed(
+                ["uint8", "uint8", "uint8"],
+                [
+                    v4_actions["INCREASE_LIQUIDITY"],
+                    v4_actions["SETTLE_PAIR"],
+                    v4_actions["SWEEP"],
+                ],
+            )
+        else:
+            actions = encode_packed(
+                ["uint8", "uint8"],
+                [
+                    v4_actions["INCREASE_LIQUIDITY"],
+                    v4_actions["SETTLE_PAIR"],
+                ],
+            )
+        # Encoding params
+        increase_liquidity_params: bytes = encode(
+            ["(uint256,uint256,uint128,uint128,bytes)"],
+            [
+                (
+                    token_id,
+                    liquidity,
+                    amount0_max,
+                    amount1_max,
+                    hook_data,
+                )
+            ],
+        )
+        settle_pair_params: bytes = encode(
+            ["address", "address"],
+            [pool_key.currency0, pool_key.currency1],
+        )
+        params: List[bytes] = [increase_liquidity_params, settle_pair_params]
+        if pool_key.currency0 == ETH_ADDRESS:
+            sweep_params: bytes = encode(
+                ["address", "address"],
+                [pool_key.currency0, recipient],
+            )
+            params.append(sweep_params)
+
+        # Encoding unlock data
+        unlock_data: bytes = encode(
+            ["bytes", "bytes[]"],
+            [actions, params],
+        )
+
+        tx: HexBytes = self._build_and_send_tx(
+            self.position_manager.functions.modifyLiquidity(
+                unlock_data, self._deadline()
+            ),
+            self._get_tx_params(value=ether_amount),
+        )
         return tx
 
-    def decrease_liquidity(self) -> HexBytes:
+    def decrease_liquidity(
+        self,
+        pool_key: PoolKey,
+        token_id: int,
+        amount0_min: int,
+        amount1_min: int,
+        liquidity: int,
+        recipient: Optional[str] = None,
+        hook_data: Optional[bytes] = b"",
+    ) -> HexBytes:
         """
         Decreases the liquidity of an existing position.
+
+        :param pool_key: The parameters of the pool for which the position is being decreased.
+        :param token_id: The token ID of the position to decrease liquidity for.
+        :param amount0_min: The minimum amount of token0 to receive from the liquidity decrease.
+        :param amount1_min: The minimum amount of token1 to receive from the liquidity decrease.
+        :param liquidity: The amount of liquidity to remove from the position.
+        :param recipient: The address that will receive the withdrawn liquidity. If None, it defaults to the caller's address.
+        :param hook_data: Optional bytes that can be passed to the hooks during the liquidity decrease.
+        :return: The transaction hash of the liquidity decrease transaction.
         """
-        # This is a placeholder function. The actual implementation would depend on the specific parameters required for decreasing liquidity, such as the token ID of the position and the amount of liquidity to remove.
-        function = self.position_manager.functions.decreaseLiquidity()
-        tx = self._build_and_send_tx(function, self._get_tx_params())
+        ether_amount: int = 0
+        if recipient is None:
+            recipient = _addr_to_str(self.address)
+        # Encoding actions: DECREASE_LIQUIDITY, SETTLE_PAIR
+        actions = encode_packed(
+            ["uint8", "uint8"],
+            [
+                v4_actions["DECREASE_LIQUIDITY"],
+                v4_actions["SETTLE_PAIR"],
+            ],
+        )
+        # Encoding params
+        decrease_liquidity_params: bytes = encode(
+            ["(uint256,uint256,uint128,uint128,bytes)"],
+            [
+                (
+                    token_id,
+                    liquidity,
+                    amount0_min,
+                    amount1_min,
+                    hook_data,
+                )
+            ],
+        )
+        settle_pair_params: bytes = encode(
+            ["address", "address"],
+            [pool_key.currency0, pool_key.currency1],
+        )
+        params: List[bytes] = [decrease_liquidity_params, settle_pair_params]
+
+        # Encoding unlock data
+        unlock_data: bytes = encode(
+            ["bytes", "bytes[]"],
+            [actions, params],
+        )
+
+        tx: HexBytes = self._build_and_send_tx(
+            self.position_manager.functions.modifyLiquidity(
+                unlock_data, self._deadline()
+            ),
+            self._get_tx_params(value=ether_amount),
+        )
         return tx
 
-    def collect_fees(self) -> HexBytes:
+    def collect_fees(
+        self,
+        pool_key: PoolKey,
+        token_id: int,
+        recipient: Optional[str] = None,
+        hook_data: Optional[bytes] = b"",
+    ) -> HexBytes:
         """
-        Collects the fees accrued by an existing positions specified in list.
+        Collects the fees accrued by an existing position.
+
+        :param pool_key: The parameters of the pool for which the position is collecting fees.
+        :param token_id: The token ID of the position for which to collect fees.
+        :param recipient: The address that will receive the collected fees. If None, it defaults to the caller's address.
+        :param hook_data: Optional bytes that can be passed to the hooks during the fee collection.
+        :return: The transaction hash of the fee collection transaction.
         """
-        # This is a placeholder function. The actual implementation would depend on the specific parameters required for collecting fees, such as the token ID of the position and the recipient address for the collected fees.
-        function = self.position_manager.functions.collect()
-        tx = self._build_and_send_tx(function, self._get_tx_params())
+        ether_amount: int = 0
+        if recipient is None:
+            recipient = _addr_to_str(self.address)
+        # Encoding actions: DECREASE_LIQUIDITY, TAKE_PAIR
+        actions = encode_packed(
+            ["uint8", "uint8"],
+            [
+                v4_actions["DECREASE_LIQUIDITY"],
+                v4_actions["TAKE_PAIR"],
+            ],
+        )
+        # Encoding params
+        decrease_liquidity_params: bytes = encode(
+            ["(uint256,uint256,uint128,uint128,bytes)"],
+            [
+                (
+                    token_id,
+                    0,
+                    0,
+                    0,
+                    hook_data,
+                )
+            ],
+        )
+        take_pair_params: bytes = encode(
+            ["address", "address, address"],
+            [pool_key.currency0, pool_key.currency1, recipient],
+        )
+        params: List[bytes] = [decrease_liquidity_params, take_pair_params]
+
+        # Encoding unlock data
+        unlock_data: bytes = encode(
+            ["bytes", "bytes[]"],
+            [actions, params],
+        )
+
+        tx: HexBytes = self._build_and_send_tx(
+            self.position_manager.functions.modifyLiquidity(
+                unlock_data, self._deadline()
+            ),
+            self._get_tx_params(value=ether_amount),
+        )
         return tx
 
-    def burn_position(self) -> HexBytes:
+    def burn_position(
+        self,
+        pool_key: PoolKey,
+        token_id: int,
+        amount0_min: int,
+        amount1_min: int,
+        recipient: Optional[str] = None,
+        hook_data: Optional[bytes] = b"",
+    ) -> HexBytes:
         """
         Burns an existing liquidity position.
+
+        :param pool_key: The parameters of the pool for which the position is being burned.
+        :param token_id: The token ID of the position to burn.
+        :param amount0_min: The minimum amount of token0 to receive from burning the position.
+        :param amount1_min: The minimum amount of token1 to receive from burning the position.
+        :param recipient: The address that will receive the withdrawn liquidity. If None, it defaults to the caller's address.
+        :param hook_data: Optional bytes that can be passed to the hooks during the position burn.
+        :return: The transaction hash of the position burn transaction.
         """
-        # This is a placeholder function. The actual implementation would depend on the specific parameters required for burning a position.
-        function = self.position_manager.functions.burn()
-        tx = self._build_and_send_tx(function, self._get_tx_params())
+        ether_amount: int = 0
+        if recipient is None:
+            recipient = _addr_to_str(self.address)
+        # Encoding actions: BURN_POSITION, TAKE_PAIR
+        actions = encode_packed(
+            ["uint8", "uint8"],
+            [
+                v4_actions["BURN_POSITION"],
+                v4_actions["TAKE_PAIR"],
+            ],
+        )
+        # Encoding params
+        burn_position_params: bytes = encode(
+            ["(uint256,uint128,uint128,bytes)"],
+            [
+                (
+                    token_id,
+                    amount0_min,
+                    amount1_min,
+                    hook_data,
+                )
+            ],
+        )
+        take_pair_params: bytes = encode(
+            ["address", "address, address"],
+            [pool_key.currency0, pool_key.currency1, recipient],
+        )
+        params: List[bytes] = [burn_position_params, take_pair_params]
+
+        # Encoding unlock data
+        unlock_data: bytes = encode(
+            ["bytes", "bytes[]"],
+            [actions, params],
+        )
+
+        tx: HexBytes = self._build_and_send_tx(
+            self.position_manager.functions.modifyLiquidity(
+                unlock_data, self._deadline()
+            ),
+            self._get_tx_params(value=ether_amount),
+        )
         return tx
 
     # Helper functions

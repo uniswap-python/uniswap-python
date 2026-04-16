@@ -239,3 +239,56 @@ _position_manager_contract_addresses_v4 = {
     "monad": "0x5b7ec4a94ff9bedb700fb82ab09d5846972f4016",
     "megaeth": "0x9ae0921e981aaa7308f176f8d4f9129b9247c89d",
 }
+
+# Source: https://github.com/Uniswap/universal-router/blob/main/contracts/libraries/Commands.sol
+universal_router_commands = {
+    "V3_SWAP_EXACT_IN": 0x00,
+    "V3_SWAP_EXACT_OUT": 0x01,
+    "PERMIT2_TRANSFER_FROM": 0x02,
+    "PERMIT2_PERMIT_BATCH": 0x03,
+    "SWEEP": 0x04,
+    "TRANSFER": 0x05,
+    "PAY_PORTION": 0x06,
+    "V2_SWAP_EXACT_IN": 0x08,
+    "V2_SWAP_EXACT_OUT": 0x09,
+    "PERMIT2_PERMIT": 0x0A,
+    "WRAP_ETH": 0x0B,
+    "UNWRAP_WETH": 0x0C,
+    "PERMIT2_TRANSFER_FROM_BATCH": 0x0D,
+    "BALANCE_CHECK_ERC20": 0x0E,
+    "V4_SWAP": 0x10,
+    "V3_POSITION_MANAGER_PERMIT": 0x11,
+    "V3_POSITION_MANAGER_CALL": 0x12,
+    "V4_INITIALIZE_POOL": 0x13,
+    "V4_POSITION_MANAGER_CALL": 0x14,
+    "EXECUTE_SUB_PLAN": 0x21,
+}
+
+# Source: https://github.com/Uniswap/v4-periphery/blob/main/src/libraries/Actions.sol
+# NOTE: `INCREASE_LIQUIDITY_FROM_DELTAS` and `MINT_POSITION_FROM_DELTAS` are deprecated and should not be used, see comments in the source file.
+v4_actions = {
+    "INCREASE_LIQUIDITY": 0x00,
+    "DECREASE_LIQUIDITY": 0x01,
+    "MINT_POSITION": 0x02,
+    "BURN_POSITION": 0x03,
+    "INCREASE_LIQUIDITY_FROM_DELTAS": 0x04,
+    "MINT_POSITION_FROM_DELTAS": 0x05,
+    "SWAP_EXACT_IN_SINGLE": 0x06,
+    "SWAP_EXACT_IN": 0x07,
+    "SWAP_EXACT_OUT_SINGLE": 0x08,
+    "SWAP_EXACT_OUT": 0x09,
+    "SETTLE": 0x0B,
+    "SETTLE_ALL": 0x0C,
+    "SETTLE_PAIR": 0x0D,
+    "TAKE": 0x0E,
+    "TAKE_ALL": 0x0F,
+    "TAKE_PORTION": 0x10,
+    "TAKE_PAIR": 0x11,
+    "CLOSE_CURRENCY": 0x12,
+    "CLEAR_OR_TAKE": 0x13,
+    "SWEEP": 0x14,
+    "WRAP": 0x15,
+    "UNWRAP": 0x16,
+    "MINT_6909": 0x17,
+    "BURN_6909": 0x18,
+}
