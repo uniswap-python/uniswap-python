@@ -2198,7 +2198,7 @@ class Uniswap4:
         )
 
         tx: HexBytes = self._build_and_send_tx(
-            self.position_manager.functions.modifyLiquidity(
+            self.position_manager.functions.modifyLiquidities(
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount),
@@ -2282,7 +2282,7 @@ class Uniswap4:
         )
 
         tx: HexBytes = self._build_and_send_tx(
-            self.position_manager.functions.modifyLiquidity(
+            self.position_manager.functions.modifyLiquidities(
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount),
@@ -2314,12 +2314,12 @@ class Uniswap4:
         ether_amount: int = 0
         if recipient is None:
             recipient = _addr_to_str(self.address)
-        # Encoding actions: DECREASE_LIQUIDITY, SETTLE_PAIR
+        # Encoding actions: DECREASE_LIQUIDITY, TAKE_PAIR
         actions = encode_packed(
             ["uint8", "uint8"],
             [
                 v4_actions["DECREASE_LIQUIDITY"],
-                v4_actions["SETTLE_PAIR"],
+                v4_actions["TAKE_PAIR"],
             ],
         )
         # Encoding params
@@ -2335,11 +2335,11 @@ class Uniswap4:
                 )
             ],
         )
-        settle_pair_params: bytes = encode(
-            ["address", "address"],
-            [pool_key.currency0, pool_key.currency1],
+        take_pair_params: bytes = encode(
+            ["address", "address", "address"],
+            [pool_key.currency0, pool_key.currency1, recipient],
         )
-        params: List[bytes] = [decrease_liquidity_params, settle_pair_params]
+        params: List[bytes] = [decrease_liquidity_params, take_pair_params]
 
         # Encoding unlock data
         unlock_data: bytes = encode(
@@ -2348,7 +2348,7 @@ class Uniswap4:
         )
 
         tx: HexBytes = self._build_and_send_tx(
-            self.position_manager.functions.modifyLiquidity(
+            self.position_manager.functions.modifyLiquidities(
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount),
@@ -2396,7 +2396,7 @@ class Uniswap4:
             ],
         )
         take_pair_params: bytes = encode(
-            ["address", "address, address"],
+            ["address", "address", " address"],
             [pool_key.currency0, pool_key.currency1, recipient],
         )
         params: List[bytes] = [decrease_liquidity_params, take_pair_params]
@@ -2408,7 +2408,7 @@ class Uniswap4:
         )
 
         tx: HexBytes = self._build_and_send_tx(
-            self.position_manager.functions.modifyLiquidity(
+            self.position_manager.functions.modifyLiquidities(
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount),
@@ -2459,7 +2459,7 @@ class Uniswap4:
             ],
         )
         take_pair_params: bytes = encode(
-            ["address", "address, address"],
+            ["address", "address", "address"],
             [pool_key.currency0, pool_key.currency1, recipient],
         )
         params: List[bytes] = [burn_position_params, take_pair_params]
@@ -2471,7 +2471,7 @@ class Uniswap4:
         )
 
         tx: HexBytes = self._build_and_send_tx(
-            self.position_manager.functions.modifyLiquidity(
+            self.position_manager.functions.modifyLiquidities(
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount),
