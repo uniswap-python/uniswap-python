@@ -358,23 +358,6 @@ class V4pools:
                 return
             for log_item in logs:
                 try:
-                    txn = self.web3.eth.get_transaction_receipt(
-                        log_item.transactionHash
-                    )
-                except Exception as e:
-                    # Exception occurs when RPC endpoint is down.
-                    print(
-                        "Couldn't retrieve transaction receipt; check RPC availability."
-                    )
-                    print(f"Error details: {e}")
-                    continue
-
-                try:
-                    if (
-                        txn["to"].lower() != pool_manager_contract_address.lower()
-                        or int(txn["status"]) == 0
-                    ):
-                        continue
                     pool_currency0 = str(log_item.args.currency0)
                     pool_currency1 = str(log_item.args.currency1)
                     pool_fee = int(str(log_item.args.fee))
@@ -389,7 +372,8 @@ class V4pools:
                     )
                     if pool not in self.poolkeys_list:
                         self.poolkeys_list.append(pool)
-                except Exception:
+                except AttributeError as e:
+                    print(f"Error occurred while processing log item: {e}")
                     continue
             self.set_last_block(end_block)
             if end_block == last_block_number:
