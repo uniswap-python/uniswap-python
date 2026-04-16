@@ -2,6 +2,7 @@ import functools
 import json
 import math
 import os
+from time import sleep
 from typing import (
     Any,
     Generator,
@@ -295,13 +296,18 @@ class V4pools:
         first_block: int,
         chunk_size: int = 500,
         clear_list: bool = True,
+        reconnect_attempts: int = 3,
+        minutes_between_retries: int = 3,
         last_block: Optional[int] = None,
-    ) -> None:
+    ) -> int:
         """
         :param first_block: Starting block for scanning process
         :param chunk_size: Defines amount of blocks per single log request
         :param clear_list: When True, clears pool list before log scanning, when False - new entries will be added to the end of the list.
+        :param reconnect_attempts: Number of attempts to reconnect and resume log retrieval in case of RPC endpoint failure.
+        :param minutes_between_retries: Minutes to wait between reconnection attempts.
         :param last_block: Optional parameter defining the last block for scanning process. If None, current block number will be used.
+        :return: 0 if logs were successfully processed, -1 if logs retrieval failed (e.g. due to wrong chunk size or RPC endpoint failure).
         """
         # Scans PoolManager contract' Initialize() event logs in order to get
         # list of all pools.  See documentation for suggested starting blocks.
@@ -333,7 +339,7 @@ class V4pools:
         )
         if clear_list:
             self.poolkeys_list.clear()
-
+        reconnect_attempts_done: int = 0
         for i in range(0, chunks_amount + 1):
             if start_block + chunk_size <= last_block_number:
                 end_block = start_block + chunk_size
@@ -351,11 +357,33 @@ class V4pools:
             except Exception as e:
                 # Exception occurs when chunk size value is too big so RPC endpoint rejects
                 # requests OR RPC endpoint is down.
-                print(
-                    "Couldn't retrieve logs; check chunk size and RPC availability. Aborted.              "
-                )
-                print(f"Error details: {e}")
-                return
+                # In such cases, we will try to reconnect and resume log retrieval process for a defined number of attempts. If all attempts fail, the method will be aborted and -1 value will be returned.
+                while reconnect_attempts_done < reconnect_attempts:
+                    print(
+                        f"Error retrieving logs. Attempting to reconnect... ({reconnect_attempts_done + 1}/{reconnect_attempts})"
+                    )
+                    print(
+                        f"Waiting for {minutes_between_retries} minutes before next attempt..."
+                    )
+                    sleep(int(minutes_between_retries) * 60)
+                    reconnect_attempts_done += 1
+                    try:
+                        logs = pool_manager_contract.events.Initialize().get_logs(  # type: ignore [attr-defined]
+                            fromBlock=start_block, toBlock=end_block
+                        )
+                        print("Reconnection successful. Resuming log retrieval.")
+                        reconnect_attempts_done = 0
+                        break
+                    except Exception as e_reconnect:
+                        print(
+                            f"Reconnection attempt {reconnect_attempts_done} failed: {e_reconnect}"
+                        )
+                if reconnect_attempts_done == reconnect_attempts:
+                    print(
+                        "Couldn't retrieve logs; check chunk size and RPC availability. Aborted.              "
+                    )
+                    print(f"Error details: {e}")
+                    return -1
             for log_item in logs:
                 try:
                     pool_currency0 = str(log_item.args.currency0)
@@ -385,7 +413,7 @@ class V4pools:
         )
         print(f"Logs processing completed. Last block processed {last_block_number}")
         self.set_last_block(last_block_number)
-        return
+        return 0
 
     def save_poolkeys_list(self, poolkey_data_filename: str) -> None:
         """Saves poolKey list to specified file (XML format)"""
