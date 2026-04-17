@@ -296,7 +296,7 @@ class V4pools:
         first_block: int,
         chunk_size: int = 500,
         clear_list: bool = True,
-        reconnect_attempts: int = 3,
+        retry_attempts: int = 3,
         minutes_between_retries: int = 3,
         last_block: Optional[int] = None,
     ) -> int:
@@ -304,8 +304,8 @@ class V4pools:
         :param first_block: Starting block for scanning process
         :param chunk_size: Defines amount of blocks per single log request
         :param clear_list: When True, clears pool list before log scanning, when False - new entries will be added to the end of the list.
-        :param reconnect_attempts: Number of attempts to reconnect and resume log retrieval in case of RPC endpoint failure.
-        :param minutes_between_retries: Minutes to wait between reconnection attempts.
+        :param retry_attempts: Number of attempts to retry and resume log retrieval in case of RPC returns errors like `500` etc.
+        :param minutes_between_retries: Minutes to wait between retry attempts.
         :param last_block: Optional parameter defining the last block for scanning process. If None, current block number will be used.
         :return: 0 if logs were successfully processed, -1 if logs retrieval failed (e.g. due to wrong chunk size or RPC endpoint failure).
         """
@@ -339,7 +339,7 @@ class V4pools:
         )
         if clear_list:
             self.poolkeys_list.clear()
-        reconnect_attempts_done: int = 0
+        retry_attempts_done: int = 0
         for i in range(0, chunks_amount + 1):
             if start_block + chunk_size <= last_block_number:
                 end_block = start_block + chunk_size
@@ -356,29 +356,29 @@ class V4pools:
                 )
             except Exception as e:
                 # Exception occurs when chunk size value is too big so RPC endpoint rejects
-                # requests OR RPC endpoint is down.
-                # In such cases, we will try to reconnect and resume log retrieval process for a defined number of attempts. If all attempts fail, the method will be aborted and -1 value will be returned.
-                while reconnect_attempts_done < reconnect_attempts:
+                # requests OR RPC endpoint has issues.
+                # In such cases, we will try to resume log retrieval process for a defined number of attempts. If all attempts fail, the method will be aborted and `-1`` value will be returned.
+                while retry_attempts_done < retry_attempts:
+                    print("")
+                    print("")
                     print(
-                        f"Error retrieving logs. Attempting to reconnect... ({reconnect_attempts_done + 1}/{reconnect_attempts})"
+                        f"Error retrieving logs. Retrying. ({retry_attempts_done + 1}/{retry_attempts})"
                     )
                     print(
                         f"Waiting for {minutes_between_retries} minutes before next attempt..."
                     )
                     sleep(int(minutes_between_retries) * 60)
-                    reconnect_attempts_done += 1
+                    retry_attempts_done += 1
                     try:
                         logs = pool_manager_contract.events.Initialize().get_logs(  # type: ignore [attr-defined]
                             fromBlock=start_block, toBlock=end_block
                         )
-                        print("Reconnection successful. Resuming log retrieval.")
-                        reconnect_attempts_done = 0
+                        print("Issue addressed. Resuming log retrieval.")
+                        retry_attempts_done = 0
                         break
                     except Exception as e_reconnect:
-                        print(
-                            f"Reconnection attempt {reconnect_attempts_done} failed: {e_reconnect}"
-                        )
-                if reconnect_attempts_done == reconnect_attempts:
+                        print(f"Attempt {retry_attempts_done} failed: {e_reconnect}")
+                if retry_attempts_done == retry_attempts:
                     print(
                         "Couldn't retrieve logs; check chunk size and RPC availability. Aborted.              "
                     )

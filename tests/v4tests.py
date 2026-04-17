@@ -15,8 +15,8 @@ def pool_tests():
     try:
         v4pools_test.fetch_poolkey_data(first_block, chunk_size=500, clear_list=False)
         print("Test passed.")
-    except Exception:
-        print("Test failed.")
+    except Exception as e:
+        print(f"Test failed. {e}")
 
     print("Testing save_poolkeys_list() absolute path")
     try:
@@ -24,8 +24,8 @@ def pool_tests():
             os.path.join(_TESTS_DIR, "pools", "pool_list_mainnet.tst1")
         )
         print("Test passed.")
-    except Exception:
-        print("Test failed.")
+    except Exception as e:
+        print(f"Test failed. {e}")
 
     print("Testing load_poolkeys_list() absolute path")
     try:
@@ -33,8 +33,8 @@ def pool_tests():
             os.path.join(_TESTS_DIR, "pools", "pool_list_mainnet.tst1")
         )
         print("Test passed.")
-    except Exception:
-        print("Test failed.")
+    except Exception as e:
+        print(f"Test failed. {e}")
 
     print("Testing get_pool_key() for ETH-USDC (correct entry)...")
     test_result = v4pools_test.get_poolkeys_sublist(
