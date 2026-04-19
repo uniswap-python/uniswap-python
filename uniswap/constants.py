@@ -341,15 +341,26 @@ universal_router_commands_abis = {
         "bytes",
         "bytes[]",
     ],
-    "V3_POSITION_MANAGER_PERMIT": [],
-    "V3_POSITION_MANAGER_CALL": [],
-    "V4_INITIALIZE_POOL": [],
-    "V4_POSITION_MANAGER_CALL": [],
-    "EXECUTE_SUB_PLAN": [],
+    "V3_POSITION_MANAGER_PERMIT": [
+        "bytes",
+    ],
+    "V3_POSITION_MANAGER_CALL": [
+        "bytes",
+    ],
+    "V4_INITIALIZE_POOL": [
+        "tuple",
+        "uint160",
+    ],
+    "V4_POSITION_MANAGER_CALL": ["bytes", "uint256"],
+    "EXECUTE_SUB_PLAN": [
+        "bytes",
+        "bytes[]",
+    ],
 }
 
 # Source: https://github.com/Uniswap/v4-periphery/blob/main/src/libraries/Actions.sol
 # NOTE: `INCREASE_LIQUIDITY_FROM_DELTAS` and `MINT_POSITION_FROM_DELTAS` are deprecated and should not be used, see comments in the source file.
+# NOTE: `DONATE` is not supported in the position manager or router.
 v4_actions = {
     "INCREASE_LIQUIDITY": 0x00,
     "DECREASE_LIQUIDITY": 0x01,
@@ -361,6 +372,7 @@ v4_actions = {
     "SWAP_EXACT_IN": 0x07,
     "SWAP_EXACT_OUT_SINGLE": 0x08,
     "SWAP_EXACT_OUT": 0x09,
+    "DONATE": 0x0A,
     "SETTLE": 0x0B,
     "SETTLE_ALL": 0x0C,
     "SETTLE_PAIR": 0x0D,
