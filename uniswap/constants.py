@@ -106,7 +106,7 @@ _tick_bitmap_range = {
     10_000: (-18, 17),
 }
 # Source:
-# https://docs.uniswap.org/contracts/v4/deployments
+# https://developers.uniswap.org/docs/protocols/v4/deployments
 _router_contract_addresses_v4 = {
     "mainnet": "0x66a9893cc07d91d95644aedd05d03f95e1dba8af",
     "unichain": "0xef740bf23acae26f6492b10de645d6b98dc8eaf3",
@@ -264,6 +264,90 @@ universal_router_commands = {
     "EXECUTE_SUB_PLAN": 0x21,
 }
 
+universal_router_commands_abis = {
+    "V3_SWAP_EXACT_IN": [
+        "address",
+        "uint256",
+        "uint256",
+        "bytes",
+        "bool",
+    ],
+    "V3_SWAP_EXACT_OUT": [
+        "address",
+        "uint256",
+        "uint256",
+        "bytes",
+        "bool",
+    ],
+    "PERMIT2_TRANSFER_FROM": [
+        "address",
+        "address",
+        "uint256",
+    ],
+    "PERMIT2_PERMIT_BATCH": [
+        "tuple",
+        "bytes",
+    ],
+    "SWEEP": [
+        "address",
+        "address",
+        "uint256",
+    ],
+    "TRANSFER": [
+        "address",
+        "address",
+        "uint256",
+    ],
+    "PAY_PORTION": [
+        "address",
+        "address",
+        "uint256",
+    ],
+    "V2_SWAP_EXACT_IN": [
+        "address",
+        "uint256",
+        "uint256",
+        "address[]",
+        "bool",
+    ],
+    "V2_SWAP_EXACT_OUT": [
+        "address",
+        "uint256",
+        "uint256",
+        "address[]",
+        "bool",
+    ],
+    "PERMIT2_PERMIT": [
+        "tuple",
+        "bytes",
+    ],
+    "WRAP_ETH": [
+        "address",
+        "uint256",
+    ],
+    "UNWRAP_WETH": [
+        "address",
+        "uint256",
+    ],
+    "PERMIT2_TRANSFER_FROM_BATCH": [
+        "tuple[]",
+    ],
+    "BALANCE_CHECK_ERC20": [
+        "address",
+        "address",
+        "uint256",
+    ],
+    "V4_SWAP": [
+        "bytes",
+        "bytes[]",
+    ],
+    "V3_POSITION_MANAGER_PERMIT": [],
+    "V3_POSITION_MANAGER_CALL": [],
+    "V4_INITIALIZE_POOL": [],
+    "V4_POSITION_MANAGER_CALL": [],
+    "EXECUTE_SUB_PLAN": [],
+}
+
 # Source: https://github.com/Uniswap/v4-periphery/blob/main/src/libraries/Actions.sol
 # NOTE: `INCREASE_LIQUIDITY_FROM_DELTAS` and `MINT_POSITION_FROM_DELTAS` are deprecated and should not be used, see comments in the source file.
 v4_actions = {
@@ -291,4 +375,139 @@ v4_actions = {
     "UNWRAP": 0x16,
     "MINT_6909": 0x17,
     "BURN_6909": 0x18,
+}
+
+v4_actions_abi = {
+    "INCREASE_LIQUIDITY": [
+        "uint256",
+        "uint256",
+        "uint128",
+        "uint128",
+        "bytes",
+    ],
+    "DECREASE_LIQUIDITY": [
+        "uint256",
+        "uint256",
+        "uint128",
+        "uint128",
+        "bytes",
+    ],
+    "MINT_POSITION": [
+        "tuple",
+        "int24",
+        "int24",
+        "uint256",
+        "uint128",
+        "uint128",
+        "address",
+        "bytes",
+    ],
+    "BURN_POSITION": [
+        "uint256",
+        "uint128",
+        "uint128",
+        "bytes",
+    ],
+    "INCREASE_LIQUIDITY_FROM_DELTAS": [
+        "uint256",
+        "uint256",
+        "uint128",
+        "uint128",
+        "bytes",
+    ],
+    "MINT_POSITION_FROM_DELTAS": [
+        "tuple",
+        "int24",
+        "int24",
+        "uint256",
+        "uint128",
+        "uint128",
+        "address",
+        "bytes",
+    ],
+    "SWAP_EXACT_IN_SINGLE": [
+        "tuple",
+        "bool",
+        "uint128",
+        "uint128",
+        "bytes",
+    ],
+    "SWAP_EXACT_IN": [
+        "address",
+        "tuple[]",
+        "uint128",
+        "uint128",
+    ],
+    "SWAP_EXACT_OUT_SINGLE": [
+        "tuple",
+        "bool",
+        "uint128",
+        "uint128",
+        "bytes",
+    ],
+    "SWAP_EXACT_OUT": [
+        "address",
+        "tuple[]",
+        "uint128",
+        "uint128",
+    ],
+    "SETTLE": [
+        "address",
+        "uint256",
+        "bool",
+    ],
+    "SETTLE_ALL": [
+        "address",
+        "uint256",
+    ],
+    "SETTLE_PAIR": [
+        "address",
+        "address",
+    ],
+    "TAKE": [
+        "address",
+        "address",
+        "uint256",
+    ],
+    "TAKE_ALL": [
+        "address",
+        "uint256",
+    ],
+    "TAKE_PORTION": [
+        "address",
+        "address",
+        "uint256",
+    ],
+    "TAKE_PAIR": [
+        "address",
+        "address",
+        "address",
+    ],
+    "CLOSE_CURRENCY": [
+        "address",
+    ],
+    "CLEAR_OR_TAKE": [
+        "address",
+        "uint256",
+    ],
+    "SWEEP": [
+        "address",
+        "address",
+    ],
+    "WRAP": [
+        "uint256",
+    ],
+    "UNWRAP": [
+        "uint256",
+    ],
+    "MINT_6909": [
+        "address",
+        "uint256",
+        "uint256",
+    ],
+    "BURN_6909": [
+        "address",
+        "uint256",
+        "uint256",
+    ],
 }
