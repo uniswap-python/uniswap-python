@@ -32,7 +32,9 @@ from .constants import (
     _router_contract_addresses_v4,
     _stateview_contract_addresses_v4,
     universal_router_commands,
+    universal_router_commands_abis,
     v4_actions,
+    v4_actions_abis,
 )
 from .exceptions import InvalidToken
 from .token import ERC20Token
@@ -1855,7 +1857,7 @@ class Uniswap4:
             ["(address,tuple[],uint128,int128)"],
             [
                 (
-                    input_token,
+                    output_token,
                     [astuple(path_key) for path_key in route],
                     qty,
                     amount_in_max,
@@ -2478,7 +2480,97 @@ class Uniswap4:
         )
         return tx
 
+    def universal_router_execute(
+        self,
+        commands: List[int],
+        actions: List[List[int]],
+        params: List[List[List]],
+        ether_amount: int = 0,
+    ) -> HexBytes:
+        # Validating input parameters
+        if len(commands) != len(actions) or len(actions) != len(params):
+            raise ValueError("Lists' lengths are not equal.")
+        for commands_item, actions_item, params_item in zip(commands, actions, params):
+            command_key: str = self._get_dict_key_by_value(
+                universal_router_commands, commands_item
+            )
+            if len(actions_item) == 0:
+                if len(universal_router_commands_abis[command_key]) != sum(
+                    len(sub_list) for sub_list in params_item
+                ):
+                    raise ValueError("ABI mismatch for " + command_key + "command.")
+            else:
+                for specific_action, specific_param in zip(actions_item, params_item):
+                    action_key: str = self._get_dict_key_by_value(
+                        v4_actions, specific_action
+                    )
+                    if len(v4_actions_abis[action_key]) != len(specific_param):
+                        raise ValueError(
+                            "ABI mistmatch for "
+                            + action_key
+                            + "command in "
+                            + command_key
+                            + " command."
+                        )
+
+        # Encoding data
+        commands_abi = ["uint8"] * len(commands)
+        encoded_commands: bytes = encode_packed(commands_abi, commands)
+        encoded_inputs: List[bytes] = []
+        for commands_item, actions_item, params_item in zip(commands, actions, params):
+            command_key = self._get_dict_key_by_value(
+                universal_router_commands, commands_item
+            )
+            if len(actions_item) == 0:
+                encoded_params: bytes = encode(
+                    universal_router_commands_abis[command_key], *params_item[0]
+                )
+                encoded_inputs.append(encoded_params)
+            else:
+                encoded_actions_with_params = self.encode_actions_with_params(
+                    actions_item, params_item
+                )
+                encoded_params = encode(
+                    universal_router_commands_abis[command_key],
+                    [
+                        encoded_actions_with_params["actions"],
+                        encoded_actions_with_params["params"],
+                    ],
+                )
+                encoded_inputs.append(encoded_params)
+        # Execute contract call
+        result: HexBytes = self._build_and_send_tx(
+            self.router.functions.execute(
+                encoded_commands, encoded_inputs, self._deadline()
+            ),
+            self._get_tx_params(value=ether_amount),
+        )
+
+        return result
+
     # Helper functions
+    def encode_actions_with_params(
+        self, actions: List[int], params: List[List]
+    ) -> Dict:
+        encoded_actions_abi = ["uint8"] * len(actions)
+        encoded_actions: bytes = encode_packed(encoded_actions_abi, actions)
+        encoded_params: List[bytes] = []
+        for actions_item, params_item in zip(actions, params):
+            action_key = self._get_dict_key_by_value(v4_actions, actions_item)
+            encoded_params_item: bytes = encode(
+                v4_actions_abis[action_key], params_item
+            )
+            encoded_params.append(encoded_params_item)
+        return_value: Dict = {
+            "actions": encoded_actions,
+            "params": encoded_params,
+        }
+        return return_value
+
+    def _get_dict_key_by_value(self, param_dict: Dict, value: int) -> str:
+        return_value = str(next((k for k, v in param_dict.items() if v == value), None))
+        return return_value
+
     def get_liquidity_for_amount0(
         self, sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, amount0: int
     ) -> int:
