@@ -389,7 +389,7 @@ v4_actions = {
     "BURN_6909": 0x18,
 }
 
-v4_actions_abi = {
+v4_actions_abis = {
     "INCREASE_LIQUIDITY": [
         "uint256",
         "uint256",
