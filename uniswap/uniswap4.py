@@ -845,7 +845,7 @@ class Uniswap4:
         Allows forwarding a single permit to permit2
         """
         function = self.position_manager.functions.permit(
-            owner, astuple(permit_single), signature
+            owner, astuple(permit_single), spender, sig_deadline, signature
         )
         tx = self._build_and_send_tx(
             function, self._get_tx_params(value=payable_amount)
@@ -1624,7 +1624,7 @@ class Uniswap4:
             zero_for_one = False
             token0, token1 = output_token, input_token
         exact_input_single_params: bytes = encode(
-            ["((address,address,uint24,int24,address),bool,int128,uint128,bytes)"],
+            ["((address,address,uint24,int24,address),bool,uint128,uint128,bytes)"],
             [
                 (
                     (token0, token1, fee, tick_spacing, hooks),
@@ -1778,7 +1778,7 @@ class Uniswap4:
             zero_for_one = False
             token0, token1 = output_token, input_token
         exact_output_single_params = encode(
-            ["((address,address,uint24,int24,address),bool,int128,uint128,bytes)"],
+            ["((address,address,uint24,int24,address),bool,uint128,uint128,bytes)"],
             [
                 (
                     (
@@ -1856,7 +1856,7 @@ class Uniswap4:
         )
         # SETTING PARAMS
         exact_output_params: bytes = encode(
-            ["(address,tuple[],uint128,int128)"],
+            ["(address,tuple[],uint128,uint128)"],
             [
                 (
                     output_token,
@@ -2500,7 +2500,7 @@ class Uniswap4:
                 if len(universal_router_commands_abis[command_key]) != sum(
                     len(sub_list) for sub_list in params_item
                 ):
-                    raise ValueError("ABI mismatch for " + command_key + "command.")
+                    raise ValueError("ABI mismatch for " + command_key + " command.")
             else:
                 for specific_action, specific_param in zip(actions_item, params_item):
                     action_key: str = self._get_dict_key_by_value(
@@ -2508,9 +2508,9 @@ class Uniswap4:
                     )
                     if len(v4_actions_abis[action_key]) != len(specific_param):
                         raise ValueError(
-                            "ABI mistmatch for "
+                            "ABI mismatch for "
                             + action_key
-                            + "command in "
+                            + " command in "
                             + command_key
                             + " command."
                         )
@@ -2572,6 +2572,8 @@ class Uniswap4:
     @staticmethod
     def _get_dict_key_by_value(param_dict: Dict, value: int) -> str:
         return_value = str(next((k for k, v in param_dict.items() if v == value), None))
+        if return_value is None:
+            raise IndexError("Key is not found.")
         return return_value
 
     @staticmethod
