@@ -187,6 +187,8 @@ class Uniswap4:
             logger.info(f"Approving {_addr_to_str(token)} for PERMIT2...")
             tx = self._build_and_send_tx(function)
             time.sleep(7)
+        else:
+            raise ValueError("ETH needs no approval.")
         # Give an exchange/router max approval for a token.
         max_approval = 2**100 - 1
         expiration: int = int(10**12)
@@ -843,7 +845,7 @@ class Uniswap4:
         Allows forwarding a single permit to permit2
         """
         function = self.position_manager.functions.permit(
-            owner, astuple(permit_single), signature
+            owner, astuple(permit_single), spender, sig_deadline, signature
         )
         tx = self._build_and_send_tx(
             function, self._get_tx_params(value=payable_amount)
@@ -1622,7 +1624,7 @@ class Uniswap4:
             zero_for_one = False
             token0, token1 = output_token, input_token
         exact_input_single_params: bytes = encode(
-            ["((address,address,uint24,int24,address),bool,int128,uint128,bytes)"],
+            ["((address,address,uint24,int24,address),bool,uint128,uint128,bytes)"],
             [
                 (
                     (token0, token1, fee, tick_spacing, hooks),
@@ -1776,7 +1778,7 @@ class Uniswap4:
             zero_for_one = False
             token0, token1 = output_token, input_token
         exact_output_single_params = encode(
-            ["((address,address,uint24,int24,address),bool,int128,uint128,bytes)"],
+            ["((address,address,uint24,int24,address),bool,uint128,uint128,bytes)"],
             [
                 (
                     (
@@ -1854,7 +1856,7 @@ class Uniswap4:
         )
         # SETTING PARAMS
         exact_output_params: bytes = encode(
-            ["(address,tuple[],uint128,int128)"],
+            ["(address,tuple[],uint128,uint128)"],
             [
                 (
                     output_token,
@@ -2498,7 +2500,7 @@ class Uniswap4:
                 if len(universal_router_commands_abis[command_key]) != sum(
                     len(sub_list) for sub_list in params_item
                 ):
-                    raise ValueError("ABI mismatch for " + command_key + "command.")
+                    raise ValueError("ABI mismatch for " + command_key + " command.")
             else:
                 for specific_action, specific_param in zip(actions_item, params_item):
                     action_key: str = self._get_dict_key_by_value(
@@ -2506,9 +2508,9 @@ class Uniswap4:
                     )
                     if len(v4_actions_abis[action_key]) != len(specific_param):
                         raise ValueError(
-                            "ABI mistmatch for "
+                            "ABI mismatch for "
                             + action_key
-                            + "command in "
+                            + " command in "
                             + command_key
                             + " command."
                         )
@@ -2567,12 +2569,16 @@ class Uniswap4:
         }
         return return_value
 
-    def _get_dict_key_by_value(self, param_dict: Dict, value: int) -> str:
+    @staticmethod
+    def _get_dict_key_by_value(param_dict: Dict, value: int) -> str:
         return_value = str(next((k for k, v in param_dict.items() if v == value), None))
+        if return_value is None:
+            raise IndexError("Key is not found.")
         return return_value
 
+    @staticmethod
     def get_liquidity_for_amount0(
-        self, sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, amount0: int
+        sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, amount0: int
     ) -> int:
         """
         Helper function to calculate the amount of liquidity that can be provided for a given amount of `token0` and price range defined by `sqrt_  ratio_a_x96` and `sqrt_ratio_b_x96`.
@@ -2585,8 +2591,9 @@ class Uniswap4:
         )
         return liquidity
 
+    @staticmethod
     def get_liquidity_for_amount1(
-        self, sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, amount1: int
+        sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, amount1: int
     ) -> int:
         """
         Helper function to calculate the amount of liquidity that can be provided for a given amount of `token1` and price range defined by `sqrt_ratio_a_x96` and `sqrt_ratio_b_x96`.
@@ -2629,8 +2636,9 @@ class Uniswap4:
             )
         return liquidity
 
+    @staticmethod
     def get_amount0_for_liquidity(
-        self, sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, liquidity: int
+        sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, liquidity: int
     ) -> int:
         """
         Helper function to calculate the amount of `token0` that can be provided for a given amount of liquidity and price range defined by `sqrt_ratio_a_x96` and `sqrt_ratio_b_x96`.
@@ -2645,8 +2653,9 @@ class Uniswap4:
         )
         return amount0
 
+    @staticmethod
     def get_amount1_for_liquidity(
-        self, sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, liquidity: int
+        sqrt_ratio_a_x96: int, sqrt_ratio_b_x96: int, liquidity: int
     ) -> int:
         """
         Helper function to calculate the amount of `token1` that can be provided for a given amount of liquidity and price range defined by `sqrt_ratio_a_x96` and `sqrt_ratio_b_x96`.
@@ -2741,7 +2750,8 @@ class Uniswap4:
                 )
         return return_value
 
-    def decode_position_info(self, position_info: int) -> Dict:
+    @staticmethod
+    def decode_position_info(position_info: int) -> Dict:
         """
 
                 :return:
@@ -2855,7 +2865,8 @@ class Uniswap4:
             currency_out = currency_in
         return encoded_path
 
-    def get_pool_id(self, pool: PoolKey) -> HexBytes:
+    @staticmethod
+    def get_pool_id(pool: PoolKey) -> HexBytes:
         """Computes the pool ID for a given PoolKey by hashing its parameters."""
         pool_data = eth_abi.abi.encode(
             types=["address", "address", "uint24", "int24", "address"],
