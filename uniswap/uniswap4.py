@@ -2525,7 +2525,7 @@ class Uniswap4:
             )
             if len(actions_item) == 0:
                 encoded_params: bytes = encode(
-                    universal_router_commands_abis[command_key], *params_item[0]
+                    universal_router_commands_abis[command_key], params_item[0]
                 )
                 encoded_inputs.append(encoded_params)
             else:
@@ -2571,10 +2571,10 @@ class Uniswap4:
 
     @staticmethod
     def _get_dict_key_by_value(param_dict: Dict, value: int) -> str:
-        return_value = str(next((k for k, v in param_dict.items() if v == value), None))
+        return_value = next((k for k, v in param_dict.items() if v == value), None)
         if return_value is None:
             raise IndexError("Key is not found.")
-        return return_value
+        return str(return_value)
 
     @staticmethod
     def get_liquidity_for_amount0(
