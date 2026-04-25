@@ -449,13 +449,13 @@ v4_actions_abis = {
         "((address,address,uint24,int24,address),bool,uint128,uint128,bytes)",
     ],
     "SWAP_EXACT_IN": [
-        "(address,(address,uint24,int24,address,bytes)[],uint128,int128)",
+        "(address,(address,uint24,int24,address,bytes)[],uint128,uint128)",
     ],
     "SWAP_EXACT_OUT_SINGLE": [
         "((address,address,uint24,int24,address),bool,uint128,uint128,bytes)",
     ],
     "SWAP_EXACT_OUT": [
-        "(address,(address,uint24,int24,address,bytes)[],uint128,int128)",
+        "(address,(address,uint24,int24,address,bytes)[],uint128,uint128)",
     ],
     "SETTLE": [
         "address",

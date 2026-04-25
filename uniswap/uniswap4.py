@@ -1701,7 +1701,7 @@ class Uniswap4:
 
         # SETTING PARAMS
         exact_input_params: bytes = encode(
-            ["(address,tuple[],uint128,int128)"],
+            ["(address,tuple[],uint128,uint128)"],
             [
                 (
                     input_token,
@@ -2502,6 +2502,12 @@ class Uniswap4:
         ether_amount: int = 0,
     ) -> HexBytes:
         # Validating input parameters
+        ignore_list = [
+            "SWAP_EXACT_IN_SINGLE",
+            "SWAP_EXACT_IN",
+            "SWAP_EXACT_OUT_SINGLE",
+            "SWAP_EXACT_OUT",
+        ]
         if len(commands) != len(actions) or len(actions) != len(params):
             raise ValueError("Lists' lengths are not equal.")
         for commands_item, actions_item, params_item in zip(commands, actions, params):
@@ -2518,6 +2524,8 @@ class Uniswap4:
                     action_key: str = self._get_dict_key_by_value(
                         v4_actions, specific_action
                     )
+                    if action_key in ignore_list:
+                        continue
                     if len(v4_actions_abis[action_key]) != len(specific_param):
                         raise ValueError(
                             "ABI mismatch for "
