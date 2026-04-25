@@ -1592,7 +1592,9 @@ class Uniswap4:
         reverting if the amount of `output_token` received is less than `qtycap`.
         """
         if recipient is None:
-            recipient = str(self.address)
+            recipient = _addr_to_str(self.address)
+        else:
+            recipient = _addr_to_str(recipient)
 
         min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
 
@@ -1606,13 +1608,13 @@ class Uniswap4:
             args=[universal_router_commands["V4_SWAP"]],
         )
 
-        # SWAP_EXACT_IN_SINGLE, SETTLE_ALL, TAKE_ALL
+        # Actions are SWAP_EXACT_IN_SINGLE, SETTLE_ALL, TAKE
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             [
                 v4_actions["SWAP_EXACT_IN_SINGLE"],
                 v4_actions["SETTLE_ALL"],
-                v4_actions["TAKE_ALL"],
+                v4_actions["TAKE"],
             ],
         )
 
@@ -1639,13 +1641,13 @@ class Uniswap4:
             ["address", "uint128"],
             [input_token, qty],
         )
-        take_all_params: bytes = encode(
-            ["address", "uint128"],
-            [output_token, min_tokens_bought],
+        take_params: bytes = encode(
+            ["address", "address", "uint128"],
+            [output_token, recipient, min_tokens_bought],
         )
 
         # ENCODING DATA
-        params = [exact_input_single_params, settle_all_params, take_all_params]
+        params = [exact_input_single_params, settle_all_params, take_params]
         inputs = []
         inputs.append(
             encode(
@@ -1671,7 +1673,9 @@ class Uniswap4:
         reverting if the amount of `output_token` received is less than `qtycap`.
         """
         if recipient is None:
-            recipient = str(self.address)
+            recipient = _addr_to_str(self.address)
+        else:
+            recipient = _addr_to_str(recipient)
 
         min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
 
@@ -1685,19 +1689,19 @@ class Uniswap4:
             args=[universal_router_commands["V4_SWAP"]],
         )
 
-        # SWAP_EXACT_IN, SETTLE_ALL, TAKE_ALL
+        # Actions are SWAP_EXACT_IN, SETTLE_ALL, TAKE
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             [
                 v4_actions["SWAP_EXACT_IN"],
                 v4_actions["SETTLE_ALL"],
-                v4_actions["TAKE_ALL"],
+                v4_actions["TAKE"],
             ],
         )
 
         # SETTING PARAMS
         exact_input_params: bytes = encode(
-            ["(address,tuple[],uint128,int128)"],
+            ["(address,tuple[],uint128,uint128)"],
             [
                 (
                     input_token,
@@ -1711,13 +1715,17 @@ class Uniswap4:
             ["address", "uint128"],
             [input_token, qty],
         )
-        take_all_params: bytes = encode(
-            ["address", "uint128"],
-            [str(route[-1].intermediate_currency), min_tokens_bought],
+        take_params: bytes = encode(
+            ["address", "address", "uint128"],
+            [
+                _addr_to_str(route[-1].intermediate_currency),
+                recipient,
+                min_tokens_bought,
+            ],
         )
 
         # ENCODING DATA
-        params = [exact_input_params, settle_all_params, take_all_params]
+        params = [exact_input_params, settle_all_params, take_params]
         inputs = []
         inputs.append(
             encode(
@@ -1747,7 +1755,9 @@ class Uniswap4:
         reverting if the amount of `input_token` required is more than `qtycap`.
         """
         if recipient is None:
-            recipient = str(self.address)
+            recipient = _addr_to_str(self.address)
+        else:
+            recipient = _addr_to_str(recipient)
 
         amount_in_max: int = int((1 + self.max_slippage) * qtycap)
 
@@ -1761,13 +1771,13 @@ class Uniswap4:
             args=[universal_router_commands["V4_SWAP"]],
         )
 
-        # SWAP_EXACT_OUT_SINGLE, SETTLE_ALL, TAKE_ALL
+        # Actions are SWAP_EXACT_OUT_SINGLE, SETTLE_ALL, TAKE
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             args=[
                 v4_actions["SWAP_EXACT_OUT_SINGLE"],
                 v4_actions["SETTLE_ALL"],
-                v4_actions["TAKE_ALL"],
+                v4_actions["TAKE"],
             ],
         )
         # SETTING PARAMS
@@ -1799,13 +1809,13 @@ class Uniswap4:
             ["address", "uint128"],
             [input_token, amount_in_max],
         )
-        take_all_params = encode(
-            ["address", "uint128"],
-            [output_token, qty],
+        take_params = encode(
+            ["address", "address", "uint128"],
+            [output_token, recipient, qty],
         )
 
         # ENCODING DATA
-        params = [exact_output_single_params, settle_all_params, take_all_params]
+        params = [exact_output_single_params, settle_all_params, take_params]
         inputs = []
         inputs.append(
             encode(
@@ -1831,10 +1841,12 @@ class Uniswap4:
         reverting if the amount of `input_token` required is more than `qtycap`.
         """
         if recipient is None:
-            recipient = str(self.address)
+            recipient = _addr_to_str(self.address)
+        else:
+            recipient = _addr_to_str(recipient)
 
         amount_in_max: int = int((1 + self.max_slippage) * qtycap)
-        input_token: str = route[0].intermediate_currency
+        input_token: str = _addr_to_str(route[0].intermediate_currency)
         ether_amount: int = 0
         if input_token == ETH_ADDRESS:
             ether_amount = amount_in_max
@@ -1845,13 +1857,13 @@ class Uniswap4:
             args=[universal_router_commands["V4_SWAP"]],
         )
 
-        # SWAP_EXACT_OUT, SETTLE_ALL, TAKE_ALL
+        # Actions are SWAP_EXACT_OUT, SETTLE_ALL, TAKE
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             args=[
                 v4_actions["SWAP_EXACT_OUT"],
                 v4_actions["SETTLE_ALL"],
-                v4_actions["TAKE_ALL"],
+                v4_actions["TAKE"],
             ],
         )
         # SETTING PARAMS
@@ -1870,13 +1882,13 @@ class Uniswap4:
             ["address", "uint128"],
             [input_token, amount_in_max],
         )
-        take_all_params: bytes = encode(
-            ["address", "uint128"],
-            [output_token, qty],
+        take_params: bytes = encode(
+            ["address", "address", "uint128"],
+            [output_token, recipient, qty],
         )
 
         # ENCODING DATA
-        params = [exact_output_params, settle_all_params, take_all_params]
+        params = [exact_output_params, settle_all_params, take_params]
         inputs = []
         inputs.append(
             encode(
@@ -2490,6 +2502,12 @@ class Uniswap4:
         ether_amount: int = 0,
     ) -> HexBytes:
         # Validating input parameters
+        ignore_list = [
+            "SWAP_EXACT_IN_SINGLE",
+            "SWAP_EXACT_IN",
+            "SWAP_EXACT_OUT_SINGLE",
+            "SWAP_EXACT_OUT",
+        ]
         if len(commands) != len(actions) or len(actions) != len(params):
             raise ValueError("Lists' lengths are not equal.")
         for commands_item, actions_item, params_item in zip(commands, actions, params):
@@ -2506,6 +2524,8 @@ class Uniswap4:
                     action_key: str = self._get_dict_key_by_value(
                         v4_actions, specific_action
                     )
+                    if action_key in ignore_list:
+                        continue
                     if len(v4_actions_abis[action_key]) != len(specific_param):
                         raise ValueError(
                             "ABI mismatch for "

@@ -248,6 +248,7 @@ universal_router_commands = {
     "SWEEP": 0x04,
     "TRANSFER": 0x05,
     "PAY_PORTION": 0x06,
+    "PAY_PORTION_FULL_PRECISION": 0x07,
     "V2_SWAP_EXACT_IN": 0x08,
     "V2_SWAP_EXACT_OUT": 0x09,
     "PERMIT2_PERMIT": 0x0A,
@@ -262,7 +263,7 @@ universal_router_commands = {
     "V4_POSITION_MANAGER_CALL": 0x14,
     "EXECUTE_SUB_PLAN": 0x21,
 }
-
+# Source: https://github.com/Uniswap/universal-router/blob/d3123d99493aa6524bc5de44423c3961177758cb/test/integration-tests/shared/planner.ts
 universal_router_commands_abis = {
     "V3_SWAP_EXACT_IN": [
         "address",
@@ -298,6 +299,11 @@ universal_router_commands_abis = {
         "uint256",
     ],
     "PAY_PORTION": [
+        "address",
+        "address",
+        "uint256",
+    ],
+    "PAY_PORTION_FULL_PRECISION": [
         "address",
         "address",
         "uint256",
@@ -350,7 +356,9 @@ universal_router_commands_abis = {
         "tuple",
         "uint160",
     ],
-    "V4_POSITION_MANAGER_CALL": ["bytes", "uint256"],
+    "V4_POSITION_MANAGER_CALL": [
+        "bytes",
+    ],
     "EXECUTE_SUB_PLAN": [
         "bytes",
         "bytes[]",
@@ -388,6 +396,7 @@ v4_actions = {
     "BURN_6909": 0x18,
 }
 
+# Source: https://github.com/Uniswap/universal-router/blob/d3123d99493aa6524bc5de44423c3961177758cb/test/integration-tests/shared/v4Planner.ts
 v4_actions_abis = {
     "INCREASE_LIQUIDITY": [
         "uint256",
@@ -437,30 +446,16 @@ v4_actions_abis = {
         "bytes",
     ],
     "SWAP_EXACT_IN_SINGLE": [
-        "tuple",
-        "bool",
-        "uint128",
-        "uint128",
-        "bytes",
+        "((address,address,uint24,int24,address),bool,uint128,uint128,bytes)",
     ],
     "SWAP_EXACT_IN": [
-        "address",
-        "tuple[]",
-        "uint128",
-        "uint128",
+        "(address,(address,uint24,int24,address,bytes)[],uint128,uint128)",
     ],
     "SWAP_EXACT_OUT_SINGLE": [
-        "tuple",
-        "bool",
-        "uint128",
-        "uint128",
-        "bytes",
+        "((address,address,uint24,int24,address),bool,uint128,uint128,bytes)",
     ],
     "SWAP_EXACT_OUT": [
-        "address",
-        "tuple[]",
-        "uint128",
-        "uint128",
+        "(address,(address,uint24,int24,address,bytes)[],uint128,uint128)",
     ],
     "SETTLE": [
         "address",
