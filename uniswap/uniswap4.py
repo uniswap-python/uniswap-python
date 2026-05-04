@@ -1689,7 +1689,7 @@ class Uniswap4:
 
         # SETTING PARAMS
         exact_input_params: bytes = encode(
-            ["(address,tuple[],uint128,uint128)"],
+            ["(address,(address,uint24,int24,address,bytes)[],uint128,uint128)"],
             [
                 (
                     input_token,
@@ -1845,7 +1845,7 @@ class Uniswap4:
         )
         # SETTING PARAMS
         exact_output_params: bytes = encode(
-            ["(address,tuple[],uint128,uint128)"],
+            ["(address,(address,uint24,int24,address,bytes)[],uint128,uint128)"],
             [
                 (
                     output_token,

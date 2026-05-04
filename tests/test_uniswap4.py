@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 import subprocess
+from contextlib import contextmanager
 from dataclasses import dataclass
 from time import sleep
 from typing import Generator
@@ -108,6 +109,11 @@ def ganache() -> Generator[GanacheInstance, None, None]:
     yield GanacheInstance(f"http://127.0.0.1:{port}", eth_address, eth_privkey)
     p.kill()
     p.wait()
+
+
+@contextmanager
+def does_not_raise():
+    yield
 
 
 @pytest.mark.usefixtures("client", "web3")
