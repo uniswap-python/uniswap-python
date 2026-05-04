@@ -1636,7 +1636,7 @@ class Uniswap4:
             [input_token, qty],
         )
         take_all_params: bytes = encode(
-            ["address", "address", "uint128"],
+            ["address", "uint128"],
             [output_token, min_tokens_bought],
         )
 
@@ -1704,7 +1704,7 @@ class Uniswap4:
             [input_token, qty],
         )
         take_all_params: bytes = encode(
-            ["address", "address", "uint128"],
+            ["address", "uint128"],
             [
                 _addr_to_str((route[-1].intermediate_currency)),  # type: ignore[arg-type]
                 min_tokens_bought,
@@ -1792,7 +1792,7 @@ class Uniswap4:
             [input_token, amount_in_max],
         )
         take_all_params = encode(
-            ["address", "address", "uint128"],
+            ["address", "uint128"],
             [output_token, qty],
         )
 
@@ -1860,7 +1860,7 @@ class Uniswap4:
             [input_token, amount_in_max],
         )
         take_all_params: bytes = encode(
-            ["address", "address", "uint128"],
+            ["address", "uint128"],
             [output_token, qty],
         )
 
