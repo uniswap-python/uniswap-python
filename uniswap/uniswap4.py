@@ -1585,17 +1585,11 @@ class Uniswap4:
         tick_spacing: int,
         hooks: str,
         hook_data: bytes = b"",
-        recipient: Optional[str] = None,
     ) -> HexBytes:
         """
         Swaps an exact amount of `input_token` for a minimum amount of `output_token`,
         reverting if the amount of `output_token` received is less than `qtycap`.
         """
-        if recipient is None:
-            recipient = _addr_to_str(self.address)
-        else:
-            recipient = _addr_to_str(recipient)
-
         min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
 
         ether_amount: int = 0
@@ -1608,13 +1602,13 @@ class Uniswap4:
             args=[universal_router_commands["V4_SWAP"]],
         )
 
-        # Actions are SWAP_EXACT_IN_SINGLE, SETTLE_ALL, TAKE
+        # Actions are SWAP_EXACT_IN_SINGLE, SETTLE_ALL, TAKE_ALL
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             [
                 v4_actions["SWAP_EXACT_IN_SINGLE"],
                 v4_actions["SETTLE_ALL"],
-                v4_actions["TAKE"],
+                v4_actions["TAKE_ALL"],
             ],
         )
 
@@ -1641,13 +1635,13 @@ class Uniswap4:
             ["address", "uint128"],
             [input_token, qty],
         )
-        take_params: bytes = encode(
-            ["address", "address", "uint128"],
-            [output_token, recipient, min_tokens_bought],
+        take_all_params: bytes = encode(
+            ["address", "uint128"],
+            [output_token, min_tokens_bought],
         )
 
         # ENCODING DATA
-        params = [exact_input_single_params, settle_all_params, take_params]
+        params = [exact_input_single_params, settle_all_params, take_all_params]
         inputs = []
         inputs.append(
             encode(
@@ -1667,16 +1661,10 @@ class Uniswap4:
         qty: int,
         qtycap: int,
         route: List[PathKey],
-        recipient: Optional[str] = None,
     ) -> HexBytes:
         """Swaps an exact amount of `input_token` for a minimum amount of `output_token` through a specified multi-hop route,
         reverting if the amount of `output_token` received is less than `qtycap`.
         """
-        if recipient is None:
-            recipient = _addr_to_str(self.address)
-        else:
-            recipient = _addr_to_str(recipient)
-
         min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
 
         ether_amount: int = 0
@@ -1689,13 +1677,13 @@ class Uniswap4:
             args=[universal_router_commands["V4_SWAP"]],
         )
 
-        # Actions are SWAP_EXACT_IN, SETTLE_ALL, TAKE
+        # Actions are SWAP_EXACT_IN, SETTLE_ALL, TAKE_ALL
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             [
                 v4_actions["SWAP_EXACT_IN"],
                 v4_actions["SETTLE_ALL"],
-                v4_actions["TAKE"],
+                v4_actions["TAKE_ALL"],
             ],
         )
 
@@ -1715,17 +1703,16 @@ class Uniswap4:
             ["address", "uint128"],
             [input_token, qty],
         )
-        take_params: bytes = encode(
-            ["address", "address", "uint128"],
+        take_all_params: bytes = encode(
+            ["address", "uint128"],
             [
-                _addr_to_str(route[-1].intermediate_currency),
-                recipient,
+                _addr_to_str((route[-1].intermediate_currency)),  # type: ignore[arg-type]
                 min_tokens_bought,
             ],
         )
 
         # ENCODING DATA
-        params = [exact_input_params, settle_all_params, take_params]
+        params = [exact_input_params, settle_all_params, take_all_params]
         inputs = []
         inputs.append(
             encode(
@@ -1749,15 +1736,10 @@ class Uniswap4:
         tick_spacing: int,
         hooks: str,
         hook_data: bytes = b"",
-        recipient: Optional[str] = None,
     ) -> HexBytes:
         """Swaps a maximum amount of `input_token` for an exact amount of `output_token`,
         reverting if the amount of `input_token` required is more than `qtycap`.
         """
-        if recipient is None:
-            recipient = _addr_to_str(self.address)
-        else:
-            recipient = _addr_to_str(recipient)
 
         amount_in_max: int = int((1 + self.max_slippage) * qtycap)
 
@@ -1771,13 +1753,13 @@ class Uniswap4:
             args=[universal_router_commands["V4_SWAP"]],
         )
 
-        # Actions are SWAP_EXACT_OUT_SINGLE, SETTLE_ALL, TAKE
+        # Actions are SWAP_EXACT_OUT_SINGLE, SETTLE_ALL, TAKE_ALL
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             args=[
                 v4_actions["SWAP_EXACT_OUT_SINGLE"],
                 v4_actions["SETTLE_ALL"],
-                v4_actions["TAKE"],
+                v4_actions["TAKE_ALL"],
             ],
         )
         # SETTING PARAMS
@@ -1809,13 +1791,13 @@ class Uniswap4:
             ["address", "uint128"],
             [input_token, amount_in_max],
         )
-        take_params = encode(
-            ["address", "address", "uint128"],
-            [output_token, recipient, qty],
+        take_all_params = encode(
+            ["address", "uint128"],
+            [output_token, qty],
         )
 
         # ENCODING DATA
-        params = [exact_output_single_params, settle_all_params, take_params]
+        params = [exact_output_single_params, settle_all_params, take_all_params]
         inputs = []
         inputs.append(
             encode(
@@ -1835,18 +1817,13 @@ class Uniswap4:
         qty: int,
         qtycap: int,
         route: List[PathKey],
-        recipient: Optional[str] = None,
     ) -> HexBytes:
         """Swaps a maximum amount of `input_token` for an exact amount of `output_token` through a specified multi-hop route,
         reverting if the amount of `input_token` required is more than `qtycap`.
         """
-        if recipient is None:
-            recipient = _addr_to_str(self.address)
-        else:
-            recipient = _addr_to_str(recipient)
 
         amount_in_max: int = int((1 + self.max_slippage) * qtycap)
-        input_token: str = _addr_to_str(route[0].intermediate_currency)
+        input_token: str = _addr_to_str(route[0].intermediate_currency)  # type: ignore[arg-type]
         ether_amount: int = 0
         if input_token == ETH_ADDRESS:
             ether_amount = amount_in_max
@@ -1857,13 +1834,13 @@ class Uniswap4:
             args=[universal_router_commands["V4_SWAP"]],
         )
 
-        # Actions are SWAP_EXACT_OUT, SETTLE_ALL, TAKE
+        # Actions are SWAP_EXACT_OUT, SETTLE_ALL, TAKE_ALL
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8"],
             args=[
                 v4_actions["SWAP_EXACT_OUT"],
                 v4_actions["SETTLE_ALL"],
-                v4_actions["TAKE"],
+                v4_actions["TAKE_ALL"],
             ],
         )
         # SETTING PARAMS
@@ -1882,13 +1859,13 @@ class Uniswap4:
             ["address", "uint128"],
             [input_token, amount_in_max],
         )
-        take_params: bytes = encode(
-            ["address", "address", "uint128"],
-            [output_token, recipient, qty],
+        take_all_params: bytes = encode(
+            ["address", "uint128"],
+            [output_token, qty],
         )
 
         # ENCODING DATA
-        params = [exact_output_params, settle_all_params, take_params]
+        params = [exact_output_params, settle_all_params, take_all_params]
         inputs = []
         inputs.append(
             encode(
@@ -1957,7 +1934,6 @@ class Uniswap4:
         swap_pool_key: Optional[PoolKey] = None,
         hook_data: Optional[bytes] = b"",
         route: Optional[List[PoolKey]] = None,
-        recipient: Optional[str] = None,
     ) -> HexBytes:
         """
         Make a trade by defining the qty of the input token.
@@ -1975,7 +1951,6 @@ class Uniswap4:
                 swap_pool_key.tick_spacing,
                 swap_pool_key.hooks,
                 hook_data,  # type: ignore[arg-type]
-                recipient,
             )
         else:
             encoded_route = self.encode_path_keys_input(route, input_token)
@@ -1984,7 +1959,6 @@ class Uniswap4:
                 qty,
                 qtycap,
                 encoded_route,
-                recipient,
             )
         return result
 
@@ -1997,7 +1971,6 @@ class Uniswap4:
         swap_pool_key: Optional[PoolKey] = None,
         hook_data: Optional[bytes] = b"",
         route: Optional[List[PoolKey]] = None,
-        recipient: Optional[str] = None,
     ) -> HexBytes:
         """
         Make a trade by defining the qty of the output token.
@@ -2016,7 +1989,6 @@ class Uniswap4:
                 swap_pool_key.tick_spacing,
                 swap_pool_key.hooks,
                 hook_data,  # type: ignore[arg-type]
-                recipient,
             )
         else:
             encoded_route = self.encode_path_keys_output(route, output_token)
@@ -2025,7 +1997,6 @@ class Uniswap4:
                 qty,
                 qtycap,
                 encoded_route,
-                recipient,
             )
         return result
 
