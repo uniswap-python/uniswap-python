@@ -22,9 +22,9 @@ jobs:
       matrix:
         uniswap-version: [1, 2, 3, 4]
         network: ["mainnet"]
-        include:
-          - network: arbitrum
-            uniswap-version: 3
+        # include:
+        #   - network: arbitrum
+        #     uniswap-version: 3
         #include:
         #  - network: xdai
         #    uniswap-version: 3
