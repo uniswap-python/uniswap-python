@@ -73,6 +73,8 @@ jobs:
       run: |
         poetry install
         npm install -g ganache@7.5.0
+        wget -qO- https://foundry.paradigm.xyz | bash
+        foundryup
 
     - name: Test
       env:
