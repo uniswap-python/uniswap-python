@@ -76,7 +76,7 @@ jobs:
         wget -qO- https://foundry.paradigm.xyz | bash
         source ~/.bashrc
         source ~/.zshrc
-        foundryup
+        ~/.foundry/bin/foundryup
 
     - name: Test
       env:
