@@ -22,6 +22,11 @@ from uniswap.util import (
     default_tick_range,
 )
 
+pytestmark = pytest.mark.skipif(
+    os.getenv("UNISWAP_VERSION") == "4",
+    reason="This test file is for Uniswap v1, v2, and v3. For Uniswap v4 tests, see test_uniswap4.py",
+)
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 

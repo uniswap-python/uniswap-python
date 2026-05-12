@@ -14,6 +14,11 @@ from uniswap import Uniswap4
 from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
 from uniswap.types import PoolKey
 
+pytestmark = pytest.mark.skipif(
+    os.getenv("UNISWAP_VERSION") != "4",
+    reason="This test file is for Uniswap v4. For Uniswap v1, v2, and v3 tests, see test_uniswap.py",
+)
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
