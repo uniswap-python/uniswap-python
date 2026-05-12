@@ -6,6 +6,11 @@ from click.testing import CliRunner
 
 from uniswap.cli import main
 
+pytestmark = pytest.mark.skipif(
+    os.getenv("UNISWAP_VERSION") == "4",
+    reason="Not supported in v4",
+)
+
 
 def print_result(result):
     print(result)
