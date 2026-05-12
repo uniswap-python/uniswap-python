@@ -74,6 +74,7 @@ jobs:
         poetry install
         npm install -g ganache@7.5.0
         wget -qO- https://foundry.paradigm.xyz | bash
+        source ~/.bashrc      
         foundryup
 
     - name: Test
