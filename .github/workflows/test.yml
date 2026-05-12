@@ -75,7 +75,6 @@ jobs:
         npm install -g ganache@7.5.0
         wget -qO- https://foundry.paradigm.xyz | bash
         source ~/.bashrc
-        source ~/.zshrc
         ~/.foundry/bin/foundryup
 
     - name: Test
