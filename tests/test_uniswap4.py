@@ -14,6 +14,11 @@ from uniswap import Uniswap4
 from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
 from uniswap.types import PoolKey
 
+pytestmark = pytest.mark.skipif(
+    os.getenv("UNISWAP_VERSION") != "4",
+    reason="This test file is for Uniswap v4. For Uniswap v1, v2, and v3 tests, see test_uniswap.py",
+)
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -31,7 +36,7 @@ USDC_USDT_TICK_SPACING = 1
 
 
 @dataclass
-class GanacheInstance:
+class AnvilInstance:
     provider: str
     eth_address: str
     eth_privkey: str
@@ -60,53 +65,50 @@ def usdc_usdt_poolkey() -> PoolKey:
 
 
 @pytest.fixture(scope="module")
-def client(web3: Web3, ganache: GanacheInstance) -> Uniswap4:
+def client(web3: Web3, anvil: AnvilInstance) -> Uniswap4:
     return Uniswap4(
-        ganache.eth_address,
-        ganache.eth_privkey,
+        anvil.eth_address,
+        anvil.eth_privkey,
         web3=web3,
     )
 
 
 @pytest.fixture(scope="module")
-def web3(ganache: GanacheInstance) -> Web3:
-    w3 = Web3(Web3.HTTPProvider(ganache.provider, request_kwargs={"timeout": 30}))
+def web3(anvil: AnvilInstance) -> Web3:
+    w3 = Web3(Web3.HTTPProvider(anvil.provider, request_kwargs={"timeout": 30}))
     if 1 != int(w3.net.version):
         logger.warning("PROVIDER was not a mainnet provider, which the tests require")
     return w3
 
 
 @pytest.fixture(scope="module")
-def ganache() -> Generator[GanacheInstance, None, None]:
-    """Fixture that runs ganache which has forked off mainnet"""
-    if not shutil.which("ganache"):
+def anvil() -> Generator[AnvilInstance, None, None]:
+    """Fixture that runs anvil which has forked off mainnet"""
+    if not shutil.which("anvil"):
         raise Exception(
-            "ganache was not found in PATH, you can install it with `npm install -g ganache`"
+            "anvil was not found in PATH, you can install it with `npm install -g anvil`"
         )
     if "PROVIDER" not in os.environ:
         raise Exception(
             "PROVIDER was not set, you need to set it to a mainnet provider (such as Infura) so that we can fork off our testnet"
         )
 
-    port = 10999
+    port = 10998
     defaultGasPrice = 100_000_000_000  # 100 gwei
     p = subprocess.Popen(
-        f"""ganache
+        f"""anvil
         --port {port}
-        --wallet.seed test
-        --chain.networkId 1
-        --chain.chainId 1
-        --fork.url {os.environ["PROVIDER"]}
-        --miner.defaultGasPrice {defaultGasPrice}
-        --miner.instamine "strict"
+        --chain-id 1
+        --fork-url {os.environ["PROVIDER"]}
+        --gas-price {defaultGasPrice}
         """.replace("\n", " "),
         shell=True,
     )
-    # Address #1 when ganache is run with `--wallet.seed test`, it starts with 1000 ETH
-    eth_address = "0x94e3361495bD110114ac0b6e35Ed75E77E6a6cFA"
-    eth_privkey = "0x6f1313062db38875fb01ee52682cbf6a8420e92bfbc578c5d4fdc0a32c50266f"
+    # Address #1 when anvil is run with `--wallet.seed test`, it starts with 1000 ETH
+    eth_address = "0xa0Ee7A142d267C1f36714E4a8F75612F20a79720"
+    eth_privkey = "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6"
     sleep(3)
-    yield GanacheInstance(f"http://127.0.0.1:{port}", eth_address, eth_privkey)
+    yield AnvilInstance(f"http://127.0.0.1:{port}", eth_address, eth_privkey)
     p.kill()
     p.wait()
 
@@ -117,7 +119,7 @@ def does_not_raise():
 
 
 @pytest.mark.usefixtures("client", "web3")
-class TestUniswap(object):
+class TestUniswap4(object):
     # ------ Market --------------------------------------------------------------------
     # Input quotes
     @pytest.mark.parametrize(
@@ -163,7 +165,7 @@ class TestUniswap(object):
             (
                 ETH_ADDRESS,
                 USDC_ADDRESS,
-                ONE_ETH,
+                1000 * ONE_USDC,
                 ETH_USDC_FEE,
                 ETH_USDC_TICK_SPACING,
                 ZERO_HOOK,
