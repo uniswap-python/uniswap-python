@@ -73,9 +73,9 @@ jobs:
       run: |
         poetry install
         npm install -g ganache@7.5.0
-        wget -qO- https://foundry.paradigm.xyz | bash
-        source /home/runner/.bashrc
-        foundryup 
+
+    - name: Install Foundry
+      uses: foundry-rs/foundry-toolchain@v1
 
     - name: Test
       env:
