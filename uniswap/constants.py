@@ -285,7 +285,7 @@ universal_router_commands_abis = {
         "uint256",
     ],
     "PERMIT2_PERMIT_BATCH": [
-        "tuple",
+        "((address,uint160,uint48,uint48)[],address,uint256)",
         "bytes",
     ],
     "SWEEP": [
@@ -323,7 +323,7 @@ universal_router_commands_abis = {
         "bool",
     ],
     "PERMIT2_PERMIT": [
-        "tuple",
+        "(address,uint160,uint48,uint48)",
         "bytes",
     ],
     "WRAP_ETH": [
@@ -335,7 +335,7 @@ universal_router_commands_abis = {
         "uint256",
     ],
     "PERMIT2_TRANSFER_FROM_BATCH": [
-        "tuple[]",
+        "(address,uint256,address,bytes)[]",
     ],
     "BALANCE_CHECK_ERC20": [
         "address",
@@ -353,7 +353,7 @@ universal_router_commands_abis = {
         "bytes",
     ],
     "V4_INITIALIZE_POOL": [
-        "tuple",
+        "(address,address,uint24,int24,address)",
         "uint160",
     ],
     "V4_POSITION_MANAGER_CALL": [
@@ -413,7 +413,7 @@ v4_actions_abis = {
         "bytes",
     ],
     "MINT_POSITION": [
-        "tuple",
+        "(address,address,uint24,int24,address)",
         "int24",
         "int24",
         "uint256",
@@ -436,7 +436,7 @@ v4_actions_abis = {
         "bytes",
     ],
     "MINT_POSITION_FROM_DELTAS": [
-        "tuple",
+        "(address,address,uint24,int24,address)",
         "int24",
         "int24",
         "uint256",
