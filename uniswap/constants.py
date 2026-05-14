@@ -323,7 +323,7 @@ universal_router_commands_abis = {
         "bool",
     ],
     "PERMIT2_PERMIT": [
-        "(address,uint160,uint48,uint48)",
+        "((address,uint160,uint48,uint48),address,uint256)",
         "bytes",
     ],
     "WRAP_ETH": [
