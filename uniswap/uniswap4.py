@@ -186,8 +186,8 @@ class Uniswap4:
         """Approve the router to spend a token on the user's behalf, or set up a permit for the position manager to pull the token from the user's wallet. For ETH, the router can pull from the user's wallet directly, so no approval is necessary.
 
         :param token: The address of the token to approve.
-        :param max_approval: Optional. The maximum amount to approve. If not set, will approve a maximum amount (2**100 - 1).
-        :param delay_interval: Optional. The interval to wait between transactions. If not set, will wait 7 seconds.
+        :param max_approval: Optional. The maximum amount to approve. If not set, will approve a maximum possible amount.
+        :param delay_interval: Optional. Seconds to wait between two approval transactions. Defaults to 7. Values less than 1 are treated as default.
         """
 
         # If the token is not ETH, approve the router to spend it. For ETH, the router can pull from the user's wallet directly, so no approval is necessary.
@@ -2958,8 +2958,8 @@ class Uniswap4:
         self, value: int = 0, gas: int = 250000, custom_nonce: Optional[Nonce] = None
     ) -> TxParams:
         """Get generic transaction parameters."""
-        if self.last_nonce is not None:
-            if custom_nonce < Nonce(0):  # type: ignore [operator]
+        if custom_nonce is not None:
+            if custom_nonce < Nonce(0):
                 raise ValueError("Nonce can only be a positive integer.")
         if not self.post_merge:
             return {
@@ -3002,5 +3002,5 @@ class Uniswap4:
             return self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
         finally:
             # logger.debug(f"nonce: {tx_params['nonce']}")
-            if custom_nonce is None:
+            if tx_params["nonce"] == Nonce(max(self.last_nonce, 0)):
                 self.last_nonce = Nonce(tx_params["nonce"] + 1)
