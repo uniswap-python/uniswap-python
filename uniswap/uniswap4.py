@@ -64,6 +64,10 @@ class Uniswap4:
     Wrapper around Uniswap v4 contracts.
     """
 
+    w3: Web3
+    address: AddressLike
+    last_nonce: Nonce
+
     def __init__(
         self,
         address: Union[str, AddressLike],
@@ -103,7 +107,7 @@ class Uniswap4:
                 Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60})
             )
 
-        self.last_nonce: Nonce = self.w3.eth.get_transaction_count(self.address)
+        self.last_nonce = self.w3.eth.get_transaction_count(self.address)
 
         # This code automatically approves you for trading on the exchange.
         # max_approval is to allow the contract to exchange on your behalf.
@@ -174,9 +178,17 @@ class Uniswap4:
 
     # Approvals
     def approve(
-        self, token: AddressLike, max_approval: Optional[int] = None
+        self,
+        token: AddressLike,
+        max_approval: Optional[int] = None,
+        delay_interval: Optional[int] = 7,
     ) -> HexBytes:
-        """Approve a `token` for trading on the exchange. Only needs to be done once per token, unless you want to set a different max approval."""
+        """Approve the router to spend a token on the user's behalf, or set up a permit for the position manager to pull the token from the user's wallet. For ETH, the router can pull from the user's wallet directly, so no approval is necessary.
+
+        :param token: The address of the token to approve.
+        :param max_approval: Optional. The maximum amount to approve. If not set, will approve a maximum amount (2**100 - 1).
+        :param delay_interval: Optional. The interval to wait between transactions. If not set, will wait 7 seconds.
+        """
 
         # If the token is not ETH, approve the router to spend it. For ETH, the router can pull from the user's wallet directly, so no approval is necessary.
         if _addr_to_str(token) != ETH_ADDRESS:
@@ -186,7 +198,9 @@ class Uniswap4:
             )
             logger.info(f"Approving {_addr_to_str(token)} for PERMIT2...")
             tx = self._build_and_send_tx(function)
-            time.sleep(7)
+            if delay_interval is None or delay_interval < 1:
+                delay_interval = 7
+            time.sleep(delay_interval)
         else:
             raise ValueError("ETH needs no approval.")
         # Give an exchange/router max approval for a token.
@@ -1585,6 +1599,7 @@ class Uniswap4:
         tick_spacing: int,
         hooks: str,
         hook_data: bytes = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Swaps an exact amount of `input_token` for a minimum amount of `output_token`,
@@ -1652,7 +1667,7 @@ class Uniswap4:
 
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
-            self._get_tx_params(value=ether_amount),
+            self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
         )
 
     def token_to_token_swap_input(
@@ -1661,6 +1676,7 @@ class Uniswap4:
         qty: int,
         qtycap: int,
         route: List[PathKey],
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """Swaps an exact amount of `input_token` for a minimum amount of `output_token` through a specified multi-hop route,
         reverting if the amount of `output_token` received is less than `qtycap`.
@@ -1723,7 +1739,7 @@ class Uniswap4:
 
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
-            self._get_tx_params(value=ether_amount),
+            self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
         )
 
     def token_to_token_swap_exact_output(
@@ -1736,6 +1752,7 @@ class Uniswap4:
         tick_spacing: int,
         hooks: str,
         hook_data: bytes = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """Swaps a maximum amount of `input_token` for an exact amount of `output_token`,
         reverting if the amount of `input_token` required is more than `qtycap`.
@@ -1808,7 +1825,7 @@ class Uniswap4:
 
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
-            self._get_tx_params(value=ether_amount),
+            self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
         )
 
     def token_to_token_swap_output(
@@ -1817,6 +1834,7 @@ class Uniswap4:
         qty: int,
         qtycap: int,
         route: List[PathKey],
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """Swaps a maximum amount of `input_token` for an exact amount of `output_token` through a specified multi-hop route,
         reverting if the amount of `input_token` required is more than `qtycap`.
@@ -1876,7 +1894,7 @@ class Uniswap4:
 
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
-            self._get_tx_params(value=ether_amount),
+            self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
         )
 
     def drop_txn(
@@ -1884,6 +1902,7 @@ class Uniswap4:
         address_to: AddressLike,
         gas_price: float,
         priority_fee: int = 10,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Replaces pending transaction with zero-value ETH transfer
@@ -1897,7 +1916,7 @@ class Uniswap4:
         signed_txn = self.w3.eth.account.sign_transaction(
             dict(
                 chainId=int(self.w3.net.version),
-                nonce=self.last_nonce,
+                nonce=self.last_nonce if custom_nonce is None else custom_nonce,
                 gasPrice=Web3.to_wei(gas_price, "gwei"),
                 gas=int(21000),
                 to=Web3.to_checksum_address(address_to),
@@ -1910,7 +1929,7 @@ class Uniswap4:
             dict(
                 chainId=int(self.w3.net.version),
                 type=2,
-                nonce=self.last_nonce,
+                nonce=self.last_nonce if custom_nonce is None else custom_nonce,
                 maxFeePerGas=Web3.to_wei(int(gas_price), "gwei"),
                 maxPriorityFeePerGas=Web3.to_wei(priority_fee, "gwei"),
                 gas=int(21000),
@@ -1934,6 +1953,7 @@ class Uniswap4:
         swap_pool_key: Optional[PoolKey] = None,
         hook_data: Optional[bytes] = b"",
         route: Optional[List[PoolKey]] = None,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Make a trade by defining the qty of the input token.
@@ -1951,6 +1971,7 @@ class Uniswap4:
                 swap_pool_key.tick_spacing,
                 swap_pool_key.hooks,
                 hook_data,  # type: ignore[arg-type]
+                custom_nonce=custom_nonce,
             )
         else:
             encoded_route = self.encode_path_keys_input(route, input_token)
@@ -1959,6 +1980,7 @@ class Uniswap4:
                 qty,
                 qtycap,
                 encoded_route,
+                custom_nonce=custom_nonce,
             )
         return result
 
@@ -1971,6 +1993,7 @@ class Uniswap4:
         swap_pool_key: Optional[PoolKey] = None,
         hook_data: Optional[bytes] = b"",
         route: Optional[List[PoolKey]] = None,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Make a trade by defining the qty of the output token.
@@ -1989,6 +2012,7 @@ class Uniswap4:
                 swap_pool_key.tick_spacing,
                 swap_pool_key.hooks,
                 hook_data,  # type: ignore[arg-type]
+                custom_nonce=custom_nonce,
             )
         else:
             encoded_route = self.encode_path_keys_output(route, output_token)
@@ -1997,6 +2021,7 @@ class Uniswap4:
                 qty,
                 qtycap,
                 encoded_route,
+                custom_nonce=custom_nonce,
             )
         return result
 
@@ -2089,6 +2114,7 @@ class Uniswap4:
         self,
         pool_key: PoolKey,
         sqrt_price_x96: int,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Creates a new liquidity pool without initial liquidity with the specified parameters and a starting price.
@@ -2097,7 +2123,9 @@ class Uniswap4:
             astuple(pool_key),
             sqrt_price_x96,
         )
-        tx = self._build_and_send_tx(function, self._get_tx_params())
+        tx = self._build_and_send_tx(
+            function, self._get_tx_params(custom_nonce=custom_nonce)
+        )
         return tx
 
     def mint_position(
@@ -2110,6 +2138,7 @@ class Uniswap4:
         amount1: int,
         recipient: Optional[str] = None,
         hook_data: Optional[bytes] = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Mints a new liquidity position with the specified parameters.
@@ -2188,7 +2217,7 @@ class Uniswap4:
             self.position_manager.functions.modifyLiquidities(
                 unlock_data, self._deadline()
             ),
-            self._get_tx_params(value=ether_amount),
+            self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
         )
         return tx
 
@@ -2201,6 +2230,7 @@ class Uniswap4:
         liquidity: int,
         recipient: Optional[str] = None,
         hook_data: Optional[bytes] = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Increases the liquidity of an existing position.
@@ -2272,7 +2302,7 @@ class Uniswap4:
             self.position_manager.functions.modifyLiquidities(
                 unlock_data, self._deadline()
             ),
-            self._get_tx_params(value=ether_amount),
+            self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
         )
         return tx
 
@@ -2285,6 +2315,7 @@ class Uniswap4:
         liquidity: int,
         recipient: Optional[str] = None,
         hook_data: Optional[bytes] = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Decreases the liquidity of an existing position.
@@ -2338,7 +2369,7 @@ class Uniswap4:
             self.position_manager.functions.modifyLiquidities(
                 unlock_data, self._deadline()
             ),
-            self._get_tx_params(value=ether_amount),
+            self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
         )
         return tx
 
@@ -2348,6 +2379,7 @@ class Uniswap4:
         token_id: int,
         recipient: Optional[str] = None,
         hook_data: Optional[bytes] = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Collects the fees accrued by an existing position.
@@ -2398,7 +2430,7 @@ class Uniswap4:
             self.position_manager.functions.modifyLiquidities(
                 unlock_data, self._deadline()
             ),
-            self._get_tx_params(value=ether_amount),
+            self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
         )
         return tx
 
@@ -2410,6 +2442,7 @@ class Uniswap4:
         amount1_min: int,
         recipient: Optional[str] = None,
         hook_data: Optional[bytes] = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Burns an existing liquidity position.
@@ -2461,7 +2494,7 @@ class Uniswap4:
             self.position_manager.functions.modifyLiquidities(
                 unlock_data, self._deadline()
             ),
-            self._get_tx_params(value=ether_amount),
+            self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
         )
         return tx
 
@@ -2471,6 +2504,7 @@ class Uniswap4:
         actions: List[List[int]],
         params: List[List[List]],
         ether_amount: int = 0,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         # Validating input parameters
         ignore_list = [
@@ -2536,7 +2570,7 @@ class Uniswap4:
             self.router.functions.execute(
                 encoded_commands, encoded_inputs, self._deadline()
             ),
-            self._get_tx_params(value=ether_amount),
+            self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
         )
 
         return result
@@ -2773,15 +2807,6 @@ class Uniswap4:
 
         # The pool ID is stored in the remaining bytes, so we shift the position info to the right by the pool ID offset to get the pool ID.
         rest_part: int = position_info >> pool_id_offset
-        # pool_id_raw_length = (rest_part.bit_length() + 7) // 8
-        # if pool_id_raw_length < 25:
-        #     raise ContractLogicError(
-        #         f"Invalid return: truncated pool ID is too short. Expected at least 25 bytes, got {pool_id_raw_length} bytes."
-        #     ) from None
-        # pool_id_raw: bytes = rest_part.to_bytes(pool_id_raw_length, byteorder="big")
-        # pool_id: bytes = bytes(25)
-        # copy_bytes: int = min(len(pool_id_raw), 25)
-        # pool_id = pool_id_raw[:copy_bytes]
         pool_id: bytes = rest_part.to_bytes(25, byteorder="big")
 
         return_value = {
@@ -2929,15 +2954,22 @@ class Uniswap4:
         """Get a predefined deadline. 10min by default."""
         return int(time.time()) + 10 * 60
 
-    def _get_tx_params(self, value: int = 0, gas: int = 250000) -> TxParams:
+    def _get_tx_params(
+        self, value: int = 0, gas: int = 250000, custom_nonce: Optional[Nonce] = None
+    ) -> TxParams:
         """Get generic transaction parameters."""
+        if self.last_nonce is not None:
+            if custom_nonce < Nonce(0):  # type: ignore [operator]
+                raise ValueError("Nonce can only be a positive integer.")
         if not self.post_merge:
             return {
                 "from": _addr_to_str(self.address),
                 "value": Wei(value),
                 "gas": int(self.gas_limit),
                 "gasPrice": Web3.to_wei(self.gas_price, "gwei"),
-                "nonce": Nonce(max(self.last_nonce, 0)),
+                "nonce": Nonce(max(self.last_nonce, 0))
+                if custom_nonce is None
+                else custom_nonce,
             }
         else:
             return {
@@ -2948,15 +2980,20 @@ class Uniswap4:
                 "type": 2,
                 "chainId": self.w3.eth.chain_id,
                 "value": Wei(value),
-                "nonce": Nonce(max(self.last_nonce, 0)),
+                "nonce": Nonce(max(self.last_nonce, 0))
+                if custom_nonce is None
+                else custom_nonce,
             }
 
     def _build_and_send_tx(
-        self, function: ContractFunction, tx_params: Optional[TxParams] = None
+        self,
+        function: ContractFunction,
+        tx_params: Optional[TxParams] = None,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """Build and send a transaction."""
         if not tx_params:
-            tx_params = self._get_tx_params()
+            tx_params = self._get_tx_params(custom_nonce=custom_nonce)
         transaction = function.build_transaction(tx_params)
         signed_txn = self.w3.eth.account.sign_transaction(
             transaction, private_key=self.private_key
@@ -2965,4 +3002,5 @@ class Uniswap4:
             return self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
         finally:
             # logger.debug(f"nonce: {tx_params['nonce']}")
-            self.last_nonce = Nonce(tx_params["nonce"] + 1)
+            if custom_nonce is None:
+                self.last_nonce = Nonce(tx_params["nonce"] + 1)

@@ -85,9 +85,7 @@ def web3(anvil: AnvilInstance) -> Web3:
 def anvil() -> Generator[AnvilInstance, None, None]:
     """Fixture that runs anvil which has forked off mainnet"""
     if not shutil.which("anvil"):
-        raise Exception(
-            "anvil was not found in PATH, you can install it with `npm install -g anvil`"
-        )
+        raise Exception("anvil was not found in PATH")
     if "PROVIDER" not in os.environ:
         raise Exception(
             "PROVIDER was not set, you need to set it to a mainnet provider (such as Infura) so that we can fork off our testnet"
