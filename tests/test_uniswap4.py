@@ -5,14 +5,16 @@ import subprocess
 from contextlib import contextmanager
 from dataclasses import dataclass
 from time import sleep
-from typing import Generator
+from typing import Generator, List, Optional
 
 import pytest
 from web3 import Web3
+from web3.types import Nonce
 
 from uniswap import Uniswap4
 from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
 from uniswap.types import PoolKey
+from uniswap.util import _addr_to_str, _str_to_addr
 
 pytestmark = pytest.mark.skipif(
     os.getenv("UNISWAP_VERSION") != "4",
@@ -118,6 +120,75 @@ def does_not_raise():
 
 @pytest.mark.usefixtures("client", "web3")
 class TestUniswap4(object):
+    # ------ Approve/tx replacement-----------------------------------------------------
+    @pytest.mark.parametrize(
+        "token, max_approval, delay_interval",
+        [
+            (USDC_ADDRESS, None, 7),
+            (USDT_ADDRESS, 1_000_000 * ONE_USDT, 1),
+        ],
+    )
+    def test_approve(
+        self,
+        client: Uniswap4,
+        token: str,
+        max_approval: Optional[int],
+        delay_interval: int,
+    ):
+        # Approve the token
+        tx_receipt = client.approve(
+            _str_to_addr(token), max_approval, delay_interval=delay_interval
+        )
+        assert tx_receipt
+        print(tx_receipt.hex())
+        tx = client.w3.eth.wait_for_transaction_receipt(
+            tx_receipt, timeout=RECEIPT_TIMEOUT
+        )
+        print(str(tx))
+        assert tx["status"], f"Transaction failed with status {tx['status']}; tx: {tx}"
+        # Check that the approval was successful by calling allowance
+        allowance = client.approval(_str_to_addr(token))
+        assert allowance
+
+    @pytest.mark.parametrize(
+        "address_to, gas_price, priority_fee, custom_nonce",
+        [
+            ("self", 10, 8, None),
+            (ETH_ADDRESS, 20, 10, 0),
+        ],
+    )
+    def test_drop_txn(
+        self,
+        client: Uniswap4,
+        address_to: str,
+        gas_price: float,
+        priority_fee: int,
+        custom_nonce: Optional[int],
+    ):
+        if address_to == "self":
+            address = _addr_to_str(client.address)
+        else:
+            address = address_to
+        if custom_nonce == 0:
+            nonce: Optional[Nonce] = client.last_nonce
+        else:
+            nonce = None
+
+        tx_receipt = client.drop_txn(
+            _str_to_addr(address),
+            gas_price,
+            priority_fee=priority_fee,
+            custom_nonce=nonce,
+        )
+        assert tx_receipt
+        print(tx_receipt.hex())
+        tx = client.w3.eth.wait_for_transaction_receipt(
+            tx_receipt, timeout=RECEIPT_TIMEOUT
+        )
+        print(str(tx))
+        assert tx["status"], f"Transaction failed with status {tx['status']}; tx: {tx}"
+        client.update_last_nonce()
+
     # ------ Market --------------------------------------------------------------------
     # Input quotes
     @pytest.mark.parametrize(
@@ -156,6 +227,46 @@ class TestUniswap4(object):
         )
         assert result
 
+    @pytest.mark.parametrize(
+        "token0, qty, route",
+        [
+            (
+                ETH_ADDRESS,
+                ONE_ETH,
+                [
+                    eth_usdc_poolkey,
+                ],
+            ),
+            (
+                USDC_ADDRESS,
+                1000 * ONE_USDC,
+                [
+                    usdc_usdt_poolkey,
+                ],
+            ),
+            (
+                ETH_ADDRESS,
+                ONE_ETH,
+                [
+                    eth_usdc_poolkey,
+                    usdc_usdt_poolkey,
+                ],
+            ),
+        ],
+    )
+    def test_get_quote_exact_input(
+        self,
+        client: Uniswap4,
+        token0: str,
+        qty: int,
+        route: List[PoolKey],
+    ):
+        result = client.get_quote_exact_input(token0, qty, route)
+        assert result
+
+    def test_get_price_input(self):
+        pass
+
     # Output quotes
     @pytest.mark.parametrize(
         "token0, token1, qty, fee, tick_spacing, hooks",
@@ -192,3 +303,95 @@ class TestUniswap4(object):
             token0, token1, qty, fee, tick_spacing, hooks
         )
         assert result
+
+    @pytest.mark.parametrize(
+        "token0, qty, route",
+        [
+            (
+                USDC_ADDRESS,
+                1000 * ONE_USDC,
+                [
+                    eth_usdc_poolkey,
+                ],
+            ),
+            (
+                USDT_ADDRESS,
+                1000 * ONE_USDT,
+                [
+                    usdc_usdt_poolkey,
+                ],
+            ),
+            (
+                USDT_ADDRESS,
+                1000 * ONE_USDT,
+                [
+                    eth_usdc_poolkey,
+                    usdc_usdt_poolkey,
+                ],
+            ),
+        ],
+    )
+    def test_get_quote_exact_output(
+        self, client: Uniswap4, token0: str, qty: int, route: List[PoolKey]
+    ):
+        result = client.get_quote_exact_output(token0, qty, route)
+        assert result
+
+    def test_get_price_output(self):
+        pass
+
+    def test_estimate_price_impact(self):
+        pass
+
+    def test_get_token_token_spot_price(self):
+        pass
+
+    # ------ Swaps----------------------------------------------------------------------
+    def test_swap_exact_input_single(self):
+        pass
+
+    def test_swap_exact_input(self):
+        pass
+
+    def test_make_swap_input(self):
+        pass
+
+    def test_swap_exact_output_single(self):
+        pass
+
+    def test_swap_exact_output(self):
+        pass
+
+    def test_make_swap_output(self):
+        pass
+
+    # ------ Liquidity --------------------------------------------------------------------
+    def test_get_position_info(self):
+        pass
+
+    def test_get_position_value(self):
+        pass
+
+    def test_create_pool(self):
+        pass
+
+    def test_mint_position(self):
+        pass
+
+    def test_increase_liquidity(self):
+        pass
+
+    def test_decrease_liquidity(self):
+        pass
+
+    def test_collect_fees(self):
+        pass
+
+    def test_burn_position(self):
+        pass
+
+    # ------ StateView tests --------------------------------------------------------------
+    # ------ PositionDescriptor tests -----------------------------------------------------
+    # ------ PositionManager tests --------------------------------------------------------
+    # ------ PoolManager tests ------------------------------------------------------------
+    # ------ UniversalRouter tests --------------------------------------------------------

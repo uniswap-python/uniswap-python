@@ -224,7 +224,7 @@ class Uniswap4:
         )
         return result
 
-    # Gas customization
+    # Transaction parameters customization
     # Gas limit
     def get_gas_limit(self) -> float:
         """Returns the current gas limit for transactions."""
@@ -260,6 +260,11 @@ class Uniswap4:
     def set_max_slippage(self, max_slippage: float) -> None:
         """Sets the maximum slippage as a float (0.01 is 1%)."""
         self.max_slippage = max_slippage
+
+    # Nonce management
+    def update_last_nonce(self) -> None:
+        """Updates the last nonce to the current nonce of the wallet. This can be used to resync the nonce if transactions have been sent outside of this class or custom nonce is used."""
+        self.last_nonce = self.w3.eth.get_transaction_count(self.address)
 
     # StateView methods
     def stateview_get_fee_growth_globals(
@@ -1520,7 +1525,7 @@ class Uniswap4:
         ).call()[0]
         return quote_amount
 
-    # market price functions for selling `qty` amount of `token0` to buy `token1`
+    # Market price functions for selling `qty` amount of `token0` to buy `token1`
     def get_price_input(
         self,
         token0: str,
@@ -1668,6 +1673,7 @@ class Uniswap4:
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
 
     def token_to_token_swap_input(
@@ -1740,6 +1746,7 @@ class Uniswap4:
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
 
     def token_to_token_swap_exact_output(
@@ -1826,6 +1833,7 @@ class Uniswap4:
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
 
     def token_to_token_swap_output(
@@ -1895,6 +1903,7 @@ class Uniswap4:
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
 
     def drop_txn(
@@ -1943,7 +1952,7 @@ class Uniswap4:
         else:
             return self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
 
-    # market functions for swapping `qty` amount of `token0` to buy `token1`
+    # Market functions for swapping `qty` amount of `token0` to buy `token1`
     def make_swap_input(
         self,
         input_token: str,
@@ -2124,7 +2133,9 @@ class Uniswap4:
             sqrt_price_x96,
         )
         tx = self._build_and_send_tx(
-            function, self._get_tx_params(custom_nonce=custom_nonce)
+            function,
+            self._get_tx_params(custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2218,6 +2229,7 @@ class Uniswap4:
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2303,6 +2315,7 @@ class Uniswap4:
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2370,6 +2383,7 @@ class Uniswap4:
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2431,6 +2445,7 @@ class Uniswap4:
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2495,6 +2510,7 @@ class Uniswap4:
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2571,6 +2587,7 @@ class Uniswap4:
                 encoded_commands, encoded_inputs, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
 
         return result
@@ -2817,8 +2834,8 @@ class Uniswap4:
         }
         return return_value
 
+    @staticmethod
     def encode_path_keys_input(
-        self,
         path: List[PoolKey],
         currency_in: str,
         hook_data_list: Optional[List[bytes]] = None,
@@ -2849,8 +2866,8 @@ class Uniswap4:
             currency_in = currency_out
         return encoded_path
 
+    @staticmethod
     def encode_path_keys_output(
-        self,
         path: List[PoolKey],
         currency_out: str,
         hook_data_list: Optional[List[bytes]] = None,
@@ -3002,5 +3019,5 @@ class Uniswap4:
             return self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
         finally:
             # logger.debug(f"nonce: {tx_params['nonce']}")
-            if tx_params["nonce"] == Nonce(max(self.last_nonce, 0)):
+            if custom_nonce is None:
                 self.last_nonce = Nonce(tx_params["nonce"] + 1)
