@@ -36,34 +36,29 @@ ETH_USDC_TICK_SPACING = 10
 USDC_USDT_FEE = 10
 USDC_USDT_TICK_SPACING = 1
 
+eth_usdc_poolkey: PoolKey = PoolKey(
+    currency0=ETH_ADDRESS,  # ETH
+    currency1=USDC_ADDRESS,  # USDC
+    fee=ETH_USDC_FEE,
+    tick_spacing=ETH_USDC_TICK_SPACING,
+    hooks=ZERO_HOOK,
+)
+
+
+usdc_usdt_poolkey: PoolKey = PoolKey(
+    currency0=USDC_ADDRESS,  # USDC
+    currency1=USDT_ADDRESS,  # USDT
+    fee=USDC_USDT_FEE,
+    tick_spacing=USDC_USDT_TICK_SPACING,
+    hooks=ZERO_HOOK,
+)
+
 
 @dataclass
 class AnvilInstance:
     provider: str
     eth_address: str
     eth_privkey: str
-
-
-@pytest.fixture(scope="module")
-def eth_usdc_poolkey() -> PoolKey:
-    return PoolKey(
-        currency0=ETH_ADDRESS,  # ETH
-        currency1=USDC_ADDRESS,  # USDC
-        fee=ETH_USDC_FEE,
-        tick_spacing=ETH_USDC_TICK_SPACING,
-        hooks=ZERO_HOOK,
-    )
-
-
-@pytest.fixture(scope="module")
-def usdc_usdt_poolkey() -> PoolKey:
-    return PoolKey(
-        currency0=USDC_ADDRESS,  # USDC
-        currency1=USDT_ADDRESS,  # USDT
-        fee=USDC_USDT_FEE,
-        tick_spacing=USDC_USDT_TICK_SPACING,
-        hooks=ZERO_HOOK,
-    )
 
 
 @pytest.fixture(scope="module")
@@ -153,7 +148,7 @@ class TestUniswap4(object):
     @pytest.mark.parametrize(
         "address_to, gas_price, priority_fee, custom_nonce",
         [
-            ("self", 10, 8, None),
+            ("self", 10, 3, None),
             (ETH_ADDRESS, 20, 10, 0),
         ],
     )
@@ -169,6 +164,7 @@ class TestUniswap4(object):
             address = _addr_to_str(client.address)
         else:
             address = address_to
+        client.update_last_nonce()
         if custom_nonce == 0:
             nonce: Optional[Nonce] = client.last_nonce
         else:
