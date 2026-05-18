@@ -171,7 +171,7 @@ class TestUniswap4(object):
             nonce = None
 
         tx_receipt = client.drop_txn(
-            _str_to_addr(address),
+            address,
             gas_price,
             priority_fee=priority_fee,
             custom_nonce=nonce,
