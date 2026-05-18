@@ -1925,7 +1925,9 @@ class Uniswap4:
         signed_txn = self.w3.eth.account.sign_transaction(
             dict(
                 chainId=int(self.w3.net.version),
-                nonce=self.last_nonce if custom_nonce is None else custom_nonce,
+                nonce=self.w3.eth.get_transaction_count(self.address)
+                if custom_nonce is None
+                else custom_nonce,
                 gasPrice=Web3.to_wei(gas_price, "gwei"),
                 gas=int(21000),
                 to=Web3.to_checksum_address(address_to),
@@ -1938,7 +1940,9 @@ class Uniswap4:
             dict(
                 chainId=int(self.w3.net.version),
                 type=2,
-                nonce=self.last_nonce if custom_nonce is None else custom_nonce,
+                nonce=self.w3.eth.get_transaction_count(self.address)
+                if custom_nonce is None
+                else custom_nonce,
                 maxFeePerGas=Web3.to_wei(int(gas_price), "gwei"),
                 maxPriorityFeePerGas=Web3.to_wei(priority_fee, "gwei"),
                 gas=int(21000),
