@@ -161,7 +161,7 @@ class TestUniswap4(object):
         custom_nonce: Optional[int],
     ):
         if address_to == "self":
-            address: AddressLike = client.address
+            address: AddressLike = client.w3.to_checksum_address(USDC_ADDRESS)
         else:
             address = client.w3.to_checksum_address(address_to)
         client.update_last_nonce()
