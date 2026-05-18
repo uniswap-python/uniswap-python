@@ -160,7 +160,7 @@ class TestUniswap4(object):
         priority_fee: int,
         custom_nonce: Optional[int],
     ):
-        if address_to == "self":
+        if not client.w3.is_address(address_to):
             address: AddressLike = client.address
         else:
             address = client.w3.to_checksum_address(address_to)
