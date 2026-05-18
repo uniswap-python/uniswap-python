@@ -321,11 +321,11 @@ class TestUniswap4(object):
         token0: str,
         token1: str,
         qty: int,
-        fee: Optional[int] = None,
-        tick_spacing: Optional[int] = None,
-        hooks: Optional[str] = None,
-        hook_data: Optional[bytes] = None,
-        route: Optional[List[PoolKey]] = None,
+        fee: Optional[int],
+        tick_spacing: Optional[int],
+        hooks: Optional[str],
+        hook_data: Optional[bytes],
+        route: Optional[List[PoolKey]],
     ):
         result = client.get_price_input(
             token0, token1, qty, fee, tick_spacing, hooks, hook_data, route
@@ -467,11 +467,11 @@ class TestUniswap4(object):
         token0: str,
         token1: str,
         qty: int,
-        fee: Optional[int] = None,
-        tick_spacing: Optional[int] = None,
-        hooks: Optional[str] = None,
-        hook_data: Optional[bytes] = None,
-        route: Optional[List[PoolKey]] = None,
+        fee: Optional[int],
+        tick_spacing: Optional[int],
+        hooks: Optional[str],
+        hook_data: Optional[bytes],
+        route: Optional[List[PoolKey]],
     ):
         result = client.get_price_output(
             token0, token1, qty, fee, tick_spacing, hooks, hook_data, route
