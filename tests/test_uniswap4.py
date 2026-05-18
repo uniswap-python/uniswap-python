@@ -187,7 +187,7 @@ class TestUniswap4(object):
         assert tx["status"], f"Transaction failed with status {tx['status']}; tx: {tx}"
         client.update_last_nonce()
 
-    # ------ Market --------------------------------------------------------------------
+    # ------ Market/price impact--------------------------------------------------------
     # Input quotes
     @pytest.mark.parametrize(
         "token0, token1, qty, fee, tick_spacing, hooks",
@@ -239,7 +239,7 @@ class TestUniswap4(object):
                 USDC_ADDRESS,
                 1000 * ONE_USDC,
                 [
-                    usdc_usdt_poolkey,
+                    eth_usdc_poolkey,
                 ],
             ),
             (
@@ -248,6 +248,14 @@ class TestUniswap4(object):
                 [
                     eth_usdc_poolkey,
                     usdc_usdt_poolkey,
+                ],
+            ),
+            (
+                USDT_ADDRESS,
+                1000 * ONE_USDT,
+                [
+                    usdc_usdt_poolkey,
+                    eth_usdc_poolkey,
                 ],
             ),
         ],
@@ -262,8 +270,67 @@ class TestUniswap4(object):
         result = client.get_quote_exact_input(token0, qty, route)
         assert result
 
-    def test_get_price_input(self):
-        pass
+    @pytest.mark.parametrize(
+        "token0, token1, qty, fee, tick_spacing, hooks, hook_data, route",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                ONE_ETH,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+                b"",
+                None,
+            ),
+            (
+                USDC_ADDRESS,
+                ETH_ADDRESS,
+                1000 * ONE_USDC,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+                b"",
+                None,
+            ),
+            (
+                ETH_ADDRESS,
+                USDT_ADDRESS,
+                ONE_ETH,
+                None,
+                None,
+                None,
+                None,
+                [eth_usdc_poolkey, usdc_usdt_poolkey],
+            ),
+            (
+                USDT_ADDRESS,
+                ETH_ADDRESS,
+                1000 * ONE_USDT,
+                None,
+                None,
+                None,
+                None,
+                [usdc_usdt_poolkey, eth_usdc_poolkey],
+            ),
+        ],
+    )
+    def test_get_price_input(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        qty: int,
+        fee: Optional[int] = None,
+        tick_spacing: Optional[int] = None,
+        hooks: Optional[str] = None,
+        hook_data: Optional[bytes] = None,
+        route: Optional[List[PoolKey]] = None,
+    ):
+        result = client.get_price_input(
+            token0, token1, qty, fee, tick_spacing, hooks, hook_data, route
+        )
+        assert result
 
     # Output quotes
     @pytest.mark.parametrize(
@@ -327,6 +394,14 @@ class TestUniswap4(object):
                     usdc_usdt_poolkey,
                 ],
             ),
+            (
+                ETH_ADDRESS,
+                ONE_ETH,
+                [
+                    usdc_usdt_poolkey,
+                    eth_usdc_poolkey,
+                ],
+            ),
         ],
     )
     def test_get_quote_exact_output(
@@ -335,14 +410,102 @@ class TestUniswap4(object):
         result = client.get_quote_exact_output(token0, qty, route)
         assert result
 
-    def test_get_price_output(self):
-        pass
+    @pytest.mark.parametrize(
+        "token0, token1, qty, fee, tick_spacing, hooks, hook_data, route",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                1000 * ONE_USDC,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+                b"",
+                None,
+            ),
+            (
+                USDC_ADDRESS,
+                ETH_ADDRESS,
+                ONE_ETH,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+                b"",
+                None,
+            ),
+            (
+                ETH_ADDRESS,
+                USDT_ADDRESS,
+                ONE_ETH,
+                None,
+                None,
+                None,
+                None,
+                [
+                    usdc_usdt_poolkey,
+                    eth_usdc_poolkey,
+                ],
+            ),
+            (
+                USDT_ADDRESS,
+                ETH_ADDRESS,
+                1000 * ONE_USDT,
+                None,
+                None,
+                None,
+                None,
+                [
+                    eth_usdc_poolkey,
+                    usdc_usdt_poolkey,
+                ],
+            ),
+        ],
+    )
+    def test_get_price_output(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        qty: int,
+        fee: Optional[int] = None,
+        tick_spacing: Optional[int] = None,
+        hooks: Optional[str] = None,
+        hook_data: Optional[bytes] = None,
+        route: Optional[List[PoolKey]] = None,
+    ):
+        result = client.get_price_output(
+            token0, token1, qty, fee, tick_spacing, hooks, hook_data, route
+        )
+        assert result
 
-    def test_estimate_price_impact(self):
-        pass
+    # Price impact/spot price
+    @pytest.mark.parametrize(
+        "token0, token1, test_volume",
+        [
+            (ETH_ADDRESS, USDC_ADDRESS, ONE_ETH),
+            (ETH_ADDRESS, USDC_ADDRESS, 10 * ONE_ETH),
+            (ETH_ADDRESS, USDC_ADDRESS, 100 * ONE_ETH),
+            (ETH_ADDRESS, USDC_ADDRESS, 1000 * ONE_ETH),
+        ],
+    )
+    def test_estimate_price_impact(
+        self, client: Uniswap4, token0: str, token1: str, test_volume: int
+    ):
+        result = client.estimate_price_impact(token0, token1, test_volume)
+        assert result
 
-    def test_get_token_token_spot_price(self):
-        pass
+    @pytest.mark.parametrize(
+        "token0, token1",
+        [
+            (ETH_ADDRESS, USDC_ADDRESS),
+            (USDC_ADDRESS, ETH_ADDRESS),
+        ],
+    )
+    def test_get_token_token_spot_price(
+        self, client: Uniswap4, token0: str, token1: str
+    ):
+        result = client.get_token_token_spot_price(token0, token1)
+        assert result
 
     # ------ Swaps----------------------------------------------------------------------
     def test_swap_exact_input_single(self):

@@ -1916,7 +1916,7 @@ class Uniswap4:
         """
         Replaces pending transaction with zero-value ETH transfer
 
-        :param address_to: Own address
+        :param address_to: Zero address
 
         Params `gas_price` and `priority_fee` are Gas Price and Max Priority Fee respectively;
         MUST be at least 20% higher than values the original transaction has.
