@@ -1929,7 +1929,7 @@ class Uniswap4:
                 if custom_nonce is None
                 else custom_nonce,
                 gasPrice=Web3.to_wei(gas_price, "gwei"),
-                gas=int(21000),
+                gas=int(self.gas_limit),
                 to=Web3.to_checksum_address(address_to),
                 value=Web3.to_wei(0, "wei"),
             ),
@@ -1942,12 +1942,12 @@ class Uniswap4:
             if custom_nonce is None
             else custom_nonce,
             "from": _addr_to_str(self.address),
-            "to": Web3.to_checksum_address(address_to),
+            "to": _addr_to_str(address_to),
             "value": Web3.to_wei(0, "wei"),
             "maxFeePerGas": Web3.to_wei(int(gas_price), "gwei"),
             "maxPriorityFeePerGas": Web3.to_wei(priority_fee, "gwei"),
-            "gas": int(21000),
-            "chainId": int(self.w3.net.version),
+            "gas": int(self.gas_limit),
+            "chainId": int(self.w3.eth.chain_id),
         }
         signed_txn_london = self.w3.eth.account.sign_transaction(
             # dict(
@@ -1958,7 +1958,7 @@ class Uniswap4:
             #     else custom_nonce,
             #     maxFeePerGas=Web3.to_wei(int(gas_price), "gwei"),
             #     maxPriorityFeePerGas=Web3.to_wei(priority_fee, "gwei"),
-            #     gas=int(21000),
+            #     gas=int(self.gas_limit),
             #     to=Web3.to_checksum_address(address_to),
             #     value=Web3.to_wei(0, "wei"),
             # ),

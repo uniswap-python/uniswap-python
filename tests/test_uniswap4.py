@@ -166,11 +166,9 @@ class TestUniswap4(object):
         custom_nonce: Optional[int],
     ):
         if not client.w3.is_address(address_to):
-            address: AddressLike = client.w3.to_checksum_address(
-                client.address  # ETH_ADDRESS
-            )  # client.address
+            address: AddressLike = client.address  # client.w3.to_checksum_address(
         else:
-            address = client.w3.to_checksum_address(address_to)
+            address = _str_to_addr(address_to)
         client.update_last_nonce()
         if custom_nonce == 0:
             nonce: Optional[Nonce] = client.last_nonce
