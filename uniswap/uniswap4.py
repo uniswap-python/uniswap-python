@@ -1916,7 +1916,7 @@ class Uniswap4:
         """
         Replaces pending transaction with zero-value ETH transfer
 
-        :param address_to: Zero address
+        :param address_to: Zero address or any other valid address to which the zero-value transaction will be sent
 
         Params `gas_price` and `priority_fee` are Gas Price and Max Priority Fee respectively;
         MUST be at least 20% higher than values the original transaction has.
@@ -1936,19 +1936,33 @@ class Uniswap4:
             self.private_key,
         )
         # This one is for post-Merge transactions
+        transaction_dict = {
+            "type": 2,
+            "nonce": self.w3.eth.get_transaction_count(self.address)
+            if custom_nonce is None
+            else custom_nonce,
+            "from": _addr_to_str(self.address),
+            "to": Web3.to_checksum_address(address_to),
+            "value": Web3.to_wei(0, "wei"),
+            "maxFeePerGas": Web3.to_wei(int(gas_price), "gwei"),
+            "maxPriorityFeePerGas": Web3.to_wei(priority_fee, "gwei"),
+            "gas": int(21000),
+            "chainId": int(self.w3.net.version),
+        }
         signed_txn_london = self.w3.eth.account.sign_transaction(
-            dict(
-                chainId=int(self.w3.net.version),
-                type=2,
-                nonce=self.w3.eth.get_transaction_count(self.address)
-                if custom_nonce is None
-                else custom_nonce,
-                maxFeePerGas=Web3.to_wei(int(gas_price), "gwei"),
-                maxPriorityFeePerGas=Web3.to_wei(priority_fee, "gwei"),
-                gas=int(21000),
-                to=Web3.to_checksum_address(address_to),
-                value=Web3.to_wei(0, "wei"),
-            ),
+            # dict(
+            #     chainId=int(self.w3.net.version),
+            #     type=2,
+            #     nonce=self.w3.eth.get_transaction_count(self.address)
+            #     if custom_nonce is None
+            #     else custom_nonce,
+            #     maxFeePerGas=Web3.to_wei(int(gas_price), "gwei"),
+            #     maxPriorityFeePerGas=Web3.to_wei(priority_fee, "gwei"),
+            #     gas=int(21000),
+            #     to=Web3.to_checksum_address(address_to),
+            #     value=Web3.to_wei(0, "wei"),
+            # ),
+            transaction_dict,
             self.private_key,
         )
         if self.post_merge:

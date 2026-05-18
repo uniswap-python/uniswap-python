@@ -29,12 +29,17 @@ RECEIPT_TIMEOUT = 5
 ONE_ETH = 10**18
 ONE_USDT = 10**6
 ONE_USDC = 10**6
+ETH_DECIMALS = 18
+USDT_DECIMALS = 6
+USDC_DECIMALS = 6
 USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
 USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
 ETH_USDC_FEE = 500
 ETH_USDC_TICK_SPACING = 10
 USDC_USDT_FEE = 10
 USDC_USDT_TICK_SPACING = 1
+
+TOKEN_ID = 1
 
 eth_usdc_poolkey: PoolKey = PoolKey(
     currency0=ETH_ADDRESS,  # ETH
@@ -162,7 +167,7 @@ class TestUniswap4(object):
     ):
         if not client.w3.is_address(address_to):
             address: AddressLike = client.w3.to_checksum_address(
-                ETH_ADDRESS
+                client.address  # ETH_ADDRESS
             )  # client.address
         else:
             address = client.w3.to_checksum_address(address_to)
@@ -527,11 +532,47 @@ class TestUniswap4(object):
         pass
 
     # ------ Liquidity --------------------------------------------------------------------
-    def test_get_position_info(self):
-        pass
+    @pytest.mark.parametrize("token_id", [(TOKEN_ID)])
+    def test_get_position_info(self, client: Uniswap4, token_id: int):
+        result = client.get_position_info(token_id)
+        test_pool_id_result: int = int.from_bytes(result["poolID"], byteorder="big")
+        truncated_pool_id_str = hex(test_pool_id_result).lower()
+        pool_id_str = (
+            client.get_pool_id(
+                PoolKey(
+                    result["currency0"],
+                    result["currency1"],
+                    result["fee"],
+                    result["tickSpacing"],
+                    result["hooks"],
+                )
+            )
+            .hex()
+            .lower()
+        )
+        assert truncated_pool_id_str == pool_id_str[: len(truncated_pool_id_str)]
 
-    def test_get_position_value(self):
-        pass
+    @pytest.mark.parametrize(
+        "token_id, token0_decimals, token1_decimals",
+        [(TOKEN_ID, ETH_DECIMALS, USDC_DECIMALS)],
+    )
+    def test_get_position_value(
+        self,
+        client: Uniswap4,
+        token_id: int,
+        token0_decimals: int,
+        token1_decimals: int,
+    ):
+        result = client.get_position_value(token_id, token0_decimals, token1_decimals)
+        assert result
+
+    @pytest.mark.parametrize(
+        "transaction_hash",
+        [("0xb30d3dde98f715e5880da9f8833f99823623229e193e04661cb7ce193e4028f8")],
+    )
+    def test_get_minted_token_id(self, client: Uniswap4, transaction_hash: str):
+        result = client.get_minted_token_id(transaction_hash)
+        assert result
 
     def test_create_pool(self):
         pass
@@ -551,6 +592,7 @@ class TestUniswap4(object):
     def test_burn_position(self):
         pass
 
+    # ------ V4Pools tests ----------------------------------------------------------------
     # ------ StateView tests --------------------------------------------------------------
     # ------ PositionDescriptor tests -----------------------------------------------------
     # ------ PositionManager tests --------------------------------------------------------
