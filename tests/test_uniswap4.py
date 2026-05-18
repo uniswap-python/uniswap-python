@@ -13,8 +13,8 @@ from web3.types import Nonce
 
 from uniswap import Uniswap4
 from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
-from uniswap.types import PoolKey
-from uniswap.util import _addr_to_str, _str_to_addr
+from uniswap.types import AddressLike, PoolKey
+from uniswap.util import _str_to_addr
 
 pytestmark = pytest.mark.skipif(
     os.getenv("UNISWAP_VERSION") != "4",
@@ -148,7 +148,7 @@ class TestUniswap4(object):
     @pytest.mark.parametrize(
         "address_to, gas_price, priority_fee, custom_nonce",
         [
-            ("self", 10, 3, None),
+            ("self", 20, 10, None),
             (ETH_ADDRESS, 20, 10, 0),
         ],
     )
@@ -161,9 +161,9 @@ class TestUniswap4(object):
         custom_nonce: Optional[int],
     ):
         if address_to == "self":
-            address = _addr_to_str(client.address)
+            address: AddressLike = client.address
         else:
-            address = address_to
+            address = client.w3.to_checksum_address(address_to)
         client.update_last_nonce()
         if custom_nonce == 0:
             nonce: Optional[Nonce] = client.last_nonce
