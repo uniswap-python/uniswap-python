@@ -636,7 +636,7 @@ class TestUniswap4(object):
         )
 
     @pytest.mark.parametrize(
-        "token0, token1, qty, pool_key, hook_data, route",
+        "token0, token1, qty, pool_key, hook_data, route, custom_nonce",
         [
             (
                 ETH_ADDRESS,
@@ -644,6 +644,7 @@ class TestUniswap4(object):
                 ONE_ETH,
                 eth_usdc_poolkey,
                 b"",
+                None,
                 None,
             ),
             (
@@ -653,6 +654,7 @@ class TestUniswap4(object):
                 eth_usdc_poolkey,
                 b"",
                 None,
+                None,
             ),
             (
                 ETH_ADDRESS,
@@ -660,9 +662,8 @@ class TestUniswap4(object):
                 ONE_ETH,
                 None,
                 None,
-                None,
-                None,
                 [eth_usdc_poolkey, usdc_usdt_poolkey],
+                None,
             ),
             (
                 USDT_ADDRESS,
@@ -670,9 +671,8 @@ class TestUniswap4(object):
                 1000 * ONE_USDT,
                 None,
                 None,
-                None,
-                None,
                 [usdc_usdt_poolkey, eth_usdc_poolkey],
+                None,
             ),
         ],
     )
@@ -829,7 +829,7 @@ class TestUniswap4(object):
         )
 
     @pytest.mark.parametrize(
-        "token0, token1, qty, pool_key, hook_data, route",
+        "token0, token1, qty, pool_key, hook_data, route, custom_nonce",
         [
             (
                 ETH_ADDRESS,
@@ -838,6 +838,7 @@ class TestUniswap4(object):
                 eth_usdc_poolkey,
                 b"",
                 None,
+                None,
             ),
             (
                 USDC_ADDRESS,
@@ -846,6 +847,7 @@ class TestUniswap4(object):
                 eth_usdc_poolkey,
                 b"",
                 None,
+                None,
             ),
             (
                 ETH_ADDRESS,
@@ -853,12 +855,11 @@ class TestUniswap4(object):
                 ONE_ETH,
                 None,
                 None,
-                None,
-                None,
                 [
                     usdc_usdt_poolkey,
                     eth_usdc_poolkey,
                 ],
+                None,
             ),
             (
                 USDT_ADDRESS,
@@ -866,12 +867,11 @@ class TestUniswap4(object):
                 1000 * ONE_USDT,
                 None,
                 None,
-                None,
-                None,
                 [
                     eth_usdc_poolkey,
                     usdc_usdt_poolkey,
                 ],
+                None,
             ),
         ],
     )
