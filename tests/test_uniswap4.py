@@ -636,7 +636,7 @@ class TestUniswap4(object):
         )
 
     @pytest.mark.parametrize(
-        "token0, token1, qty, fee, pool_key, hook_data, route",
+        "token0, token1, qty, pool_key, hook_data, route",
         [
             (
                 ETH_ADDRESS,
