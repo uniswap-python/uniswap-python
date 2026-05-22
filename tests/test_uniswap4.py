@@ -1134,26 +1134,65 @@ class TestUniswap4(object):
         )
         assert result == 0
 
-    @pytest.mark.skip(reason="Skip for now.")
+    @pytest.mark.parametrize(
+        "test_data_file_path",
+        [
+            "pool_list.test",
+        ],
+    )
     def test_load_poolkeys_list(
         self,
         pool_service: V4pools,
+        test_data_file_path: str,
     ):
-        pass
+        test_data_file_full_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), test_data_file_path
+        )
+        pool_service.load_poolkeys_list(test_data_file_full_path)
+        assert len(pool_service.poolkeys_list) > 0
 
-    @pytest.mark.skip(reason="Skip for now.")
+    @pytest.mark.parametrize(
+        "test_data_file_path",
+        [
+            "pool_list_dump.test",
+        ],
+    )
     def test_save_poolkeys_list(
         self,
         pool_service: V4pools,
+        test_data_file_path: str,
+        tmp_path,
     ):
-        pass
+        test_data_file_full_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "pool_list.test"
+        )
+        pool_service.load_poolkeys_list(test_data_file_full_path)
+        temp_dir = tmp_path / "temp"
+        temp_dir.mkdir()
+        test_data_dump_full_path = temp_dir / test_data_file_path
+        pool_service.save_poolkeys_list(test_data_dump_full_path)
+        assert len(test_data_dump_full_path.read_text()) > 0
 
-    @pytest.mark.skip(reason="Skip for now.")
+    @pytest.mark.parametrize(
+        "currecy0, currency1",
+        [
+            (ETH_ADDRESS, USDC_ADDRESS),
+            (USDC_ADDRESS, USDT_ADDRESS),
+        ],
+    )
     def test_get_poolkeys_sublist(
         self,
         pool_service: V4pools,
+        currecy0: str,
+        currency1: str,
     ):
-        pass
+        test_data_file_full_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "pool_list.test"
+        )
+        pool_service.load_poolkeys_list(test_data_file_full_path)
+
+        result = pool_service.get_poolkeys_sublist(currecy0, currency1)
+        assert len(result) > 0
 
     # ------ StateView tests --------------------------------------------------------------
     # ------ PositionDescriptor tests -----------------------------------------------------
