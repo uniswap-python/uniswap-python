@@ -444,19 +444,6 @@ class TestUniswap4(object):
             (
                 ETH_ADDRESS,
                 USDT_ADDRESS,
-                ONE_ETH,
-                None,
-                None,
-                None,
-                None,
-                [
-                    usdc_usdt_poolkey,
-                    eth_usdc_poolkey,
-                ],
-            ),
-            (
-                USDT_ADDRESS,
-                ETH_ADDRESS,
                 1000 * ONE_USDT,
                 None,
                 None,
@@ -465,6 +452,19 @@ class TestUniswap4(object):
                 [
                     eth_usdc_poolkey,
                     usdc_usdt_poolkey,
+                ],
+            ),
+            (
+                USDT_ADDRESS,
+                ETH_ADDRESS,
+                ONE_ETH,
+                None,
+                None,
+                None,
+                None,
+                [
+                    usdc_usdt_poolkey,
+                    eth_usdc_poolkey,
                 ],
             ),
         ],
@@ -850,18 +850,6 @@ class TestUniswap4(object):
                 None,
             ),
             (
-                USDT_ADDRESS,
-                ETH_ADDRESS,
-                ONE_ETH,
-                None,
-                None,
-                [
-                    usdc_usdt_poolkey,
-                    eth_usdc_poolkey,
-                ],
-                None,
-            ),
-            (
                 ETH_ADDRESS,
                 USDT_ADDRESS,
                 1000 * ONE_USDT,
@@ -870,6 +858,18 @@ class TestUniswap4(object):
                 [
                     eth_usdc_poolkey,
                     usdc_usdt_poolkey,
+                ],
+                None,
+            ),
+            (
+                USDT_ADDRESS,
+                ETH_ADDRESS,
+                ONE_ETH,
+                None,
+                None,
+                [
+                    usdc_usdt_poolkey,
+                    eth_usdc_poolkey,
                 ],
                 None,
             ),

@@ -1590,7 +1590,7 @@ class Uniswap4:
                 hook_data,  # type: ignore[arg-type]
             )
         else:
-            result = self.get_quote_exact_output(token0, qty, route)
+            result = self.get_quote_exact_output(token1, qty, route)
         return result
 
     # Swap functions
