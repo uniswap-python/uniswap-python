@@ -14,7 +14,7 @@ from web3.types import Nonce
 from uniswap import Uniswap4
 from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
 from uniswap.types import AddressLike, PoolKey
-from uniswap.util import _str_to_addr
+from uniswap.util import V4pools, _str_to_addr
 
 pytestmark = pytest.mark.skipif(
     os.getenv("UNISWAP_VERSION") != "4",
@@ -73,6 +73,11 @@ def client(web3: Web3, anvil: AnvilInstance) -> Uniswap4:
         anvil.eth_privkey,
         web3=web3,
     )
+
+
+@pytest.fixture(scope="module")
+def pool_service(web3: Web3) -> V4pools:
+    return V4pools(web3)
 
 
 @pytest.fixture(scope="module")
@@ -136,16 +141,16 @@ class TestUniswap4(object):
         delay_interval: int,
     ):
         # Approve the token
-        tx_receipt = client.approve(
+        tx = client.approve(
             _str_to_addr(token), max_approval, delay_interval=delay_interval
         )
-        assert tx_receipt
-        print(tx_receipt.hex())
-        tx = client.w3.eth.wait_for_transaction_receipt(
-            tx_receipt, timeout=RECEIPT_TIMEOUT
+        assert tx
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
         )
-        print(str(tx))
-        assert tx["status"], f"Transaction failed with status {tx['status']}; tx: {tx}"
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
         # Check that the approval was successful by calling allowance
         allowance = client.approval(_str_to_addr(token))
         assert allowance
@@ -166,7 +171,7 @@ class TestUniswap4(object):
         custom_nonce: Optional[int],
     ):
         if not client.w3.is_address(address_to):
-            address: AddressLike = client.address  # client.w3.to_checksum_address(
+            address: AddressLike = client.address
         else:
             address = _str_to_addr(address_to)
         client.update_last_nonce()
@@ -175,19 +180,19 @@ class TestUniswap4(object):
         else:
             nonce = None
 
-        tx_receipt = client.drop_txn(
+        tx = client.drop_txn(
             address,
             gas_price,
             priority_fee=priority_fee,
             custom_nonce=nonce,
         )
-        assert tx_receipt
-        print(tx_receipt.hex())
-        tx = client.w3.eth.wait_for_transaction_receipt(
-            tx_receipt, timeout=RECEIPT_TIMEOUT
+        assert tx
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
         )
-        print(str(tx))
-        assert tx["status"], f"Transaction failed with status {tx['status']}; tx: {tx}"
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
         client.update_last_nonce()
 
     # ------ Market/price impact--------------------------------------------------------
@@ -511,23 +516,397 @@ class TestUniswap4(object):
         assert result
 
     # ------ Swaps----------------------------------------------------------------------
-    def test_swap_exact_input_single(self):
-        pass
+    # Input swaps
+    @pytest.mark.parametrize(
+        "token0, token1, qty, fee, tick_spacing, hooks, hook_data, custom_nonce",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                ONE_ETH,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+                b"",
+                None,
+            ),
+            (
+                USDC_ADDRESS,
+                USDT_ADDRESS,
+                ONE_USDC,
+                USDC_USDT_FEE,
+                USDC_USDT_TICK_SPACING,
+                ZERO_HOOK,
+                b"",
+                None,
+            ),
+        ],
+    )
+    def test_token_to_token_swap_exact_input(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        qty: int,
+        fee: int,
+        tick_spacing: int,
+        hooks: str,
+        hook_data: bytes,
+        custom_nonce: Optional[Nonce],
+    ):
+        qtycap = client.get_quote_exact_input_single(
+            token0, token1, qty, fee, tick_spacing, hooks, hook_data
+        )
+        tx = client.token_to_token_swap_exact_input(
+            token0,
+            qty,
+            qtycap,
+            token1,
+            fee,
+            tick_spacing,
+            hooks,
+            hook_data,
+            custom_nonce,
+        )
+        assert tx
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
 
-    def test_swap_exact_input(self):
-        pass
+    @pytest.mark.parametrize(
+        "token0, qty, route, custom_nonce",
+        [
+            (
+                ETH_ADDRESS,
+                ONE_ETH,
+                [
+                    eth_usdc_poolkey,
+                ],
+                None,
+            ),
+            (
+                USDC_ADDRESS,
+                1000 * ONE_USDC,
+                [
+                    eth_usdc_poolkey,
+                ],
+                None,
+            ),
+            (
+                ETH_ADDRESS,
+                ONE_ETH,
+                [
+                    eth_usdc_poolkey,
+                    usdc_usdt_poolkey,
+                ],
+                None,
+            ),
+            (
+                USDT_ADDRESS,
+                1000 * ONE_USDT,
+                [
+                    usdc_usdt_poolkey,
+                    eth_usdc_poolkey,
+                ],
+                None,
+            ),
+        ],
+    )
+    def test_token_to_token_swap_input(
+        self,
+        client: Uniswap4,
+        token0: str,
+        qty: int,
+        route: List[PoolKey],
+        custom_nonce: Optional[Nonce],
+    ):
+        qtycap = client.get_quote_exact_input(token0, qty, route)
 
-    def test_make_swap_input(self):
-        pass
+        tx = client.token_to_token_swap_input(token0, qty, qtycap, route, custom_nonce)
+        assert tx
 
-    def test_swap_exact_output_single(self):
-        pass
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
 
-    def test_swap_exact_output(self):
-        pass
+    @pytest.mark.parametrize(
+        "token0, token1, qty, fee, pool_key, hook_data, route",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                ONE_ETH,
+                eth_usdc_poolkey,
+                b"",
+                None,
+            ),
+            (
+                USDC_ADDRESS,
+                ETH_ADDRESS,
+                1000 * ONE_USDC,
+                eth_usdc_poolkey,
+                b"",
+                None,
+            ),
+            (
+                ETH_ADDRESS,
+                USDT_ADDRESS,
+                ONE_ETH,
+                None,
+                None,
+                None,
+                None,
+                [eth_usdc_poolkey, usdc_usdt_poolkey],
+            ),
+            (
+                USDT_ADDRESS,
+                ETH_ADDRESS,
+                1000 * ONE_USDT,
+                None,
+                None,
+                None,
+                None,
+                [usdc_usdt_poolkey, eth_usdc_poolkey],
+            ),
+        ],
+    )
+    def test_make_swap_input(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        qty: int,
+        pool_key: Optional[PoolKey],
+        hook_data: Optional[bytes],
+        route: Optional[List[PoolKey]],
+        custom_nonce: Optional[Nonce],
+    ):
+        qtycap = client.get_price_input(
+            token0,
+            token1,
+            qty,
+            None if pool_key is None else pool_key.fee,
+            None if pool_key is None else pool_key.tick_spacing,
+            None if pool_key is None else pool_key.hooks,
+            hook_data,
+            route,
+        )
+        tx = client.make_swap_input(
+            token0, token1, qty, qtycap, pool_key, hook_data, route, custom_nonce
+        )
+        assert tx
 
-    def test_make_swap_output(self):
-        pass
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    # Output swaps
+    @pytest.mark.parametrize(
+        "token0, token1, qty, fee, tick_spacing, hooks, hook_data, custom_nonce",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                1000 * ONE_USDC,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+                b"",
+                None,
+            ),
+            (
+                USDC_ADDRESS,
+                USDT_ADDRESS,
+                ONE_USDC,
+                USDC_USDT_FEE,
+                USDC_USDT_TICK_SPACING,
+                ZERO_HOOK,
+                b"",
+                None,
+            ),
+        ],
+    )
+    def test_token_to_token_swap_exact_output(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        qty: int,
+        fee: int,
+        tick_spacing: int,
+        hooks: str,
+        hook_data: bytes,
+        custom_nonce: Optional[Nonce],
+    ):
+        qtycap = client.get_quote_exact_output_single(
+            token0, token1, qty, fee, tick_spacing, hooks, hook_data
+        )
+        tx = client.token_to_token_swap_exact_output(
+            token0,
+            qty,
+            qtycap,
+            token1,
+            fee,
+            tick_spacing,
+            hooks,
+            hook_data,
+            custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.parametrize(
+        "token0, qty, route, custom_nonce",
+        [
+            (
+                USDC_ADDRESS,
+                1000 * ONE_USDC,
+                [
+                    eth_usdc_poolkey,
+                ],
+                None,
+            ),
+            (
+                USDT_ADDRESS,
+                1000 * ONE_USDT,
+                [
+                    usdc_usdt_poolkey,
+                ],
+                None,
+            ),
+            (
+                USDT_ADDRESS,
+                1000 * ONE_USDT,
+                [
+                    eth_usdc_poolkey,
+                    usdc_usdt_poolkey,
+                ],
+                None,
+            ),
+            (
+                ETH_ADDRESS,
+                ONE_ETH,
+                [
+                    usdc_usdt_poolkey,
+                    eth_usdc_poolkey,
+                ],
+                None,
+            ),
+        ],
+    )
+    def test_token_to_token_swap_output(
+        self,
+        client: Uniswap4,
+        token0: str,
+        qty: int,
+        route: List[PoolKey],
+        custom_nonce: Optional[Nonce],
+    ):
+        qtycap = client.get_quote_exact_output(token0, qty, route)
+        tx = client.token_to_token_swap_output(token0, qty, qtycap, route, custom_nonce)
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.parametrize(
+        "token0, token1, qty, pool_key, hook_data, route",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                1000 * ONE_USDC,
+                eth_usdc_poolkey,
+                b"",
+                None,
+            ),
+            (
+                USDC_ADDRESS,
+                ETH_ADDRESS,
+                ONE_ETH,
+                eth_usdc_poolkey,
+                b"",
+                None,
+            ),
+            (
+                ETH_ADDRESS,
+                USDT_ADDRESS,
+                ONE_ETH,
+                None,
+                None,
+                None,
+                None,
+                [
+                    usdc_usdt_poolkey,
+                    eth_usdc_poolkey,
+                ],
+            ),
+            (
+                USDT_ADDRESS,
+                ETH_ADDRESS,
+                1000 * ONE_USDT,
+                None,
+                None,
+                None,
+                None,
+                [
+                    eth_usdc_poolkey,
+                    usdc_usdt_poolkey,
+                ],
+            ),
+        ],
+    )
+    def test_make_swap_output(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        qty: int,
+        pool_key: Optional[PoolKey],
+        hook_data: Optional[bytes],
+        route: Optional[List[PoolKey]],
+        custom_nonce: Optional[Nonce],
+    ):
+        qtycap = client.get_price_output(
+            token0,
+            token1,
+            qty,
+            None if pool_key is None else pool_key.fee,
+            None if pool_key is None else pool_key.tick_spacing,
+            None if pool_key is None else pool_key.hooks,
+            hook_data,
+            route,
+        )
+        tx = client.make_swap_output(
+            token0, token1, qty, qtycap, pool_key, hook_data, route, custom_nonce
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
 
     # ------ Liquidity --------------------------------------------------------------------
     @pytest.mark.parametrize("token_id", [(TOKEN_ID)])
@@ -572,25 +951,201 @@ class TestUniswap4(object):
         result = client.get_minted_token_id(transaction_hash)
         assert result
 
-    def test_create_pool(self):
-        pass
+    @pytest.mark.skip(reason="Skip for now.")
+    def test_create_pool(
+        self,
+        client: Uniswap4,
+        pool_key: PoolKey,
+        custom_nonce: Optional[Nonce],
+    ):
+        sqrt_price_x96 = 1 << 96  # 1:1 price
+        tx = client.create_pool(pool_key, sqrt_price_x96, custom_nonce)
+        assert tx
 
-    def test_mint_position(self):
-        pass
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
 
-    def test_increase_liquidity(self):
-        pass
+    @pytest.mark.skip(reason="Skip for now.")
+    def test_mint_position(
+        self,
+        client: Uniswap4,
+        pool_key: PoolKey,
+        tick_lower: int,
+        tick_upper: int,
+        liquidity: int,
+        amount0: int,
+        amount1: int,
+        recipient: str,
+        hook_data: bytes,
+        custom_nonce: Optional[Nonce],
+    ):
+        tx = client.mint_position(
+            pool_key,
+            tick_lower,
+            tick_upper,
+            liquidity,
+            amount0,
+            amount1,
+            recipient,
+            hook_data,
+            custom_nonce,
+        )
+        assert tx
 
-    def test_decrease_liquidity(self):
-        pass
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
 
-    def test_collect_fees(self):
-        pass
+    @pytest.mark.skip(reason="Skip for now.")
+    def test_increase_liquidity(
+        self,
+        client: Uniswap4,
+        pool_key: PoolKey,
+        token_id: int,
+        liquidity: int,
+        amount0: int,
+        amount1: int,
+        recipient: str,
+        hook_data: bytes,
+        custom_nonce: Optional[Nonce],
+    ):
+        tx = client.increase_liquidity(
+            pool_key,
+            token_id,
+            amount0,
+            amount1,
+            liquidity,
+            recipient,
+            hook_data,
+            custom_nonce,
+        )
+        assert tx
 
-    def test_burn_position(self):
-        pass
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.skip(reason="Skip for now.")
+    def test_decrease_liquidity(
+        self,
+        client: Uniswap4,
+        pool_key: PoolKey,
+        token_id: int,
+        liquidity: int,
+        amount0: int,
+        amount1: int,
+        recipient: str,
+        hook_data: bytes,
+        custom_nonce: Optional[Nonce],
+    ):
+        tx = client.decrease_liquidity(
+            pool_key,
+            token_id,
+            amount0,
+            amount1,
+            liquidity,
+            recipient,
+            hook_data,
+            custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.skip(reason="Skip for now.")
+    def test_collect_fees(
+        self,
+        client: Uniswap4,
+        pool_key: PoolKey,
+        token_id: int,
+        recipient: str,
+        hook_data: bytes,
+        custom_nonce: Optional[Nonce],
+    ):
+        tx = client.collect_fees(pool_key, token_id, recipient, hook_data, custom_nonce)
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.skip(reason="Skip for now.")
+    def test_burn_position(
+        self,
+        client: Uniswap4,
+        pool_key: PoolKey,
+        token_id: int,
+        amount0: int,
+        amount1: int,
+        recipient: str,
+        hook_data: bytes,
+        custom_nonce: Optional[Nonce],
+    ):
+        tx = client.burn_position(
+            pool_key,
+            token_id,
+            amount0,
+            amount1,
+            recipient,
+            hook_data,
+            custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
 
     # ------ V4Pools tests ----------------------------------------------------------------
+    @pytest.mark.skip(reason="Skip for now.")
+    def test_fetch_poolkey_data(
+        self,
+        pool_service: V4pools,
+    ):
+        pass
+
+    @pytest.mark.skip(reason="Skip for now.")
+    def test_save_poolkeys_list(
+        self,
+        pool_service: V4pools,
+    ):
+        pass
+
+    @pytest.mark.skip(reason="Skip for now.")
+    def test_load_poolkeys_list(
+        self,
+        pool_service: V4pools,
+    ):
+        pass
+
+    @pytest.mark.skip(reason="Skip for now.")
+    def test_get_poolkeys_sublist(
+        self,
+        pool_service: V4pools,
+    ):
+        pass
+
     # ------ StateView tests --------------------------------------------------------------
     # ------ PositionDescriptor tests -----------------------------------------------------
     # ------ PositionManager tests --------------------------------------------------------

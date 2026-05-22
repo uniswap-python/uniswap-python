@@ -1462,16 +1462,16 @@ class Uniswap4:
         self,
         token_exact: str,
         qty: int,
-        path: List[PoolKey],
+        route: List[PoolKey],
     ) -> int:
         """:return: Quote for token to token multi-hop trades with an exact input."""
-        encoded_path = self.encode_path_keys_input(path, token_exact)
+        encoded_route = self.encode_path_keys_input(route, token_exact)
 
         # [0]=The output quote [1]=estimated gas units used for the swap
         quote_amount: int = self.quoter.functions.quoteExactInput(
             (
                 token_exact,
-                [astuple(path_key) for path_key in encoded_path],
+                [astuple(path_key) for path_key in encoded_route],
                 qty,
             )
         ).call()[0]
@@ -1511,15 +1511,15 @@ class Uniswap4:
         self,
         token_exact: str,
         qty: int,
-        path: List[PoolKey],
+        route: List[PoolKey],
     ) -> int:
         """:return: Quote for token to token multi-hop trades with an exact output."""
 
-        encoded_path = self.encode_path_keys_output(path, token_exact)
+        encoded_route = self.encode_path_keys_output(route, token_exact)
         quote_amount: int = self.quoter.functions.quoteExactOutput(
             (
                 token_exact,
-                [astuple(path_key) for path_key in encoded_path],
+                [astuple(path_key) for path_key in encoded_route],
                 qty,
             )
         ).call()[0]
@@ -1681,7 +1681,7 @@ class Uniswap4:
         input_token: str,
         qty: int,
         qtycap: int,
-        route: List[PathKey],
+        route: List[PoolKey],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """Swaps an exact amount of `input_token` for a minimum amount of `output_token` through a specified multi-hop route,
@@ -1689,7 +1689,10 @@ class Uniswap4:
         """
         min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
 
+        encoded_route = self.encode_path_keys_input(route, input_token)
+
         ether_amount: int = 0
+
         if input_token == ETH_ADDRESS:
             ether_amount = qty
 
@@ -1715,7 +1718,7 @@ class Uniswap4:
             [
                 (
                     input_token,
-                    [astuple(path_key) for path_key in route],
+                    [astuple(path_key) for path_key in encoded_route],
                     qty,
                     min_tokens_bought,
                 )
@@ -1728,7 +1731,7 @@ class Uniswap4:
         take_all_params: bytes = encode(
             ["address", "uint128"],
             [
-                _addr_to_str((route[-1].intermediate_currency)),  # type: ignore[arg-type]
+                _addr_to_str((encoded_route[-1].intermediate_currency)),  # type: ignore[arg-type]
                 min_tokens_bought,
             ],
         )
@@ -1841,7 +1844,7 @@ class Uniswap4:
         output_token: str,
         qty: int,
         qtycap: int,
-        route: List[PathKey],
+        route: List[PoolKey],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """Swaps a maximum amount of `input_token` for an exact amount of `output_token` through a specified multi-hop route,
@@ -1849,7 +1852,10 @@ class Uniswap4:
         """
 
         amount_in_max: int = int((1 + self.max_slippage) * qtycap)
-        input_token: str = _addr_to_str(route[0].intermediate_currency)  # type: ignore[arg-type]
+        encoded_route = self.encode_path_keys_output(route, output_token)
+
+        input_token: str = _addr_to_str(encoded_route[0].intermediate_currency)  # type: ignore[arg-type]
+
         ether_amount: int = 0
         if input_token == ETH_ADDRESS:
             ether_amount = amount_in_max
@@ -1875,7 +1881,7 @@ class Uniswap4:
             [
                 (
                     output_token,
-                    [astuple(path_key) for path_key in route],
+                    [astuple(path_key) for path_key in encoded_route],
                     qty,
                     amount_in_max,
                 )
@@ -1922,17 +1928,19 @@ class Uniswap4:
         MUST be at least 20% higher than values the original transaction has.
         """
         # This one is for legacy transactions
+        transaction_dict_legacy = {
+            "nonce": self.w3.eth.get_transaction_count(self.address)
+            if custom_nonce is None
+            else custom_nonce,
+            "from": _addr_to_str(self.address),
+            "to": Web3.to_checksum_address(address_to),
+            "value": Web3.to_wei(0, "wei"),
+            "gasPrice": Web3.to_wei(gas_price, "gwei"),
+            "gas": int(self.gas_limit),
+            "chainId": int(self.w3.eth.chain_id),
+        }
         signed_txn = self.w3.eth.account.sign_transaction(
-            dict(
-                chainId=int(self.w3.net.version),
-                nonce=self.w3.eth.get_transaction_count(self.address)
-                if custom_nonce is None
-                else custom_nonce,
-                gasPrice=Web3.to_wei(gas_price, "gwei"),
-                gas=int(self.gas_limit),
-                to=Web3.to_checksum_address(address_to),
-                value=Web3.to_wei(0, "wei"),
-            ),
+            transaction_dict_legacy,
             self.private_key,
         )
         # This one is for post-Merge transactions
@@ -1950,18 +1958,6 @@ class Uniswap4:
             "chainId": int(self.w3.eth.chain_id),
         }
         signed_txn_london = self.w3.eth.account.sign_transaction(
-            # dict(
-            #     chainId=int(self.w3.net.version),
-            #     type=2,
-            #     nonce=self.w3.eth.get_transaction_count(self.address)
-            #     if custom_nonce is None
-            #     else custom_nonce,
-            #     maxFeePerGas=Web3.to_wei(int(gas_price), "gwei"),
-            #     maxPriorityFeePerGas=Web3.to_wei(priority_fee, "gwei"),
-            #     gas=int(self.gas_limit),
-            #     to=Web3.to_checksum_address(address_to),
-            #     value=Web3.to_wei(0, "wei"),
-            # ),
             transaction_dict,
             self.private_key,
         )
@@ -2001,12 +1997,11 @@ class Uniswap4:
                 custom_nonce=custom_nonce,
             )
         else:
-            encoded_route = self.encode_path_keys_input(route, input_token)
             result = self.token_to_token_swap_input(
                 input_token,
                 qty,
                 qtycap,
-                encoded_route,
+                route,
                 custom_nonce=custom_nonce,
             )
         return result
@@ -2042,12 +2037,11 @@ class Uniswap4:
                 custom_nonce=custom_nonce,
             )
         else:
-            encoded_route = self.encode_path_keys_output(route, output_token)
             result = self.token_to_token_swap_output(
                 output_token,
                 qty,
                 qtycap,
-                encoded_route,
+                route,
                 custom_nonce=custom_nonce,
             )
         return result
