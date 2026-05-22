@@ -850,8 +850,8 @@ class TestUniswap4(object):
                 None,
             ),
             (
-                ETH_ADDRESS,
                 USDT_ADDRESS,
+                ETH_ADDRESS,
                 ONE_ETH,
                 None,
                 None,
@@ -862,8 +862,8 @@ class TestUniswap4(object):
                 None,
             ),
             (
-                USDT_ADDRESS,
                 ETH_ADDRESS,
+                USDT_ADDRESS,
                 1000 * ONE_USDT,
                 None,
                 None,
