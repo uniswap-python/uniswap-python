@@ -1118,8 +1118,24 @@ class TestUniswap4(object):
         )
 
     # ------ V4Pools tests ----------------------------------------------------------------
-    @pytest.mark.skip(reason="Skip for now.")
+    @pytest.mark.parametrize(
+        "first_block",
+        [
+            21688329,
+        ],
+    )
     def test_fetch_poolkey_data(
+        self,
+        pool_service: V4pools,
+        first_block: int,
+    ):
+        result: int = pool_service.fetch_poolkey_data(
+            first_block, chunk_size=500, clear_list=False, last_block=first_block + 1001
+        )
+        assert result == 0
+
+    @pytest.mark.skip(reason="Skip for now.")
+    def test_load_poolkeys_list(
         self,
         pool_service: V4pools,
     ):
@@ -1127,13 +1143,6 @@ class TestUniswap4(object):
 
     @pytest.mark.skip(reason="Skip for now.")
     def test_save_poolkeys_list(
-        self,
-        pool_service: V4pools,
-    ):
-        pass
-
-    @pytest.mark.skip(reason="Skip for now.")
-    def test_load_poolkeys_list(
         self,
         pool_service: V4pools,
     ):
