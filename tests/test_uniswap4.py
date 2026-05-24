@@ -1034,7 +1034,7 @@ class TestUniswap4(object):
             tx_receipt["transactionHash"].hex()
         )
         assert len(test_token_id_result) > 0
-        self.test_token_id = test_token_id_result[0]
+        TestUniswap4.test_token_id = test_token_id_result[0]
 
     @pytest.mark.parametrize(
         "pool_key, liquidity, amount0, amount1, hook_data, custom_nonce",
@@ -1062,7 +1062,7 @@ class TestUniswap4(object):
         recipient = _addr_to_str(client.address)
         tx = client.increase_liquidity(
             pool_key,
-            self.test_token_id,
+            TestUniswap4.test_token_id,
             amount0,
             amount1,
             liquidity,
@@ -1094,7 +1094,7 @@ class TestUniswap4(object):
     ):
         recipient = _addr_to_str(client.address)
         tx = client.collect_fees(
-            pool_key, self.test_token_id, recipient, hook_data, custom_nonce
+            pool_key, TestUniswap4.test_token_id, recipient, hook_data, custom_nonce
         )
         assert tx
 
@@ -1131,7 +1131,7 @@ class TestUniswap4(object):
         recipient = _addr_to_str(client.address)
         tx = client.decrease_liquidity(
             pool_key,
-            self.test_token_id,
+            TestUniswap4.test_token_id,
             amount0,
             amount1,
             liquidity,
@@ -1165,7 +1165,7 @@ class TestUniswap4(object):
         # Removing liquidity before burning position, otherwise burn will revert since position is not empty
         tx = client.decrease_liquidity(
             pool_key,
-            self.test_token_id,
+            TestUniswap4.test_token_id,
             0,
             0,
             client.stateview_get_position_info(
@@ -1177,7 +1177,7 @@ class TestUniswap4(object):
                 recipient,
                 -600,
                 600,
-                self.test_token_id,
+                TestUniswap4.test_token_id,
             )["liquidity"],
             recipient,
             hook_data,
@@ -1194,7 +1194,7 @@ class TestUniswap4(object):
         # Now burn the position
         tx = client.burn_position(
             pool_key,
-            self.test_token_id,
+            TestUniswap4.test_token_id,
             0,
             0,
             recipient,
