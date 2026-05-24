@@ -643,7 +643,7 @@ class TestUniswap4(object):
             (
                 ETH_ADDRESS,
                 USDC_ADDRESS,
-                ONE_ETH,
+                10 * ONE_ETH,
                 eth_usdc_poolkey,
                 b"",
                 None,
@@ -661,7 +661,7 @@ class TestUniswap4(object):
             (
                 ETH_ADDRESS,
                 USDT_ADDRESS,
-                ONE_ETH,
+                10 * ONE_ETH,
                 None,
                 None,
                 [eth_usdc_poolkey, usdc_usdt_poolkey],
