@@ -14,7 +14,7 @@ from web3.types import Nonce
 from uniswap import Uniswap4
 from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
 from uniswap.types import AddressLike, PoolKey
-from uniswap.util import V4pools, _str_to_addr
+from uniswap.util import V4pools, _addr_to_str, _str_to_addr
 
 pytestmark = pytest.mark.skipif(
     os.getenv("UNISWAP_VERSION") != "4",
@@ -125,6 +125,8 @@ def does_not_raise():
 
 @pytest.mark.usefixtures("client", "web3")
 class TestUniswap4(object):
+    test_token_id: int = 0
+
     # ------ Approve/tx replacement-----------------------------------------------------
     @pytest.mark.parametrize(
         "token, max_approval, delay_interval",
@@ -951,7 +953,12 @@ class TestUniswap4(object):
         result = client.get_minted_token_id(transaction_hash)
         assert result
 
-    @pytest.mark.skip(reason="Skip for now.")
+    @pytest.mark.parametrize(
+        "pool_key, custom_nonce",
+        [
+            (eth_usdc_poolkey, None),
+        ],
+    )
     def test_create_pool(
         self,
         client: Uniswap4,
@@ -959,7 +966,14 @@ class TestUniswap4(object):
         custom_nonce: Optional[Nonce],
     ):
         sqrt_price_x96 = 1 << 96  # 1:1 price
-        tx = client.create_pool(pool_key, sqrt_price_x96, custom_nonce)
+        test_pool_key = PoolKey(
+            currency0=pool_key.currency0,
+            currency1=pool_key.currency1,
+            fee=pool_key.fee + 100,
+            tick_spacing=pool_key.tick_spacing + 500,
+            hooks=pool_key.hooks,
+        )
+        tx = client.create_pool(test_pool_key, sqrt_price_x96, custom_nonce)
         assert tx
 
         tx_receipt = client.w3.eth.wait_for_transaction_receipt(
@@ -969,7 +983,21 @@ class TestUniswap4(object):
             f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
         )
 
-    @pytest.mark.skip(reason="Skip for now.")
+    @pytest.mark.parametrize(
+        "pool_key, tick_lower, tick_upper, liquidity, amount0, amount1, hook_data, custom_nonce",
+        [
+            (
+                eth_usdc_poolkey,
+                -600,
+                600,
+                int(0.1 * (ONE_ETH)),
+                ONE_ETH,
+                2500 * ONE_USDC,
+                b"",
+                None,
+            ),
+        ],
+    )
     def test_mint_position(
         self,
         client: Uniswap4,
@@ -979,10 +1007,10 @@ class TestUniswap4(object):
         liquidity: int,
         amount0: int,
         amount1: int,
-        recipient: str,
         hook_data: bytes,
         custom_nonce: Optional[Nonce],
     ):
+        recipient = _addr_to_str(client.address)
         tx = client.mint_position(
             pool_key,
             tick_lower,
@@ -1002,23 +1030,39 @@ class TestUniswap4(object):
         assert tx_receipt["status"], (
             f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
         )
+        test_token_id_result = client.get_minted_token_id(
+            tx_receipt["transactionHash"].hex()
+        )
+        assert len(test_token_id_result) > 0
+        self.test_token_id = test_token_id_result[0]
 
-    @pytest.mark.skip(reason="Skip for now.")
+    @pytest.mark.parametrize(
+        "pool_key, liquidity, amount0, amount1, hook_data, custom_nonce",
+        [
+            (
+                eth_usdc_poolkey,
+                int(0.05 * ONE_ETH),
+                int(0.5 * ONE_ETH),
+                1250 * ONE_USDC,
+                b"",
+                None,
+            ),
+        ],
+    )
     def test_increase_liquidity(
         self,
         client: Uniswap4,
         pool_key: PoolKey,
-        token_id: int,
         liquidity: int,
         amount0: int,
         amount1: int,
-        recipient: str,
         hook_data: bytes,
         custom_nonce: Optional[Nonce],
     ):
+        recipient = _addr_to_str(client.address)
         tx = client.increase_liquidity(
             pool_key,
-            token_id,
+            self.test_token_id,
             amount0,
             amount1,
             liquidity,
@@ -1035,49 +1079,23 @@ class TestUniswap4(object):
             f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
         )
 
-    @pytest.mark.skip(reason="Skip for now.")
-    def test_decrease_liquidity(
-        self,
-        client: Uniswap4,
-        pool_key: PoolKey,
-        token_id: int,
-        liquidity: int,
-        amount0: int,
-        amount1: int,
-        recipient: str,
-        hook_data: bytes,
-        custom_nonce: Optional[Nonce],
-    ):
-        tx = client.decrease_liquidity(
-            pool_key,
-            token_id,
-            amount0,
-            amount1,
-            liquidity,
-            recipient,
-            hook_data,
-            custom_nonce,
-        )
-        assert tx
-
-        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
-            tx, timeout=RECEIPT_TIMEOUT
-        )
-        assert tx_receipt["status"], (
-            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
-        )
-
-    @pytest.mark.skip(reason="Skip for now.")
+    @pytest.mark.parametrize(
+        "pool_key, hook_data, custom_nonce",
+        [
+            (eth_usdc_poolkey, b"", None),
+        ],
+    )
     def test_collect_fees(
         self,
         client: Uniswap4,
         pool_key: PoolKey,
-        token_id: int,
-        recipient: str,
         hook_data: bytes,
         custom_nonce: Optional[Nonce],
     ):
-        tx = client.collect_fees(pool_key, token_id, recipient, hook_data, custom_nonce)
+        recipient = _addr_to_str(client.address)
+        tx = client.collect_fees(
+            pool_key, self.test_token_id, recipient, hook_data, custom_nonce
+        )
         assert tx
 
         tx_receipt = client.w3.eth.wait_for_transaction_receipt(
@@ -1087,23 +1105,98 @@ class TestUniswap4(object):
             f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
         )
 
-    @pytest.mark.skip(reason="Skip for now.")
+    @pytest.mark.parametrize(
+        "pool_key, liquidity, amount0, amount1, hook_data, custom_nonce",
+        [
+            (
+                eth_usdc_poolkey,
+                int(0.05 * ONE_ETH),
+                int(0.5 * ONE_ETH),
+                1250 * ONE_USDC,
+                b"",
+                None,
+            ),
+        ],
+    )
+    def test_decrease_liquidity(
+        self,
+        client: Uniswap4,
+        pool_key: PoolKey,
+        liquidity: int,
+        amount0: int,
+        amount1: int,
+        hook_data: bytes,
+        custom_nonce: Optional[Nonce],
+    ):
+        recipient = _addr_to_str(client.address)
+        tx = client.decrease_liquidity(
+            pool_key,
+            self.test_token_id,
+            amount0,
+            amount1,
+            liquidity,
+            recipient,
+            hook_data,
+            custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.parametrize(
+        "pool_key, hook_data, custom_nonce",
+        [
+            (eth_usdc_poolkey, b"", None),
+        ],
+    )
     def test_burn_position(
         self,
         client: Uniswap4,
         pool_key: PoolKey,
-        token_id: int,
-        amount0: int,
-        amount1: int,
-        recipient: str,
         hook_data: bytes,
         custom_nonce: Optional[Nonce],
     ):
+        recipient = _addr_to_str(client.address)
+        # Removing liquidity before burning position, otherwise burn will revert since position is not empty
+        tx = client.decrease_liquidity(
+            pool_key,
+            self.test_token_id,
+            0,
+            0,
+            client.stateview_get_position_info(
+                pool_key.currency0,
+                pool_key.currency1,
+                pool_key.fee,
+                pool_key.tick_spacing,
+                pool_key.hooks,
+                recipient,
+                -600,
+                600,
+                self.test_token_id,
+            )["liquidity"],
+            recipient,
+            hook_data,
+            custom_nonce,
+        )
+        assert tx
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+        # Now burn the position
         tx = client.burn_position(
             pool_key,
-            token_id,
-            amount0,
-            amount1,
+            self.test_token_id,
+            0,
+            0,
             recipient,
             hook_data,
             custom_nonce,
