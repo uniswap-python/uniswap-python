@@ -144,7 +144,10 @@ class TestUniswap4(object):
     ):
         # Approve the token
         tx = client.approve(
-            _str_to_addr(token), max_approval, delay_interval=delay_interval
+            _str_to_addr(token),
+            max_approval,
+            delay_interval=delay_interval,
+            approve_position_manager=True,
         )
         assert tx
         tx_receipt = client.w3.eth.wait_for_transaction_receipt(

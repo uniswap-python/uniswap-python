@@ -182,12 +182,14 @@ class Uniswap4:
         token: AddressLike,
         max_approval: Optional[int] = None,
         delay_interval: Optional[int] = 7,
+        approve_position_manager: bool = False,
     ) -> HexBytes:
         """Approve the router to spend a token on the user's behalf, or set up a permit for the position manager to pull the token from the user's wallet. For ETH, the router can pull from the user's wallet directly, so no approval is necessary.
 
         :param token: The address of the token to approve.
         :param max_approval: Optional. The maximum amount to approve. If not set, will approve a maximum possible amount.
         :param delay_interval: Optional. Seconds to wait between two approval transactions. Defaults to 7. Values less than 1 are treated as default.
+        :param approve_position_manager: Optional. Whether to approve the position manager to spend the token. Defaults to False.
         """
 
         # If the token is not ETH, approve the router to spend it. For ETH, the router can pull from the user's wallet directly, so no approval is necessary.
@@ -212,6 +214,18 @@ class Uniswap4:
         )
         tx = self._build_and_send_tx(function)
 
+        if approve_position_manager:
+            time.sleep(delay_interval)
+            logger.info(
+                f"Setting permit for {_addr_to_str(token)} at position manager contract..."
+            )
+            function = self.permit2.functions.approve(
+                _str_to_addr(token),
+                self.position_manager_address,
+                max_approval,
+                expiration,
+            )
+            tx = self._build_and_send_tx(function)
         return tx
 
     def approval(self, token: AddressLike) -> int:
