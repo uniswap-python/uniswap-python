@@ -182,12 +182,14 @@ class Uniswap4:
         token: AddressLike,
         max_approval: Optional[int] = None,
         delay_interval: Optional[int] = 7,
+        approve_position_manager: bool = False,
     ) -> HexBytes:
         """Approve the router to spend a token on the user's behalf, or set up a permit for the position manager to pull the token from the user's wallet. For ETH, the router can pull from the user's wallet directly, so no approval is necessary.
 
         :param token: The address of the token to approve.
         :param max_approval: Optional. The maximum amount to approve. If not set, will approve a maximum possible amount.
         :param delay_interval: Optional. Seconds to wait between two approval transactions. Defaults to 7. Values less than 1 are treated as default.
+        :param approve_position_manager: Optional. Whether to approve the position manager to spend the token. Defaults to False.
         """
 
         # If the token is not ETH, approve the router to spend it. For ETH, the router can pull from the user's wallet directly, so no approval is necessary.
@@ -212,6 +214,28 @@ class Uniswap4:
         )
         tx = self._build_and_send_tx(function)
 
+        if approve_position_manager:
+            time.sleep(delay_interval)
+            max_approval = self.max_approval_int
+            function = self.erc20_contract(token).functions.approve(
+                _addr_to_str(self.position_manager_address), max_approval
+            )
+            logger.info(f"Approving {_addr_to_str(token)} for PositionManager...")
+            tx = self._build_and_send_tx(function)
+
+            time.sleep(delay_interval)
+            max_approval = 2**100 - 1
+            expiration = int(10**12)
+            logger.info(
+                f"Setting permit for {_addr_to_str(token)} at position manager contract..."
+            )
+            function = self.permit2.functions.approve(
+                _str_to_addr(token),
+                self.position_manager_address,
+                max_approval,
+                expiration,
+            )
+            tx = self._build_and_send_tx(function)
         return tx
 
     def approval(self, token: AddressLike) -> int:
@@ -224,7 +248,7 @@ class Uniswap4:
         )
         return result
 
-    # Gas customization
+    # Transaction parameters customization
     # Gas limit
     def get_gas_limit(self) -> float:
         """Returns the current gas limit for transactions."""
@@ -260,6 +284,11 @@ class Uniswap4:
     def set_max_slippage(self, max_slippage: float) -> None:
         """Sets the maximum slippage as a float (0.01 is 1%)."""
         self.max_slippage = max_slippage
+
+    # Nonce management
+    def update_last_nonce(self) -> None:
+        """Updates the last nonce to the current nonce of the wallet. This can be used to resync the nonce if transactions have been sent outside of this class or custom nonce is used."""
+        self.last_nonce = self.w3.eth.get_transaction_count(self.address)
 
     # StateView methods
     def stateview_get_fee_growth_globals(
@@ -1457,16 +1486,16 @@ class Uniswap4:
         self,
         token_exact: str,
         qty: int,
-        path: List[PoolKey],
+        route: List[PoolKey],
     ) -> int:
         """:return: Quote for token to token multi-hop trades with an exact input."""
-        encoded_path = self.encode_path_keys_input(path, token_exact)
+        encoded_route = self.encode_path_keys_input(route, token_exact)
 
         # [0]=The output quote [1]=estimated gas units used for the swap
         quote_amount: int = self.quoter.functions.quoteExactInput(
             (
                 token_exact,
-                [astuple(path_key) for path_key in encoded_path],
+                [astuple(path_key) for path_key in encoded_route],
                 qty,
             )
         ).call()[0]
@@ -1506,21 +1535,21 @@ class Uniswap4:
         self,
         token_exact: str,
         qty: int,
-        path: List[PoolKey],
+        route: List[PoolKey],
     ) -> int:
         """:return: Quote for token to token multi-hop trades with an exact output."""
 
-        encoded_path = self.encode_path_keys_output(path, token_exact)
+        encoded_route = self.encode_path_keys_output(route, token_exact)
         quote_amount: int = self.quoter.functions.quoteExactOutput(
             (
                 token_exact,
-                [astuple(path_key) for path_key in encoded_path],
+                [astuple(path_key) for path_key in encoded_route],
                 qty,
             )
         ).call()[0]
         return quote_amount
 
-    # market price functions for selling `qty` amount of `token0` to buy `token1`
+    # Market price functions for selling `qty` amount of `token0` to buy `token1`
     def get_price_input(
         self,
         token0: str,
@@ -1585,7 +1614,7 @@ class Uniswap4:
                 hook_data,  # type: ignore[arg-type]
             )
         else:
-            result = self.get_quote_exact_output(token0, qty, route)
+            result = self.get_quote_exact_output(token1, qty, route)
         return result
 
     # Swap functions
@@ -1668,6 +1697,7 @@ class Uniswap4:
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
 
     def token_to_token_swap_input(
@@ -1675,7 +1705,7 @@ class Uniswap4:
         input_token: str,
         qty: int,
         qtycap: int,
-        route: List[PathKey],
+        route: List[PoolKey],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """Swaps an exact amount of `input_token` for a minimum amount of `output_token` through a specified multi-hop route,
@@ -1683,7 +1713,10 @@ class Uniswap4:
         """
         min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
 
+        encoded_route = self.encode_path_keys_input(route, input_token)
+
         ether_amount: int = 0
+
         if input_token == ETH_ADDRESS:
             ether_amount = qty
 
@@ -1709,7 +1742,7 @@ class Uniswap4:
             [
                 (
                     input_token,
-                    [astuple(path_key) for path_key in route],
+                    [astuple(path_key) for path_key in encoded_route],
                     qty,
                     min_tokens_bought,
                 )
@@ -1722,7 +1755,7 @@ class Uniswap4:
         take_all_params: bytes = encode(
             ["address", "uint128"],
             [
-                _addr_to_str((route[-1].intermediate_currency)),  # type: ignore[arg-type]
+                _addr_to_str((encoded_route[-1].intermediate_currency)),  # type: ignore[arg-type]
                 min_tokens_bought,
             ],
         )
@@ -1740,6 +1773,7 @@ class Uniswap4:
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
 
     def token_to_token_swap_exact_output(
@@ -1826,6 +1860,7 @@ class Uniswap4:
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
 
     def token_to_token_swap_output(
@@ -1833,7 +1868,7 @@ class Uniswap4:
         output_token: str,
         qty: int,
         qtycap: int,
-        route: List[PathKey],
+        route: List[PoolKey],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """Swaps a maximum amount of `input_token` for an exact amount of `output_token` through a specified multi-hop route,
@@ -1841,7 +1876,10 @@ class Uniswap4:
         """
 
         amount_in_max: int = int((1 + self.max_slippage) * qtycap)
-        input_token: str = _addr_to_str(route[0].intermediate_currency)  # type: ignore[arg-type]
+        encoded_route = self.encode_path_keys_output(route, output_token)
+
+        input_token: str = _addr_to_str(encoded_route[0].intermediate_currency)  # type: ignore[arg-type]
+
         ether_amount: int = 0
         if input_token == ETH_ADDRESS:
             ether_amount = amount_in_max
@@ -1867,7 +1905,7 @@ class Uniswap4:
             [
                 (
                     output_token,
-                    [astuple(path_key) for path_key in route],
+                    [astuple(path_key) for path_key in encoded_route],
                     qty,
                     amount_in_max,
                 )
@@ -1895,6 +1933,7 @@ class Uniswap4:
         return self._build_and_send_tx(
             self.router.functions.execute(commands, inputs, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
 
     def drop_txn(
@@ -1907,35 +1946,43 @@ class Uniswap4:
         """
         Replaces pending transaction with zero-value ETH transfer
 
-        :param address_to: Own address
+        :param address_to: Zero address or any other valid address to which the zero-value transaction will be sent
 
         Params `gas_price` and `priority_fee` are Gas Price and Max Priority Fee respectively;
         MUST be at least 20% higher than values the original transaction has.
         """
         # This one is for legacy transactions
+        transaction_dict_legacy = {
+            "nonce": self.w3.eth.get_transaction_count(self.address)
+            if custom_nonce is None
+            else custom_nonce,
+            "from": _addr_to_str(self.address),
+            "to": Web3.to_checksum_address(address_to),
+            "value": Web3.to_wei(0, "wei"),
+            "gasPrice": Web3.to_wei(gas_price, "gwei"),
+            "gas": int(self.gas_limit),
+            "chainId": int(self.w3.eth.chain_id),
+        }
         signed_txn = self.w3.eth.account.sign_transaction(
-            dict(
-                chainId=int(self.w3.net.version),
-                nonce=self.last_nonce if custom_nonce is None else custom_nonce,
-                gasPrice=Web3.to_wei(gas_price, "gwei"),
-                gas=int(21000),
-                to=Web3.to_checksum_address(address_to),
-                value=Web3.to_wei(0, "wei"),
-            ),
+            transaction_dict_legacy,
             self.private_key,
         )
         # This one is for post-Merge transactions
+        transaction_dict = {
+            "type": 2,
+            "nonce": self.w3.eth.get_transaction_count(self.address)
+            if custom_nonce is None
+            else custom_nonce,
+            "from": _addr_to_str(self.address),
+            "to": _addr_to_str(address_to),
+            "value": Web3.to_wei(0, "wei"),
+            "maxFeePerGas": Web3.to_wei(int(gas_price), "gwei"),
+            "maxPriorityFeePerGas": Web3.to_wei(priority_fee, "gwei"),
+            "gas": int(self.gas_limit),
+            "chainId": int(self.w3.eth.chain_id),
+        }
         signed_txn_london = self.w3.eth.account.sign_transaction(
-            dict(
-                chainId=int(self.w3.net.version),
-                type=2,
-                nonce=self.last_nonce if custom_nonce is None else custom_nonce,
-                maxFeePerGas=Web3.to_wei(int(gas_price), "gwei"),
-                maxPriorityFeePerGas=Web3.to_wei(priority_fee, "gwei"),
-                gas=int(21000),
-                to=Web3.to_checksum_address(address_to),
-                value=Web3.to_wei(0, "wei"),
-            ),
+            transaction_dict,
             self.private_key,
         )
         if self.post_merge:
@@ -1943,7 +1990,7 @@ class Uniswap4:
         else:
             return self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
 
-    # market functions for swapping `qty` amount of `token0` to buy `token1`
+    # Market functions for swapping `qty` amount of `token0` to buy `token1`
     def make_swap_input(
         self,
         input_token: str,
@@ -1974,12 +2021,11 @@ class Uniswap4:
                 custom_nonce=custom_nonce,
             )
         else:
-            encoded_route = self.encode_path_keys_input(route, input_token)
             result = self.token_to_token_swap_input(
                 input_token,
                 qty,
                 qtycap,
-                encoded_route,
+                route,
                 custom_nonce=custom_nonce,
             )
         return result
@@ -2015,12 +2061,11 @@ class Uniswap4:
                 custom_nonce=custom_nonce,
             )
         else:
-            encoded_route = self.encode_path_keys_output(route, output_token)
             result = self.token_to_token_swap_output(
                 output_token,
                 qty,
                 qtycap,
-                encoded_route,
+                route,
                 custom_nonce=custom_nonce,
             )
         return result
@@ -2124,7 +2169,9 @@ class Uniswap4:
             sqrt_price_x96,
         )
         tx = self._build_and_send_tx(
-            function, self._get_tx_params(custom_nonce=custom_nonce)
+            function,
+            self._get_tx_params(custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2157,42 +2204,38 @@ class Uniswap4:
         ether_amount: int = 0
         if recipient is None:
             recipient = _addr_to_str(self.address)
-        # Encoding actions: MINT_POSITION, SETTLE_PAIR, SWEEP (if ETH liquidity is being provided)
+        # Encoding actions: MINT_POSITION, SETTLE_PAIR
         if pool_key.currency0 == ETH_ADDRESS:
             ether_amount = amount0
-            actions: bytes = encode_packed(
-                ["uint8", "uint8", "uint8"],
-                [
-                    v4_actions["MINT_POSITION"],
-                    v4_actions["SETTLE_PAIR"],
-                    v4_actions["SWEEP"],
-                ],
-            )
-        else:
-            actions = encode_packed(
-                ["uint8", "uint8"],
-                [
-                    v4_actions["MINT_POSITION"],
-                    v4_actions["SETTLE_PAIR"],
-                ],
-            )
+        actions: bytes = encode_packed(
+            ["uint8", "uint8"],
+            [
+                v4_actions["MINT_POSITION"],
+                v4_actions["SETTLE_PAIR"],
+            ],
+        )
 
         # Encoding params
         mint_position_params: bytes = encode(
             [
-                "((address,address,uint24,int24,address),int24,int24,uint256,uint128,uint128,address,bytes)"
+                "(address,address,uint24,int24,address)",
+                "int24",
+                "int24",
+                "uint256",
+                "uint128",
+                "uint128",
+                "address",
+                "bytes",
             ],
             [
-                (
-                    (astuple(pool_key)),
-                    tick_lower,
-                    tick_upper,
-                    liquidity,
-                    amount0,
-                    amount1,
-                    recipient,
-                    hook_data,
-                )
+                astuple(pool_key),
+                tick_lower,
+                tick_upper,
+                liquidity,
+                amount0,
+                amount1,
+                recipient,
+                hook_data,
             ],
         )
         settle_pair_params: bytes = encode(
@@ -2200,12 +2243,6 @@ class Uniswap4:
             [pool_key.currency0, pool_key.currency1],
         )
         params: List[bytes] = [mint_position_params, settle_pair_params]
-        if pool_key.currency0 == ETH_ADDRESS:
-            sweep_params: bytes = encode(
-                ["address", "address"],
-                [pool_key.currency0, recipient],
-            )
-            params.append(sweep_params)
 
         # Encoding unlock data
         unlock_data: bytes = encode(
@@ -2218,6 +2255,7 @@ class Uniswap4:
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2248,36 +2286,26 @@ class Uniswap4:
         ether_amount: int = 0
         if recipient is None:
             recipient = _addr_to_str(self.address)
-        # Encoding actions: INCREASE_LIQUIDITY, SETTLE_PAIR, SWEEP (if ETH liquidity is being provided)
+        # Encoding actions: INCREASE_LIQUIDITY, SETTLE_PAIR
         if pool_key.currency0 == ETH_ADDRESS:
             ether_amount = amount0_max
-            actions: bytes = encode_packed(
-                ["uint8", "uint8", "uint8"],
-                [
-                    v4_actions["INCREASE_LIQUIDITY"],
-                    v4_actions["SETTLE_PAIR"],
-                    v4_actions["SWEEP"],
-                ],
-            )
-        else:
-            actions = encode_packed(
-                ["uint8", "uint8"],
-                [
-                    v4_actions["INCREASE_LIQUIDITY"],
-                    v4_actions["SETTLE_PAIR"],
-                ],
-            )
+
+        actions = encode_packed(
+            ["uint8", "uint8"],
+            [
+                v4_actions["INCREASE_LIQUIDITY"],
+                v4_actions["SETTLE_PAIR"],
+            ],
+        )
         # Encoding params
         increase_liquidity_params: bytes = encode(
-            ["(uint256,uint256,uint128,uint128,bytes)"],
+            ["uint256", "uint256", "uint128", "uint128", "bytes"],
             [
-                (
-                    token_id,
-                    liquidity,
-                    amount0_max,
-                    amount1_max,
-                    hook_data,
-                )
+                token_id,
+                liquidity,
+                amount0_max,
+                amount1_max,
+                hook_data,
             ],
         )
         settle_pair_params: bytes = encode(
@@ -2285,12 +2313,6 @@ class Uniswap4:
             [pool_key.currency0, pool_key.currency1],
         )
         params: List[bytes] = [increase_liquidity_params, settle_pair_params]
-        if pool_key.currency0 == ETH_ADDRESS:
-            sweep_params: bytes = encode(
-                ["address", "address"],
-                [pool_key.currency0, recipient],
-            )
-            params.append(sweep_params)
 
         # Encoding unlock data
         unlock_data: bytes = encode(
@@ -2303,6 +2325,7 @@ class Uniswap4:
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2342,15 +2365,13 @@ class Uniswap4:
         )
         # Encoding params
         decrease_liquidity_params: bytes = encode(
-            ["(uint256,uint256,uint128,uint128,bytes)"],
+            ["uint256", "uint256", "uint128", "uint128", "bytes"],
             [
-                (
-                    token_id,
-                    liquidity,
-                    amount0_min,
-                    amount1_min,
-                    hook_data,
-                )
+                token_id,
+                liquidity,
+                amount0_min,
+                amount1_min,
+                hook_data,
             ],
         )
         take_pair_params: bytes = encode(
@@ -2370,6 +2391,7 @@ class Uniswap4:
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2403,15 +2425,13 @@ class Uniswap4:
         )
         # Encoding params
         decrease_liquidity_params: bytes = encode(
-            ["(uint256,uint256,uint128,uint128,bytes)"],
+            ["uint256", "uint256", "uint128", "uint128", "bytes"],
             [
-                (
-                    token_id,
-                    0,
-                    0,
-                    0,
-                    hook_data,
-                )
+                token_id,
+                0,
+                0,
+                0,
+                hook_data,
             ],
         )
         take_pair_params: bytes = encode(
@@ -2431,6 +2451,7 @@ class Uniswap4:
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2468,14 +2489,12 @@ class Uniswap4:
         )
         # Encoding params
         burn_position_params: bytes = encode(
-            ["(uint256,uint128,uint128,bytes)"],
+            ["uint256", "uint128", "uint128", "bytes"],
             [
-                (
-                    token_id,
-                    amount0_min,
-                    amount1_min,
-                    hook_data,
-                )
+                token_id,
+                amount0_min,
+                amount1_min,
+                hook_data,
             ],
         )
         take_pair_params: bytes = encode(
@@ -2495,6 +2514,7 @@ class Uniswap4:
                 unlock_data, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
         return tx
 
@@ -2571,6 +2591,7 @@ class Uniswap4:
                 encoded_commands, encoded_inputs, self._deadline()
             ),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
         )
 
         return result
@@ -2817,8 +2838,8 @@ class Uniswap4:
         }
         return return_value
 
+    @staticmethod
     def encode_path_keys_input(
-        self,
         path: List[PoolKey],
         currency_in: str,
         hook_data_list: Optional[List[bytes]] = None,
@@ -2849,8 +2870,8 @@ class Uniswap4:
             currency_in = currency_out
         return encoded_path
 
+    @staticmethod
     def encode_path_keys_output(
-        self,
         path: List[PoolKey],
         currency_out: str,
         hook_data_list: Optional[List[bytes]] = None,
@@ -3002,5 +3023,5 @@ class Uniswap4:
             return self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
         finally:
             # logger.debug(f"nonce: {tx_params['nonce']}")
-            if tx_params["nonce"] == Nonce(max(self.last_nonce, 0)):
+            if custom_nonce is None:
                 self.last_nonce = Nonce(tx_params["nonce"] + 1)
