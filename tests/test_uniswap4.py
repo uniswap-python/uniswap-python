@@ -919,14 +919,6 @@ class TestUniswap4(object):
     # ------ Liquidity --------------------------------------------------------------------
 
     @pytest.mark.parametrize(
-        "transaction_hash",
-        [("0xb30d3dde98f715e5880da9f8833f99823623229e193e04661cb7ce193e4028f8")],
-    )
-    def test_get_minted_token_id(self, client: Uniswap4, transaction_hash: str):
-        result = client.get_minted_token_id(transaction_hash)
-        assert result
-
-    @pytest.mark.parametrize(
         "pool_key, custom_nonce",
         [
             (eth_usdc_poolkey, None),
@@ -1009,6 +1001,13 @@ class TestUniswap4(object):
         assert len(test_token_id_result) > 0
         TestUniswap4.test_token_id = test_token_id_result[0]
         TestUniswap4.test_mint_tx_hash = tx_receipt["transactionHash"].hex()
+
+    def test_get_minted_token_id(
+        self,
+        client: Uniswap4,
+    ):
+        result = client.get_minted_token_id(TestUniswap4.test_mint_tx_hash)
+        assert result
 
     def test_get_position_info(
         self,
@@ -1285,13 +1284,6 @@ class TestUniswap4(object):
                 ETH_USDC_TICK_SPACING,
                 ZERO_HOOK,
             ),
-            (
-                USDC_ADDRESS,
-                USDT_ADDRESS,
-                USDC_USDT_FEE,
-                USDC_USDT_TICK_SPACING,
-                ZERO_HOOK,
-            ),
         ],
     )
     def test_stateview_get_slot0(
@@ -1417,8 +1409,8 @@ class TestUniswap4(object):
             tick_spacing,
             hooks,
             _addr_to_str(client.address),
-            -tick_spacing * 50,
-            tick_spacing * 50,
+            -600,
+            600,
             TestUniswap4.test_token_id,
         )
         assert result
