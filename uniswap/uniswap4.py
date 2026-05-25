@@ -2194,7 +2194,7 @@ class Uniswap4:
         ether_amount: int = 0
         if recipient is None:
             recipient = _addr_to_str(self.address)
-        # Encoding actions: MINT_POSITION, SETTLE_PAIR, SWEEP (if ETH liquidity is being provided)
+        # Encoding actions: MINT_POSITION, SETTLE_PAIR
         if pool_key.currency0 == ETH_ADDRESS:
             ether_amount = amount0
         actions: bytes = encode_packed(
@@ -2208,19 +2208,24 @@ class Uniswap4:
         # Encoding params
         mint_position_params: bytes = encode(
             [
-                "((address,address,uint24,int24,address),int24,int24,uint256,uint128,uint128,address,bytes)"
+                "(address,address,uint24,int24,address)",
+                "int24",
+                "int24",
+                "uint256",
+                "uint128",
+                "uint128",
+                "address",
+                "bytes",
             ],
             [
-                (
-                    astuple(pool_key),
-                    tick_lower,
-                    tick_upper,
-                    liquidity,
-                    amount0,
-                    amount1,
-                    recipient,
-                    hook_data,
-                )
+                astuple(pool_key),
+                tick_lower,
+                tick_upper,
+                liquidity,
+                amount0,
+                amount1,
+                recipient,
+                hook_data,
             ],
         )
         settle_pair_params: bytes = encode(
