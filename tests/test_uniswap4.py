@@ -1444,7 +1444,7 @@ class TestUniswap4(object):
             hooks,
             -30000,
         )
-        assert result
+        assert isinstance(result, int)
 
     @pytest.mark.parametrize(
         "token0, token1, fee, tick_spacing, hooks",
