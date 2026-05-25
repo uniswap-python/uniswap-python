@@ -72,6 +72,7 @@ def client(web3: Web3, anvil: AnvilInstance) -> Uniswap4:
         anvil.eth_address,
         anvil.eth_privkey,
         web3=web3,
+        gas_limit=500_000,
     )
 
 
@@ -993,7 +994,7 @@ class TestUniswap4(object):
                 eth_usdc_poolkey,
                 -600,
                 600,
-                10860507277202,
+                ONE_ETH,
                 ONE_ETH,
                 2500 * ONE_USDC,
                 b"",
