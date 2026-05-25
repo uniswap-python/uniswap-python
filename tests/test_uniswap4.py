@@ -12,7 +12,7 @@ from web3 import Web3
 from web3.types import Nonce
 
 from uniswap import Uniswap4
-from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
+from uniswap.constants import ETH_ADDRESS, MAX_TICK, MIN_TICK, ZERO_HOOK
 from uniswap.types import AddressLike, PoolKey
 from uniswap.util import V4pools, _addr_to_str, _str_to_addr
 
@@ -991,9 +991,9 @@ class TestUniswap4(object):
         [
             (
                 eth_usdc_poolkey,
-                -600,
-                600,
-                int(0.1 * (ONE_ETH)),
+                MIN_TICK,
+                MAX_TICK,
+                10860507277202,
                 ONE_ETH,
                 2500 * ONE_USDC,
                 b"",
