@@ -2228,12 +2228,6 @@ class Uniswap4:
             [pool_key.currency0, pool_key.currency1],
         )
         params: List[bytes] = [mint_position_params, settle_pair_params]
-        if pool_key.currency0 == ETH_ADDRESS:
-            sweep_params: bytes = encode(
-                ["address", "address"],
-                [pool_key.currency0, recipient],
-            )
-            params.append(sweep_params)
 
         # Encoding unlock data
         unlock_data: bytes = encode(
