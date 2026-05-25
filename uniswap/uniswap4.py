@@ -225,7 +225,7 @@ class Uniswap4:
 
             time.sleep(delay_interval)
             max_approval = 2**100 - 1
-            expiration: int = int(10**12)
+            expiration = int(10**12)
             logger.info(
                 f"Setting permit for {_addr_to_str(token)} at position manager contract..."
             )
@@ -2286,36 +2286,26 @@ class Uniswap4:
         ether_amount: int = 0
         if recipient is None:
             recipient = _addr_to_str(self.address)
-        # Encoding actions: INCREASE_LIQUIDITY, SETTLE_PAIR, SWEEP (if ETH liquidity is being provided)
+        # Encoding actions: INCREASE_LIQUIDITY, SETTLE_PAIR
         if pool_key.currency0 == ETH_ADDRESS:
             ether_amount = amount0_max
-            actions: bytes = encode_packed(
-                ["uint8", "uint8", "uint8"],
-                [
-                    v4_actions["INCREASE_LIQUIDITY"],
-                    v4_actions["SETTLE_PAIR"],
-                    v4_actions["SWEEP"],
-                ],
-            )
-        else:
-            actions = encode_packed(
-                ["uint8", "uint8"],
-                [
-                    v4_actions["INCREASE_LIQUIDITY"],
-                    v4_actions["SETTLE_PAIR"],
-                ],
-            )
+
+        actions = encode_packed(
+            ["uint8", "uint8"],
+            [
+                v4_actions["INCREASE_LIQUIDITY"],
+                v4_actions["SETTLE_PAIR"],
+            ],
+        )
         # Encoding params
         increase_liquidity_params: bytes = encode(
-            ["(uint256,uint256,uint128,uint128,bytes)"],
+            ["uint256", "uint256", "uint128", "uint128", "bytes"],
             [
-                (
-                    token_id,
-                    liquidity,
-                    amount0_max,
-                    amount1_max,
-                    hook_data,
-                )
+                token_id,
+                liquidity,
+                amount0_max,
+                amount1_max,
+                hook_data,
             ],
         )
         settle_pair_params: bytes = encode(
@@ -2323,12 +2313,6 @@ class Uniswap4:
             [pool_key.currency0, pool_key.currency1],
         )
         params: List[bytes] = [increase_liquidity_params, settle_pair_params]
-        if pool_key.currency0 == ETH_ADDRESS:
-            sweep_params: bytes = encode(
-                ["address", "address"],
-                [pool_key.currency0, recipient],
-            )
-            params.append(sweep_params)
 
         # Encoding unlock data
         unlock_data: bytes = encode(
@@ -2381,15 +2365,13 @@ class Uniswap4:
         )
         # Encoding params
         decrease_liquidity_params: bytes = encode(
-            ["(uint256,uint256,uint128,uint128,bytes)"],
+            ["uint256", "uint256", "uint128", "uint128", "bytes"],
             [
-                (
-                    token_id,
-                    liquidity,
-                    amount0_min,
-                    amount1_min,
-                    hook_data,
-                )
+                token_id,
+                liquidity,
+                amount0_min,
+                amount1_min,
+                hook_data,
             ],
         )
         take_pair_params: bytes = encode(
@@ -2443,15 +2425,13 @@ class Uniswap4:
         )
         # Encoding params
         decrease_liquidity_params: bytes = encode(
-            ["(uint256,uint256,uint128,uint128,bytes)"],
+            ["uint256", "uint256", "uint128", "uint128", "bytes"],
             [
-                (
-                    token_id,
-                    0,
-                    0,
-                    0,
-                    hook_data,
-                )
+                token_id,
+                0,
+                0,
+                0,
+                hook_data,
             ],
         )
         take_pair_params: bytes = encode(
@@ -2509,14 +2489,12 @@ class Uniswap4:
         )
         # Encoding params
         burn_position_params: bytes = encode(
-            ["(uint256,uint128,uint128,bytes)"],
+            ["uint256", "uint128", "uint128", "bytes"],
             [
-                (
-                    token_id,
-                    amount0_min,
-                    amount1_min,
-                    hook_data,
-                )
+                token_id,
+                amount0_min,
+                amount1_min,
+                hook_data,
             ],
         )
         take_pair_params: bytes = encode(
