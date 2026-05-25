@@ -1115,8 +1115,8 @@ class TestUniswap4(object):
             (
                 eth_usdc_poolkey,
                 int(0.05 * ONE_ETH),
-                int(0.5 * ONE_ETH),
-                1250 * ONE_USDC,
+                0,
+                0,
                 b"",
                 None,
             ),
