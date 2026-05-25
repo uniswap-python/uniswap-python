@@ -2197,22 +2197,13 @@ class Uniswap4:
         # Encoding actions: MINT_POSITION, SETTLE_PAIR, SWEEP (if ETH liquidity is being provided)
         if pool_key.currency0 == ETH_ADDRESS:
             ether_amount = amount0
-            actions: bytes = encode_packed(
-                ["uint8", "uint8", "uint8"],
-                [
-                    v4_actions["MINT_POSITION"],
-                    v4_actions["SETTLE_PAIR"],
-                    v4_actions["SWEEP"],
-                ],
-            )
-        else:
-            actions = encode_packed(
-                ["uint8", "uint8"],
-                [
-                    v4_actions["MINT_POSITION"],
-                    v4_actions["SETTLE_PAIR"],
-                ],
-            )
+        actions: bytes = encode_packed(
+            ["uint8", "uint8"],
+            [
+                v4_actions["MINT_POSITION"],
+                v4_actions["SETTLE_PAIR"],
+            ],
+        )
 
         # Encoding params
         mint_position_params: bytes = encode(
@@ -2221,7 +2212,7 @@ class Uniswap4:
             ],
             [
                 (
-                    (astuple(pool_key)),
+                    astuple(pool_key),
                     tick_lower,
                     tick_upper,
                     liquidity,
