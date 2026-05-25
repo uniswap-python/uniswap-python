@@ -1521,7 +1521,7 @@ class TestUniswap4(object):
         self, client: Uniswap4, token0: str
     ):
         result = client.position_descriptor_get_currency_ratio_priority(token0)
-        assert result
+        assert isinstance(result, int)
 
     @pytest.mark.parametrize(
         "token0, token1",
@@ -1534,7 +1534,7 @@ class TestUniswap4(object):
         self, client: Uniswap4, token0: str, token1: str
     ):
         result = client.position_descriptor_get_flip_ratio(token0, token1)
-        assert result
+        assert isinstance(result, bool)
 
     def test_position_descriptor_get_native_currency_label(self, client: Uniswap4):
         result = client.position_descriptor_get_native_currency_label()
