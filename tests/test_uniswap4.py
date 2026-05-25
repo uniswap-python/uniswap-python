@@ -1442,7 +1442,7 @@ class TestUniswap4(object):
             fee,
             tick_spacing,
             hooks,
-            TestUniswap4.test_tick,
+            -30000,
         )
         assert result
 
