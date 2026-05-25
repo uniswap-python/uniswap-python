@@ -127,6 +127,8 @@ def does_not_raise():
 @pytest.mark.usefixtures("client", "web3")
 class TestUniswap4(object):
     test_token_id: int = 0
+    test_mint_tx_hash: str = ""
+    test_tick: int = 0
 
     # ------ Approve/tx replacement-----------------------------------------------------
     @pytest.mark.parametrize(
@@ -915,47 +917,6 @@ class TestUniswap4(object):
         )
 
     # ------ Liquidity --------------------------------------------------------------------
-    @pytest.mark.parametrize("token_id", [(TOKEN_ID)])
-    def test_get_position_info(self, client: Uniswap4, token_id: int):
-        result = client.get_position_info(token_id)
-        test_pool_id_result: int = int.from_bytes(result["poolID"], byteorder="big")
-        truncated_pool_id_str = hex(test_pool_id_result).lower()
-        pool_id_str = (
-            client.get_pool_id(
-                PoolKey(
-                    result["currency0"],
-                    result["currency1"],
-                    result["fee"],
-                    result["tickSpacing"],
-                    result["hooks"],
-                )
-            )
-            .hex()
-            .lower()
-        )
-        assert truncated_pool_id_str == pool_id_str[: len(truncated_pool_id_str)]
-
-    @pytest.mark.parametrize(
-        "token_id, token0_decimals, token1_decimals",
-        [(TOKEN_ID, ETH_DECIMALS, USDC_DECIMALS)],
-    )
-    def test_get_position_value(
-        self,
-        client: Uniswap4,
-        token_id: int,
-        token0_decimals: int,
-        token1_decimals: int,
-    ):
-        result = client.get_position_value(token_id, token0_decimals, token1_decimals)
-        assert result
-
-    @pytest.mark.parametrize(
-        "transaction_hash",
-        [("0xb30d3dde98f715e5880da9f8833f99823623229e193e04661cb7ce193e4028f8")],
-    )
-    def test_get_minted_token_id(self, client: Uniswap4, transaction_hash: str):
-        result = client.get_minted_token_id(transaction_hash)
-        assert result
 
     @pytest.mark.parametrize(
         "pool_key, custom_nonce",
@@ -1039,6 +1000,51 @@ class TestUniswap4(object):
         )
         assert len(test_token_id_result) > 0
         TestUniswap4.test_token_id = test_token_id_result[0]
+        TestUniswap4.test_mint_tx_hash = tx_receipt["transactionHash"].hex()
+
+    def test_get_minted_token_id(
+        self,
+        client: Uniswap4,
+    ):
+        result = client.get_minted_token_id(TestUniswap4.test_mint_tx_hash)
+        assert result
+
+    def test_get_position_info(
+        self,
+        client: Uniswap4,
+    ):
+        result = client.get_position_info(TestUniswap4.test_token_id)
+        test_pool_id_result: int = int.from_bytes(result["poolID"], byteorder="big")
+        truncated_pool_id_str = hex(test_pool_id_result).lower()
+        pool_id_str = (
+            client.get_pool_id(
+                PoolKey(
+                    result["currency0"],
+                    result["currency1"],
+                    result["fee"],
+                    result["tickSpacing"],
+                    result["hooks"],
+                )
+            )
+            .hex()
+            .lower()
+        )
+        assert truncated_pool_id_str == pool_id_str[: len(truncated_pool_id_str)]
+
+    @pytest.mark.parametrize(
+        "token0_decimals, token1_decimals",
+        [(ETH_DECIMALS, USDC_DECIMALS)],
+    )
+    def test_get_position_value(
+        self,
+        client: Uniswap4,
+        token0_decimals: int,
+        token1_decimals: int,
+    ):
+        result = client.get_position_value(
+            TestUniswap4.test_token_id, token0_decimals, token1_decimals
+        )
+        assert result
 
     @pytest.mark.parametrize(
         "pool_key, liquidity, amount0, amount1, hook_data, custom_nonce",
@@ -1152,68 +1158,6 @@ class TestUniswap4(object):
             f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
         )
 
-    @pytest.mark.parametrize(
-        "pool_key, hook_data, custom_nonce",
-        [
-            (eth_usdc_poolkey, b"", None),
-        ],
-    )
-    def test_burn_position(
-        self,
-        client: Uniswap4,
-        pool_key: PoolKey,
-        hook_data: bytes,
-        custom_nonce: Optional[Nonce],
-    ):
-        recipient = _addr_to_str(client.address)
-        # Removing liquidity before burning position, otherwise burn will revert since position is not empty
-        tx = client.decrease_liquidity(
-            pool_key,
-            TestUniswap4.test_token_id,
-            0,
-            0,
-            client.stateview_get_position_info(
-                pool_key.currency0,
-                pool_key.currency1,
-                pool_key.fee,
-                pool_key.tick_spacing,
-                pool_key.hooks,
-                recipient,
-                -600,
-                600,
-                TestUniswap4.test_token_id,
-            )["liquidity"],
-            recipient,
-            hook_data,
-            custom_nonce,
-        )
-        assert tx
-        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
-            tx, timeout=RECEIPT_TIMEOUT
-        )
-        assert tx_receipt["status"], (
-            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
-        )
-
-        # Now burn the position
-        tx = client.burn_position(
-            pool_key,
-            TestUniswap4.test_token_id,
-            0,
-            0,
-            recipient,
-            hook_data,
-            custom_nonce,
-        )
-        assert tx
-
-        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
-            tx, timeout=RECEIPT_TIMEOUT
-        )
-        assert tx_receipt["status"], (
-            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
-        )
-
     # ------ V4Pools tests ----------------------------------------------------------------
     @pytest.mark.parametrize(
         "first_block",
@@ -1292,7 +1236,401 @@ class TestUniswap4(object):
         assert len(result) > 0
 
     # ------ StateView tests --------------------------------------------------------------
+    # Read methods
+    @pytest.mark.parametrize(
+        "token0, token1, fee, tick_spacing, hooks",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+            ),
+            (
+                USDC_ADDRESS,
+                USDT_ADDRESS,
+                USDC_USDT_FEE,
+                USDC_USDT_TICK_SPACING,
+                ZERO_HOOK,
+            ),
+        ],
+    )
+    def test_stateview_get_liquidity(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        fee: int,
+        tick_spacing: int,
+        hooks: str,
+    ):
+        result = client.stateview_get_liquidity(
+            token0,
+            token1,
+            fee,
+            tick_spacing,
+            hooks,
+        )
+        assert result
+
+    @pytest.mark.parametrize(
+        "token0, token1, fee, tick_spacing, hooks",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+            ),
+        ],
+    )
+    def test_stateview_get_slot0(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        fee: int,
+        tick_spacing: int,
+        hooks: str,
+    ):
+        result = client.stateview_get_slot0(
+            token0,
+            token1,
+            fee,
+            tick_spacing,
+            hooks,
+        )
+        assert result
+        TestUniswap4.test_tick = int(result["tick"])
+
+    @pytest.mark.parametrize(
+        "token0, token1, fee, tick_spacing, hooks",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+            ),
+            (
+                USDC_ADDRESS,
+                USDT_ADDRESS,
+                USDC_USDT_FEE,
+                USDC_USDT_TICK_SPACING,
+                ZERO_HOOK,
+            ),
+        ],
+    )
+    def test_stateview_get_fee_growth_globals(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        fee: int,
+        tick_spacing: int,
+        hooks: str,
+    ):
+        result = client.stateview_get_fee_growth_globals(
+            token0,
+            token1,
+            fee,
+            tick_spacing,
+            hooks,
+        )
+        assert result
+
+    @pytest.mark.parametrize(
+        "token0, token1, fee, tick_spacing, hooks",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+            ),
+            (
+                USDC_ADDRESS,
+                USDT_ADDRESS,
+                USDC_USDT_FEE,
+                USDC_USDT_TICK_SPACING,
+                ZERO_HOOK,
+            ),
+        ],
+    )
+    def test_stateview_get_fee_growth_inside(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        fee: int,
+        tick_spacing: int,
+        hooks: str,
+    ):
+        result = client.stateview_get_fee_growth_inside(
+            token0,
+            token1,
+            fee,
+            tick_spacing,
+            hooks,
+            TestUniswap4.test_tick - tick_spacing * 50,
+            TestUniswap4.test_tick + tick_spacing * 50,
+        )
+        assert result
+
+    @pytest.mark.parametrize(
+        "token0, token1, fee, tick_spacing, hooks",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+            ),
+        ],
+    )
+    def test_stateview_get_position_info(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        fee: int,
+        tick_spacing: int,
+        hooks: str,
+    ):
+        result = client.stateview_get_position_info(
+            token0,
+            token1,
+            fee,
+            tick_spacing,
+            hooks,
+            _addr_to_str(client.address),
+            -600,
+            600,
+            TestUniswap4.test_token_id,
+        )
+        assert result
+
+    @pytest.mark.parametrize(
+        "token0, token1, fee, tick_spacing, hooks",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+            ),
+        ],
+    )
+    def test_stateview_get_tick_bitmap(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        fee: int,
+        tick_spacing: int,
+        hooks: str,
+    ):
+        result = client.stateview_get_tick_bitmap(
+            token0,
+            token1,
+            fee,
+            tick_spacing,
+            hooks,
+            -30000,
+        )
+        assert isinstance(result, int)
+
+    @pytest.mark.parametrize(
+        "token0, token1, fee, tick_spacing, hooks",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+            ),
+        ],
+    )
+    def test_stateview_get_tick_fee_growth_outside(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        fee: int,
+        tick_spacing: int,
+        hooks: str,
+    ):
+        result = client.stateview_get_tick_fee_growth_outside(
+            token0,
+            token1,
+            fee,
+            tick_spacing,
+            hooks,
+            TestUniswap4.test_tick,
+        )
+        assert result
+
+    @pytest.mark.parametrize(
+        "token0, token1, fee, tick_spacing, hooks",
+        [
+            (
+                ETH_ADDRESS,
+                USDC_ADDRESS,
+                ETH_USDC_FEE,
+                ETH_USDC_TICK_SPACING,
+                ZERO_HOOK,
+            ),
+        ],
+    )
+    def test_stateview_get_tick_pool_info(
+        self,
+        client: Uniswap4,
+        token0: str,
+        token1: str,
+        fee: int,
+        tick_spacing: int,
+        hooks: str,
+    ):
+        result = client.stateview_get_tick_pool_info(
+            token0,
+            token1,
+            fee,
+            tick_spacing,
+            hooks,
+            TestUniswap4.test_tick,
+        )
+        assert result
+
     # ------ PositionDescriptor tests -----------------------------------------------------
+    # Read methods
+    @pytest.mark.parametrize(
+        "token0",
+        [
+            (USDC_ADDRESS),
+            (USDT_ADDRESS),
+        ],
+    )
+    def test_position_descriptor_get_currency_ratio_priority(
+        self, client: Uniswap4, token0: str
+    ):
+        result = client.position_descriptor_get_currency_ratio_priority(token0)
+        assert isinstance(result, int)
+
+    @pytest.mark.parametrize(
+        "token0, token1",
+        [
+            (USDC_ADDRESS, ETH_ADDRESS),
+            (USDT_ADDRESS, ETH_ADDRESS),
+        ],
+    )
+    def test_position_descriptor_get_flip_ratio(
+        self, client: Uniswap4, token0: str, token1: str
+    ):
+        result = client.position_descriptor_get_flip_ratio(token0, token1)
+        assert isinstance(result, bool)
+
+    def test_position_descriptor_get_native_currency_label(self, client: Uniswap4):
+        result = client.position_descriptor_get_native_currency_label()
+        assert result
+
+    def test_position_descriptor_get_pool_manager(self, client: Uniswap4):
+        result = client.position_descriptor_get_pool_manager()
+        assert result
+
+    def test_position_descriptor_get_token_uri(self, client: Uniswap4):
+        result = client.position_descriptor_get_token_uri(
+            _addr_to_str(client.position_manager_address), TestUniswap4.test_token_id
+        )
+        assert result
+
+    def test_position_descriptor_get_wrapped_native_address(self, client: Uniswap4):
+        result = client.position_descriptor_get_wrapped_native_address()
+        assert result
+
     # ------ PositionManager tests --------------------------------------------------------
+    # Read methods
+
+    # Write methods
+
     # ------ PoolManager tests ------------------------------------------------------------
+    # Read methods
+
+    # Write methods
+
+    # Burn test position.
+    @pytest.mark.parametrize(
+        "pool_key, hook_data, custom_nonce",
+        [
+            (eth_usdc_poolkey, b"", None),
+        ],
+    )
+    def test_burn_position(
+        self,
+        client: Uniswap4,
+        pool_key: PoolKey,
+        hook_data: bytes,
+        custom_nonce: Optional[Nonce],
+    ):
+        recipient = _addr_to_str(client.address)
+        # Removing liquidity before burning position, otherwise burn will revert since position is not empty
+        tx = client.decrease_liquidity(
+            pool_key,
+            TestUniswap4.test_token_id,
+            0,
+            0,
+            client.stateview_get_position_info(
+                pool_key.currency0,
+                pool_key.currency1,
+                pool_key.fee,
+                pool_key.tick_spacing,
+                pool_key.hooks,
+                recipient,
+                -600,
+                600,
+                TestUniswap4.test_token_id,
+            )["liquidity"],
+            recipient,
+            hook_data,
+            custom_nonce,
+        )
+        assert tx
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+        # Now burn the position
+        tx = client.burn_position(
+            pool_key,
+            TestUniswap4.test_token_id,
+            0,
+            0,
+            recipient,
+            hook_data,
+            custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
     # ------ UniversalRouter tests --------------------------------------------------------
+    @pytest.mark.skip(reason="Skipped for now.")
+    def test_universal_router_execute(
+        self,
+        client: Uniswap4,
+    ):
+        pass
