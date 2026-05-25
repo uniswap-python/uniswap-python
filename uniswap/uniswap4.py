@@ -216,6 +216,16 @@ class Uniswap4:
 
         if approve_position_manager:
             time.sleep(delay_interval)
+            max_approval = self.max_approval_int
+            function = self.erc20_contract(token).functions.approve(
+                _addr_to_str(self.position_manager_address), max_approval
+            )
+            logger.info(f"Approving {_addr_to_str(token)} for PositionManager...")
+            tx = self._build_and_send_tx(function)
+
+            time.sleep(delay_interval)
+            max_approval = 2**100 - 1
+            expiration: int = int(10**12)
             logger.info(
                 f"Setting permit for {_addr_to_str(token)} at position manager contract..."
             )
