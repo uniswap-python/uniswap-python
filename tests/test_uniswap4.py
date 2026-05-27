@@ -1706,11 +1706,11 @@ class TestUniswap4(object):
                     )
                 ],
                 [
-                    usdc_usdt_poolkey.currency0,
+                    eth_usdc_poolkey.currency0,
                     qty,
                 ],
                 [
-                    usdc_usdt_poolkey.currency1,
+                    eth_usdc_poolkey.currency1,
                     qtycap,
                 ],
             ],
@@ -1779,11 +1779,11 @@ class TestUniswap4(object):
                     )
                 ],
                 [
-                    usdc_usdt_poolkey.currency0,
+                    eth_usdc_poolkey.currency0,
                     qty,
                 ],
                 [
-                    usdc_usdt_poolkey.currency1,
+                    eth_usdc_poolkey.currency1,
                     qtycap,
                 ],
             ],
