@@ -1681,6 +1681,7 @@ class TestUniswap4(object):
             eth_usdc_poolkey.hooks,
             b"",
         )
+        qtycap = int((1 - client.max_slippage) * qtycap)
 
         commands: List = [
             universal_router_commands["V4_SWAP"],
@@ -1744,6 +1745,7 @@ class TestUniswap4(object):
             eth_usdc_poolkey.hooks,
             b"",
         )
+        qtycap = int((1 - client.max_slippage) * qtycap)
         ether_value = ONE_ETH
 
         commands: List = [
