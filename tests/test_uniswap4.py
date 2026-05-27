@@ -3,7 +3,7 @@ import os
 import shutil
 import subprocess
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import astuple, dataclass
 from time import sleep
 from typing import Generator, List, Optional
 
@@ -12,7 +12,12 @@ from web3 import Web3
 from web3.types import Nonce
 
 from uniswap import Uniswap4
-from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
+from uniswap.constants import (
+    ETH_ADDRESS,
+    ZERO_HOOK,
+    universal_router_commands,
+    v4_actions,
+)
 from uniswap.types import AddressLike, PoolKey
 from uniswap.util import V4pools, _addr_to_str, _str_to_addr
 
@@ -1628,9 +1633,169 @@ class TestUniswap4(object):
         )
 
     # ------ UniversalRouter tests --------------------------------------------------------
-    @pytest.mark.skip(reason="Skipped for now.")
-    def test_universal_router_execute(
+    def test_universal_router_execute_simple_command(
         self,
         client: Uniswap4,
     ):
-        pass
+        commands: List = [
+            universal_router_commands["WRAP_ETH"],
+        ]
+        actions: List = [
+            [],
+        ]
+        params: List = [
+            [
+                [
+                    _addr_to_str(client.address),
+                    1 * ONE_ETH,
+                ],
+            ],
+        ]
+        tx = client.universal_router_execute(
+            commands, actions, params, ether_amount=1 * ONE_ETH
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    def test_universal_router_execute_composite_command(
+        self,
+        client: Uniswap4,
+    ):
+        if eth_usdc_poolkey.currency0.lower() < eth_usdc_poolkey.currency1.lower():
+            zero_for_one: bool = True
+        else:
+            zero_for_one = False
+        qty: int = 1 * ONE_ETH
+        qtycap: int = client.get_quote_exact_input_single(
+            eth_usdc_poolkey.currency0,
+            eth_usdc_poolkey.currency1,
+            qty,
+            eth_usdc_poolkey.fee,
+            eth_usdc_poolkey.tick_spacing,
+            eth_usdc_poolkey.hooks,
+            b"",
+        )
+        qtycap = int((1 - client.max_slippage) * qtycap)
+
+        commands: List = [
+            universal_router_commands["V4_SWAP"],
+        ]
+        actions: List = [
+            [
+                v4_actions["SWAP_EXACT_IN_SINGLE"],
+                v4_actions["SETTLE_ALL"],
+                v4_actions["TAKE_ALL"],
+            ],
+        ]
+
+        params: List = [
+            [
+                [
+                    (
+                        astuple(eth_usdc_poolkey),
+                        zero_for_one,
+                        qty,
+                        qtycap,
+                        b"",
+                    )
+                ],
+                [
+                    eth_usdc_poolkey.currency0,
+                    qty,
+                ],
+                [
+                    eth_usdc_poolkey.currency1,
+                    qtycap,
+                ],
+            ],
+        ]
+        tx = client.universal_router_execute(
+            commands, actions, params, ether_amount=qty
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    def test_universal_router_execute_multiaction(
+        self,
+        client: Uniswap4,
+    ):
+        if eth_usdc_poolkey.currency0.lower() < eth_usdc_poolkey.currency1.lower():
+            zero_for_one: bool = True
+        else:
+            zero_for_one = False
+        qty: int = 1 * ONE_ETH
+        qtycap: int = client.get_quote_exact_input_single(
+            eth_usdc_poolkey.currency0,
+            eth_usdc_poolkey.currency1,
+            qty,
+            eth_usdc_poolkey.fee,
+            eth_usdc_poolkey.tick_spacing,
+            eth_usdc_poolkey.hooks,
+            b"",
+        )
+        qtycap = int((1 - client.max_slippage) * qtycap)
+        ether_value = ONE_ETH
+
+        commands: List = [
+            universal_router_commands["WRAP_ETH"],
+            universal_router_commands["V4_SWAP"],
+        ]
+        actions: List = [
+            [],
+            [
+                v4_actions["SWAP_EXACT_IN_SINGLE"],
+                v4_actions["SETTLE_ALL"],
+                v4_actions["TAKE_ALL"],
+            ],
+        ]
+
+        params: List = [
+            [
+                [
+                    _addr_to_str(client.address),
+                    ether_value,
+                ],
+            ],
+            [
+                [
+                    (
+                        astuple(eth_usdc_poolkey),
+                        zero_for_one,
+                        qty,
+                        qtycap,
+                        b"",
+                    )
+                ],
+                [
+                    eth_usdc_poolkey.currency0,
+                    qty,
+                ],
+                [
+                    eth_usdc_poolkey.currency1,
+                    qtycap,
+                ],
+            ],
+        ]
+        tx = client.universal_router_execute(
+            commands, actions, params, ether_amount=(ether_value + qty)
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
