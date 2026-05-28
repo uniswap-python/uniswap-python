@@ -1806,11 +1806,12 @@ class Uniswap4:
 
         # Actions are SWAP_EXACT_OUT_SINGLE, SETTLE_ALL, TAKE_ALL
         actions: bytes = encode_packed(
-            ["uint8", "uint8", "uint8"],
+            ["uint8", "uint8", "uint8", "uint8"],
             args=[
                 v4_actions["SWAP_EXACT_OUT_SINGLE"],
                 v4_actions["SETTLE_ALL"],
                 v4_actions["TAKE_ALL"],
+                v4_actions["TAKE"],
             ],
         )
         # SETTING PARAMS
@@ -1846,9 +1847,17 @@ class Uniswap4:
             ["address", "uint128"],
             [output_token, qty],
         )
+        take_input_params = encode(
+            v4_actions_abis["TAKE"], [input_token, _addr_to_str(self.address), 0]
+        )
 
         # ENCODING DATA
-        params = [exact_output_single_params, settle_all_params, take_all_params]
+        params = [
+            exact_output_single_params,
+            settle_all_params,
+            take_all_params,
+            take_input_params,
+        ]
         inputs = []
         inputs.append(
             encode(
@@ -1892,11 +1901,12 @@ class Uniswap4:
 
         # Actions are SWAP_EXACT_OUT, SETTLE_ALL, TAKE_ALL
         actions: bytes = encode_packed(
-            ["uint8", "uint8", "uint8"],
+            ["uint8", "uint8", "uint8", "uint8"],
             args=[
                 v4_actions["SWAP_EXACT_OUT"],
                 v4_actions["SETTLE_ALL"],
                 v4_actions["TAKE_ALL"],
+                v4_actions["TAKE"],
             ],
         )
         # SETTING PARAMS
@@ -1919,9 +1929,17 @@ class Uniswap4:
             ["address", "uint128"],
             [output_token, qty],
         )
+        take_input_params = encode(
+            v4_actions_abis["TAKE"], [input_token, _addr_to_str(self.address), 0]
+        )
 
         # ENCODING DATA
-        params = [exact_output_params, settle_all_params, take_all_params]
+        params = [
+            exact_output_params,
+            settle_all_params,
+            take_all_params,
+            take_input_params,
+        ]
         inputs = []
         inputs.append(
             encode(
@@ -2208,10 +2226,12 @@ class Uniswap4:
         if pool_key.currency0 == ETH_ADDRESS:
             ether_amount = amount0
         actions: bytes = encode_packed(
-            ["uint8", "uint8"],
+            ["uint8", "uint8", "uint8", "uint8"],
             [
                 v4_actions["MINT_POSITION"],
                 v4_actions["SETTLE_PAIR"],
+                v4_actions["SWEEP"],
+                v4_actions["SWEEP"],
             ],
         )
 
@@ -2242,7 +2262,20 @@ class Uniswap4:
             ["address", "address"],
             [pool_key.currency0, pool_key.currency1],
         )
-        params: List[bytes] = [mint_position_params, settle_pair_params]
+        sweep0_params: bytes = encode(
+            v4_actions_abis["SWEEP"],
+            [pool_key.currency0, _addr_to_str(self.address)],
+        )
+        sweep1_params: bytes = encode(
+            v4_actions_abis["SWEEP"],
+            [pool_key.currency1, _addr_to_str(self.address)],
+        )
+        params: List[bytes] = [
+            mint_position_params,
+            settle_pair_params,
+            sweep0_params,
+            sweep1_params,
+        ]
 
         # Encoding unlock data
         unlock_data: bytes = encode(
@@ -2291,10 +2324,12 @@ class Uniswap4:
             ether_amount = amount0_max
 
         actions = encode_packed(
-            ["uint8", "uint8"],
+            ["uint8", "uint8", "uint8", "uint8"],
             [
                 v4_actions["INCREASE_LIQUIDITY"],
                 v4_actions["SETTLE_PAIR"],
+                v4_actions["SWEEP"],
+                v4_actions["SWEEP"],
             ],
         )
         # Encoding params
@@ -2312,7 +2347,20 @@ class Uniswap4:
             ["address", "address"],
             [pool_key.currency0, pool_key.currency1],
         )
-        params: List[bytes] = [increase_liquidity_params, settle_pair_params]
+        sweep0_params: bytes = encode(
+            v4_actions_abis["SWEEP"],
+            [pool_key.currency0, _addr_to_str(self.address)],
+        )
+        sweep1_params: bytes = encode(
+            v4_actions_abis["SWEEP"],
+            [pool_key.currency1, _addr_to_str(self.address)],
+        )
+        params: List[bytes] = [
+            increase_liquidity_params,
+            settle_pair_params,
+            sweep0_params,
+            sweep1_params,
+        ]
 
         # Encoding unlock data
         unlock_data: bytes = encode(
