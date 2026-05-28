@@ -5,7 +5,7 @@ This library attempts to present a clean interface to Uniswap, but in order to u
 
 - V1: https://uniswap.org/docs/v1/
 - V2: https://uniswap.org/docs/v2/
-- V3: https://docs.uniswap.org/
+- V3 and V4: https://docs.uniswap.org/
 
 .. contents:: Table of contents
     :local:

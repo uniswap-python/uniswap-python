@@ -888,7 +888,7 @@ class Uniswap4:
         Allows forwarding a single permit to permit2
         """
         function = self.position_manager.functions.permit(
-            owner, astuple(permit_single), spender, sig_deadline, signature
+            owner, (astuple(permit_single), spender, sig_deadline), signature
         )
         tx = self._build_and_send_tx(
             function, self._get_tx_params(value=payable_amount)
@@ -1243,13 +1243,13 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def pool_manager_set_operator(self, operator: str, approved: bool) -> HexBytes:
+    def pool_manager_set_operator(self, operator: str, approved: bool) -> bool:
         """
         Sets or removes an operator for the caller.
         """
         function = self.pool_manager.functions.setOperator(operator, approved)
-        tx = self._build_and_send_tx(function, self._get_tx_params())
-        return tx
+        self._build_and_send_tx(function, self._get_tx_params())
+        return True
 
     def pool_manager_set_protocol_fee(
         self, pool_key: PoolKey, new_protocol_fee: int
