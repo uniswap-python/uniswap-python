@@ -1804,7 +1804,7 @@ class Uniswap4:
             args=[universal_router_commands["V4_SWAP"]],
         )
 
-        # Actions are SWAP_EXACT_OUT_SINGLE, SETTLE_ALL, TAKE_ALL
+        # Actions are SWAP_EXACT_OUT_SINGLE, SETTLE_ALL, TAKE_ALL, TAKE
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8", "uint8"],
             args=[
@@ -1899,7 +1899,7 @@ class Uniswap4:
             args=[universal_router_commands["V4_SWAP"]],
         )
 
-        # Actions are SWAP_EXACT_OUT, SETTLE_ALL, TAKE_ALL
+        # Actions are SWAP_EXACT_OUT, SETTLE_ALL, TAKE_ALL, TAKE
         actions: bytes = encode_packed(
             ["uint8", "uint8", "uint8", "uint8"],
             args=[
@@ -2222,7 +2222,7 @@ class Uniswap4:
         ether_amount: int = 0
         if recipient is None:
             recipient = _addr_to_str(self.address)
-        # Encoding actions: MINT_POSITION, SETTLE_PAIR
+        # Encoding actions: MINT_POSITION, SETTLE_PAIR, SWEEP, SWEEP
         if pool_key.currency0 == ETH_ADDRESS:
             ether_amount = amount0
         actions: bytes = encode_packed(
@@ -2319,7 +2319,7 @@ class Uniswap4:
         ether_amount: int = 0
         if recipient is None:
             recipient = _addr_to_str(self.address)
-        # Encoding actions: INCREASE_LIQUIDITY, SETTLE_PAIR
+        # Encoding actions: INCREASE_LIQUIDITY, SETTLE_PAIR, SWEEP, SWEEP
         if pool_key.currency0 == ETH_ADDRESS:
             ether_amount = amount0_max
 
