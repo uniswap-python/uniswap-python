@@ -1243,13 +1243,13 @@ class Uniswap4:
         tx = self._build_and_send_tx(function, self._get_tx_params())
         return tx
 
-    def pool_manager_set_operator(self, operator: str, approved: bool) -> bool:
+    def pool_manager_set_operator(self, operator: str, approved: bool) -> HexBytes:
         """
         Sets or removes an operator for the caller.
         """
         function = self.pool_manager.functions.setOperator(operator, approved)
-        self._build_and_send_tx(function, self._get_tx_params())
-        return True
+        tx = self._build_and_send_tx(function, self._get_tx_params())
+        return tx
 
     def pool_manager_set_protocol_fee(
         self, pool_key: PoolKey, new_protocol_fee: int
