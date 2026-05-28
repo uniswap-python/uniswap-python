@@ -1013,7 +1013,7 @@ class Uniswap:
             weth = self.get_weth_address()
             path = (
                 [input_token, output_token]
-                if input_token == weth or output_token == weth
+                if is_same_address(input_token, weth) or is_same_address(output_token, weth)
                 else [input_token, weth, output_token]
             )
             return self._build_and_send_tx(
