@@ -742,11 +742,17 @@ class Uniswap:
                 )
             else:
                 func = self.router.functions.swapExactTokensForTokens
+            weth_address = self.get_weth_address()
+            if is_same_address(input_token, weth_address) or is_same_address(output_token, weth_address):
+                path = [input_token, output_token]
+            else:
+                path = [input_token, weth_address, output_token]
+
             return self._build_and_send_tx(
                 func(
                     qty,
                     min_tokens_bought,
-                    [input_token, self.get_weth_address(), output_token],
+                    path,
                     recipient,
                     self._deadline(),
                 ),
