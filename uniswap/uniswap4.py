@@ -2264,11 +2264,11 @@ class Uniswap4:
         )
         sweep0_params: bytes = encode(
             v4_actions_abis["SWEEP"],
-            [pool_key.currency0, _addr_to_str(self.address)],
+            [pool_key.currency0, recipient],
         )
         sweep1_params: bytes = encode(
             v4_actions_abis["SWEEP"],
-            [pool_key.currency1, _addr_to_str(self.address)],
+            [pool_key.currency1, recipient],
         )
         params: List[bytes] = [
             mint_position_params,
@@ -2349,11 +2349,11 @@ class Uniswap4:
         )
         sweep0_params: bytes = encode(
             v4_actions_abis["SWEEP"],
-            [pool_key.currency0, _addr_to_str(self.address)],
+            [pool_key.currency0, recipient],
         )
         sweep1_params: bytes = encode(
             v4_actions_abis["SWEEP"],
-            [pool_key.currency1, _addr_to_str(self.address)],
+            [pool_key.currency1, recipient],
         )
         params: List[bytes] = [
             increase_liquidity_params,
