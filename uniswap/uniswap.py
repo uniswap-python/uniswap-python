@@ -1010,11 +1010,17 @@ class Uniswap:
                 input_token, output_token, qty, fee=fee
             )
             amount_in_max = int((1 + slippage) * cost)
+            weth = self.get_weth_address()
+            path = (
+                [input_token, output_token]
+                if input_token == weth or output_token == weth
+                else [input_token, weth, output_token]
+            )
             return self._build_and_send_tx(
                 self.router.functions.swapTokensForExactTokens(
                     qty,
                     amount_in_max,
-                    [input_token, self.get_weth_address(), output_token],
+                    path,
                     recipient,
                     self._deadline(),
                 ),
