@@ -1,4 +1,4 @@
-﻿import enum
+import enum
 import logging
 from typing import final, Final, Optional
 
