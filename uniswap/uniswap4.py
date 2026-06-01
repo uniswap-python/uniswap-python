@@ -1382,7 +1382,14 @@ class Uniswap4:
         tick_spacing: int = 10,
         hooks: str = ZERO_HOOK,
     ) -> float:
-        """Current spot price for token to token trades."""
+        """
+        :param token0: The first token in the pair.
+        :param token1: The second token in the pair.
+        :param fee: The fee tier for the swap.
+        :param tick_spacing: The tick spacing for the swap.
+        :param hooks: The hooks for the swap.
+        :return: The current spot price for token to token trades.
+        """
 
         if token0.lower() < token1.lower():
             den0 = self.get_token(_str_to_addr(token0)).decimals
@@ -1419,9 +1426,16 @@ class Uniswap4:
         hook_data: bytes = bytes(),
     ) -> float:
         """
+        :param token0: The token to be sold.
+        :param token1: The token to be bought.
+        :param qty: The amount of `token0` to be sold.
+        :param fee: The fee tier for the swap.
+        :param tick_spacing: The tick spacing for the swap.
+        :param hooks: The hooks for the swap.
+        :param hook_data: The hook data for the swap.
         :return: the estimated price impact as a positive float (0.01 = 1%).
 
-        See ``examples/price_impact.py`` for an example which uses this.
+        See ``examples/v4_examples.py`` for an example which uses this.
         """
 
         try:
@@ -1469,7 +1483,16 @@ class Uniswap4:
         hooks: str = ZERO_HOOK,
         hook_data: bytes = b"",
     ) -> int:
-        """:return: Quote for token to token single hop trades with an exact input."""
+        """
+        :param token0: The token to be sold.
+        :param token1: The token to be bought.
+        :param qty: The amount of `token0` to be sold.
+        :param fee: The fee tier for the swap.
+        :param tick_spacing: The tick spacing for the swap.
+        :param hooks: The hooks for the swap.
+        :param hook_data: The hook data for the swap.
+        :return: Quote for token to token single hop trades with an exact input.
+        """
         if token0.lower() < token1.lower():
             zero_for_one = True
         else:
@@ -1488,7 +1511,12 @@ class Uniswap4:
         qty: int,
         route: List[PoolKey],
     ) -> int:
-        """:return: Quote for token to token multi-hop trades with an exact input."""
+        """
+        :param token_exact: The token for which the qty parameter is specified.
+        :param qty: The amount of the token_exact to be swapped.
+        :param route: The list of PoolKeys representing the path of the swap, starting with the pool containing the input token and ending with the pool containing the output token.
+        :return: Quote for token to token multi-hop trades with an exact input.
+        """
         encoded_route = self.encode_path_keys_input(route, token_exact)
 
         # [0]=The output quote [1]=estimated gas units used for the swap
@@ -1511,7 +1539,16 @@ class Uniswap4:
         hooks: str = ZERO_HOOK,
         hook_data: bytes = b"",
     ) -> int:
-        """:return: Quote for token to token single hop trades with an exact output."""
+        """
+        :param token0: The token to be sold.
+        :param token1: The token to be bought.
+        :param qty: The amount of `token1` to be bought.
+        :param fee: The fee tier for the swap.
+        :param tick_spacing: The tick spacing for the swap.
+        :param hooks: The hooks for the swap.
+        :param hook_data: The hook data for the swap.
+        :return: Quote for token to token single hop trades with an exact output.
+        """
         if token0.lower() < token1.lower():
             zero_for_one = True
         else:
@@ -1537,7 +1574,12 @@ class Uniswap4:
         qty: int,
         route: List[PoolKey],
     ) -> int:
-        """:return: Quote for token to token multi-hop trades with an exact output."""
+        """
+        :param token_exact: The token for which the qty parameter is specified, either the input or output token depending on the quote type.
+        :param qty: The amount of the token_exact to be swapped. For an exact output quote, this is the amount of output token desired.
+        :param route: The list of PoolKeys representing the path of the swap in reverse order, starting with the pool containing the output token and ending with the pool containing the input token.
+        :return: Quote for token to token multi-hop trades with an exact output.
+        """
 
         encoded_route = self.encode_path_keys_output(route, token_exact)
         quote_amount: int = self.quoter.functions.quoteExactOutput(
@@ -1562,8 +1604,19 @@ class Uniswap4:
         route: Optional[List[PoolKey]] = None,
     ) -> int:
         """
-        Given `qty` amount of the input `token0`, returns the maximum output amount of output `token1`.
-        If `route` is provided, it will be used for the quote. Otherwise, `fee` and `tick_spacing` must be provided for a single hop quote."""
+        :param token0: The token to be sold.
+        :param token1: The token to be bought.
+        :param qty: The amount of `token0` to be sold.
+        :param fee: Optional. The fee tier for the swap.
+
+        :param tick_spacing: Optional. The tick spacing for the swap.
+        :param hooks: Optional. The hooks for the swap.
+        :param hook_data: Optional. The hook data for the swap.
+        :param route: Optional. The route for the swap. The first element should be the pool containing `token0` and the last element should be the pool containing `token1`.
+        :return: Returns the minimum amount of `token1` that can be received for `qty` amount of `token0`.
+
+        If `route` is provided, it will be used for the quote. Otherwise, `fee` and `tick_spacing` must be provided for a single hop quote.
+        """
         result: int = 0
         if route is None:
             if fee is None or tick_spacing is None:
@@ -1595,7 +1648,16 @@ class Uniswap4:
         route: Optional[List[PoolKey]] = None,
     ) -> int:
         """
-        Returns the minimum amount of `token0` required to buy `qty` amount of `token1`.
+        :param token0: The token to be sold.
+        :param token1: The token to be bought.
+        :param qty: The amount of `token1` to be bought.
+        :param fee: Optional. The fee tier for the swap.
+        :param tick_spacing: Optional. The tick spacing for the swap.
+        :param hooks: Optional. The hooks for the swap.
+        :param hook_data: Optional. The hook data for the swap.
+        :param route: Optional. The route for the swap in reverse order. The first element should be the pool containing `token1` and the last element should be the pool containing `token0`.
+        :return: Returns the maximum amount of `token0` required to buy `qty` amount of `token1`.
+
         If `route` is provided, it will be used for the quote. Otherwise, `fee` and `tick_spacing` must be provided for a single hop quote.
         """
         result: int = 0
@@ -1631,6 +1693,16 @@ class Uniswap4:
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
+        :param input_token: The token to be sold.
+        :param qty: The amount of `input_token` to be sold.
+        :param qtycap: The minimum amount of `output_token` that must be bought for the swap to succeed.
+        :param output_token: The token to be bought.
+        :param fee: The fee for the swap.
+        :param tick_spacing: The tick spacing for the swap.
+        :param hooks: The hooks for the swap.
+        :param hook_data: The hook data for the swap.
+        :param custom_nonce: Optional. The nonce to use for the transaction.
+
         Swaps an exact amount of `input_token` for a minimum amount of `output_token`,
         reverting if the amount of `output_token` received is less than `qtycap`.
         """
@@ -1708,7 +1780,14 @@ class Uniswap4:
         route: List[PoolKey],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
-        """Swaps an exact amount of `input_token` for a minimum amount of `output_token` through a specified multi-hop route,
+        """
+        :param input_token: The token to be sold.
+        :param qty: The amount of `input_token` to be sold.
+        :param qtycap: The minimum amount of `output_token` that must be bought for the swap to succeed.
+        :param route: The list of PoolKeys representing the path of the swap. The first element should be the pool containing the `input_token` and the last element should be the pool containing the `output_token`.
+        :param custom_nonce: Optional. The nonce to use for the transaction.
+
+        Swaps an exact amount of `input_token` for a minimum amount of `output_token` through a specified multi-hop route,
         reverting if the amount of `output_token` received is less than `qtycap`.
         """
         min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
@@ -1788,8 +1867,16 @@ class Uniswap4:
         hook_data: bytes = b"",
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
-        """Swaps a maximum amount of `input_token` for an exact amount of `output_token`,
-        reverting if the amount of `input_token` required is more than `qtycap`.
+        """
+        :param input_token: The token to be sold.
+        :param qty: The amount of `output_token` to be bought.
+        :param qtycap: The maximum amount of `input_token` that can be sold for the trade to proceed.
+        :param output_token: The token to be bought.
+        :param fee: The fee for the swap.
+        :param tick_spacing: The tick spacing for the swap.
+        :param hooks: The hooks for the swap.
+        :param hook_data: The hook data for the swap.
+        :param custom_nonce: Optional. The nonce for the transaction.
         """
 
         amount_in_max: int = int((1 + self.max_slippage) * qtycap)
@@ -1880,7 +1967,14 @@ class Uniswap4:
         route: List[PoolKey],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
-        """Swaps a maximum amount of `input_token` for an exact amount of `output_token` through a specified multi-hop route,
+        """
+        :param output_token: The token to be bought.
+        :param qty: The amount of `output_token` to be bought.
+        :param qtycap: The maximum amount of `input_token` that can be sold for the trade to proceed.
+        :param route: The route for the swap in reverse order. The first element should be the pool containing `output_token` and the last element should be the pool containing `input_token`.
+        :param custom_nonce: Optional. The nonce for the transaction.
+
+        Swaps a maximum amount of `input_token` for an exact amount of `output_token` through a specified multi-hop route,
         reverting if the amount of `input_token` required is more than `qtycap`.
         """
 
@@ -2021,6 +2115,15 @@ class Uniswap4:
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
+        :param input_token: The token to be sold.
+        :param output_token: The token to be bought.
+        :param qty: The amount of `input_token` to be sold.
+        :param qtycap: The minimum amount of `output_token` that must be bought for the trade to proceed.
+        :param swap_pool_key: Optional. The PoolKey for the swap, required if `route` is not provided.
+        :param hook_data: Optional. The hook data for the swap. This is only used for single hop swaps and will be ignored if `route` is provided.
+        :param route: Optional. The route for the swap. The first element should be the pool containing `input_token` and the last element should be the pool containing `output_token`. If `route` is provided, it will be used for the swap instead of `swap_pool_key`.
+        :param custom_nonce: Optional. The nonce for the transaction.
+
         Make a trade by defining the qty of the input token.
          If `route` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap."""
         result: Optional[HexBytes] = None
@@ -2060,8 +2163,14 @@ class Uniswap4:
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
-        Make a trade by defining the qty of the output token.
-         If `route` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap.
+        :param input_token: The token to be sold.
+        :param output_token: The token to be bought.
+        :param qty: The amount of `output_token` to be bought.
+        :param qtycap: The maximum amount of `input_token` that can be sold for the trade to proceed.
+        :param swap_pool_key: Optional. The PoolKey for the swap, required if `route` is not provided.
+        :param hook_data: Optional. The hook data for the swap.
+        :param route: Optional. The route for the swap in reverse order. The first element should be the pool containing `output_token` and the last element should be the pool containing `input_token`.
+        :return: Returns the maximum amount of `input_token` required to buy `qty` amount of `output_token`.
         """
         result: Optional[HexBytes] = None
         if route is None:
