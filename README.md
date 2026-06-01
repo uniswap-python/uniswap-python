@@ -84,7 +84,7 @@ _0.8.0_
 
 * Added: Uniswap V4 support
 * Added: Pool cache service for Uniswap V4
-* Full parameters cutomization for V4 transactions; V4 transaction replacement and cancelling.
+* Full parameters customization for V4 transactions; V4 transaction replacement and cancelling.
 
 _0.7.2_
 

@@ -13,7 +13,7 @@ Uniswap class
 
 
 Uniswap4 class
--------------
+--------------
 .. automodule:: uniswap.uniswap4
 
 .. autoclass:: Uniswap4
@@ -21,7 +21,7 @@ Uniswap4 class
 
 
 Pools cache class
------------
+-----------------
 .. automodule:: uniswap.util
 
 .. autoclass:: V4pools

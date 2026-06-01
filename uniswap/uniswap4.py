@@ -1613,7 +1613,7 @@ class Uniswap4:
         :param hooks: Optional. The hooks for the swap.
         :param hook_data: Optional. The hook data for the swap.
         :param route: Optional. The route for the swap. The first element should be the pool containing `token0` and the last element should be the pool containing `token1`.
-        :return: Returns the minimum amount of `token1` that can be received for `qty` amount of `token0`.
+        :return: Returns the exact amount of `token1` that can be received for `qty` amount of `token0` at the current price.
 
         If `route` is provided, it will be used for the quote. Otherwise, `fee` and `tick_spacing` must be provided for a single hop quote.
         """
@@ -1656,7 +1656,7 @@ class Uniswap4:
         :param hooks: Optional. The hooks for the swap.
         :param hook_data: Optional. The hook data for the swap.
         :param route: Optional. The route for the swap in reverse order. The first element should be the pool containing `token1` and the last element should be the pool containing `token0`.
-        :return: Returns the maximum amount of `token0` required to buy `qty` amount of `token1`.
+        :return: Returns the exact amount of `token0` required to buy `qty` amount of `token1` at the current price.
 
         If `route` is provided, it will be used for the quote. Otherwise, `fee` and `tick_spacing` must be provided for a single hop quote.
         """
@@ -2170,7 +2170,9 @@ class Uniswap4:
         :param swap_pool_key: Optional. The PoolKey for the swap, required if `route` is not provided.
         :param hook_data: Optional. The hook data for the swap.
         :param route: Optional. The route for the swap in reverse order. The first element should be the pool containing `output_token` and the last element should be the pool containing `input_token`.
-        :return: Returns the maximum amount of `input_token` required to buy `qty` amount of `output_token`.
+
+        Make a trade by defining the qty of the output token.
+        If `route` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap.
         """
         result: Optional[HexBytes] = None
         if route is None:
