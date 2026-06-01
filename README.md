@@ -80,6 +80,12 @@ Contributors also earn this beautiful [GitPOAP](https://gitpoap.notion.site/What
 
 ## Changelog
 
+_0.8.0_
+
+* Added: Uniswap V4 support
+* Added: Pool cache service for Uniswap V4
+* Full parameters customization for V4 transactions; V4 transaction replacement and cancelling.
+
 _0.7.2_
 
 * Updated: Default fee is not applied when using Uniswap V3. Default fee for Uniswap V1 and V2 is still 0.3%.
