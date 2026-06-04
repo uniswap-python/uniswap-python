@@ -1754,7 +1754,7 @@ class TestUniswap4(object):
             universal_router_commands["V4_SWAP"],
         ]
 
-        # List of actions for each command, in this case we have 1 action for the WRAP_ETH command and 3 actions for the V4_SWAP command (swap, settle and take)
+        # List of actions for each command, in this case we have 0 action for the WRAP_ETH command and 3 actions for the V4_SWAP command (swap, settle and take)
         # As WRAP_ETH command does not require any action, we pass an empty list for it
         actions: List = [
             [],

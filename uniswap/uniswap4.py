@@ -1436,7 +1436,8 @@ class Uniswap4:
         :return: the estimated price impact as a positive float (0.01 = 1%).
 
         See ``examples/v4_examples.py`` for an example which uses this.
-        # NOTE: Does not support multi-hop swaps, should be used for single-hop swaps only.
+
+        NOTE: Does not support multi-hop swaps, should be used for single-hop swaps only.
         """
 
         try:
@@ -2697,7 +2698,7 @@ class Uniswap4:
 
         See ``tests/test_uniswap4.py`` for an example which uses this, `test_universal_router_execute_multiaction()` specific test.
 
-        # NOTE: This function does not perform checks on the validity of the commands `SWAP_EXACT_IN*` and `SWAP_EXACT_OUT*`. It is the caller's responsibility to ensure that they are correct and will not cause the transaction to revert.
+        NOTE: This function does not perform checks on the validity of the commands ``SWAP_EXACT_IN*`` and ``SWAP_EXACT_OUT*``. It is the caller's responsibility to ensure that they are correct and will not cause the transaction to revert.
         """
         # Validating input parameters
         ignore_list = [
