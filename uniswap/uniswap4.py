@@ -879,8 +879,6 @@ class Uniswap4:
         self,
         owner: str,
         permit_single: PermitSingle,
-        spender: str,
-        sig_deadline: int,
         signature: bytes,
         payable_amount: int,
     ) -> HexBytes:
@@ -888,7 +886,7 @@ class Uniswap4:
         Allows forwarding a single permit to permit2
         """
         function = self.position_manager.functions.permit(
-            owner, (astuple(permit_single), spender, sig_deadline), signature
+            owner, astuple(permit_single), signature
         )
         tx = self._build_and_send_tx(
             function, self._get_tx_params(value=payable_amount)
