@@ -1748,10 +1748,14 @@ class TestUniswap4(object):
         qtycap = int((1 - client.max_slippage) * qtycap)
         ether_value = ONE_ETH
 
+        # Executes a WRAP_ETH followed by a V4_SWAP in the same transaction
         commands: List = [
             universal_router_commands["WRAP_ETH"],
             universal_router_commands["V4_SWAP"],
         ]
+
+        # List of actions for each command, in this case we have 1 action for the WRAP_ETH command and 3 actions for the V4_SWAP command (swap, settle and take)
+        # As WRAP_ETH command does not require any action, we pass an empty list for it
         actions: List = [
             [],
             [
@@ -1761,6 +1765,8 @@ class TestUniswap4(object):
             ],
         ]
 
+        # List of parameters for each action, the first element of the list corresponds to the parameters for the WRAP_ETH command (recipient and amount),
+        # and the second element corresponds to the parameters for each of the 3 actions of the V4_SWAP command
         params: List = [
             [
                 [
@@ -1788,6 +1794,7 @@ class TestUniswap4(object):
                 ],
             ],
         ]
+        # Both commands use ether as input token, so we set the ether_amount to the sum of the ether required for each commands
         tx = client.universal_router_execute(
             commands, actions, params, ether_amount=(ether_value + qty)
         )
