@@ -3057,7 +3057,6 @@ class Uniswap4:
         """
         Encodes a list of PoolKeys into the format expected by the quoter for multi-hop ExactOutput quotes.
 
-        NOTE: The path and `hook_data_list` should be provided in the reverse order (i.e., starting from the last pool and ending with the first pool).
         """
         encoded_path: List[PathKey] = []
         if hook_data_list is None:
