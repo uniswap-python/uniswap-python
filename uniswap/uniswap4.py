@@ -128,6 +128,8 @@ class Uniswap4:
         self.net_id = chain_id
         if self.net_id in _netid_to_name:
             self.net_name = _netid_to_name[self.net_id]
+            if self.net_name not in _quoter_contract_addresses_v4:
+                raise Exception(f"Netid {self.net_id} is not supported yet.")
         else:
             raise Exception(f"Unknown netid: {self.net_id}")
 
