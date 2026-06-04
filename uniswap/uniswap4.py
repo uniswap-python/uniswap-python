@@ -3056,6 +3056,7 @@ class Uniswap4:
     ) -> List[PathKey]:
         """
         Encodes a list of PoolKeys into the format expected by the quoter for multi-hop ExactOutput quotes.
+
         """
         encoded_path: List[PathKey] = []
         if hook_data_list is None:
