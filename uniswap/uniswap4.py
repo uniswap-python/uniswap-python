@@ -1436,6 +1436,8 @@ class Uniswap4:
         :return: the estimated price impact as a positive float (0.01 = 1%).
 
         See ``examples/v4_examples.py`` for an example which uses this.
+
+        NOTE: Does not support multi-hop swaps, should be used for single-hop swaps only.
         """
 
         try:
@@ -1736,7 +1738,7 @@ class Uniswap4:
             zero_for_one = False
             token0, token1 = output_token, input_token
         exact_input_single_params: bytes = encode(
-            ["((address,address,uint24,int24,address),bool,uint128,uint128,bytes)"],
+            v4_actions_abis["SWAP_EXACT_IN_SINGLE"],
             [
                 (
                     (token0, token1, fee, tick_spacing, hooks),
@@ -1748,11 +1750,11 @@ class Uniswap4:
             ],
         )
         settle_all_params: bytes = encode(
-            ["address", "uint128"],
+            v4_actions_abis["SETTLE_ALL"],
             [input_token, qty],
         )
         take_all_params: bytes = encode(
-            ["address", "uint128"],
+            v4_actions_abis["TAKE_ALL"],
             [output_token, min_tokens_bought],
         )
 
@@ -1817,7 +1819,7 @@ class Uniswap4:
 
         # SETTING PARAMS
         exact_input_params: bytes = encode(
-            ["(address,(address,uint24,int24,address,bytes)[],uint128,uint128)"],
+            v4_actions_abis["SWAP_EXACT_IN"],
             [
                 (
                     input_token,
@@ -1828,11 +1830,11 @@ class Uniswap4:
             ],
         )
         settle_all_params: bytes = encode(
-            ["address", "uint128"],
+            v4_actions_abis["SETTLE_ALL"],
             [input_token, qty],
         )
         take_all_params: bytes = encode(
-            ["address", "uint128"],
+            v4_actions_abis["TAKE_ALL"],
             [
                 _addr_to_str((encoded_route[-1].intermediate_currency)),  # type: ignore[arg-type]
                 min_tokens_bought,
@@ -1909,7 +1911,7 @@ class Uniswap4:
             zero_for_one = False
             token0, token1 = output_token, input_token
         exact_output_single_params = encode(
-            ["((address,address,uint24,int24,address),bool,uint128,uint128,bytes)"],
+            v4_actions_abis["SWAP_EXACT_OUT_SINGLE"],
             [
                 (
                     (
@@ -1927,11 +1929,11 @@ class Uniswap4:
             ],
         )
         settle_all_params = encode(
-            ["address", "uint128"],
+            v4_actions_abis["SETTLE_ALL"],
             [input_token, amount_in_max],
         )
         take_all_params = encode(
-            ["address", "uint128"],
+            v4_actions_abis["TAKE_ALL"],
             [output_token, qty],
         )
         take_input_params = encode(
@@ -2005,7 +2007,7 @@ class Uniswap4:
         )
         # SETTING PARAMS
         exact_output_params: bytes = encode(
-            ["(address,(address,uint24,int24,address,bytes)[],uint128,uint128)"],
+            v4_actions_abis["SWAP_EXACT_OUT"],
             [
                 (
                     output_token,
@@ -2016,11 +2018,11 @@ class Uniswap4:
             ],
         )
         settle_all_params: bytes = encode(
-            ["address", "uint128"],
+            v4_actions_abis["SETTLE_ALL"],
             [input_token, amount_in_max],
         )
         take_all_params: bytes = encode(
-            ["address", "uint128"],
+            v4_actions_abis["TAKE_ALL"],
             [output_token, qty],
         )
         take_input_params = encode(
@@ -2685,6 +2687,19 @@ class Uniswap4:
         ether_amount: int = 0,
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
+        """
+        Executes a transaction with the Universal Router with the specified commands, actions, and parameters.
+
+        :param commands: A list of command integers corresponding to the commands to execute.
+        :param actions: A list of lists of action integers, where each sublist corresponds to the actions for the respective command in the `commands` list.
+        :param params: A list of lists of lists of parameters, where each sublist corresponds to the parameters for the respective actions in the `actions` list. The structure of the parameters should match the expected input for each action as defined in the Universal Router documentation.
+        :param ether_amount: The amount of ether to send with the transaction, if any.
+        :param custom_nonce: Optional. The nonce for the transaction.
+
+        See ``tests/test_uniswap4.py`` for an example which uses this, `test_universal_router_execute_multiaction()` specific test.
+
+        NOTE: This function does not perform checks on the validity of the commands ``SWAP_EXACT_IN*`` and ``SWAP_EXACT_OUT*``. It is the caller's responsibility to ensure that they are correct and will not cause the transaction to revert.
+        """
         # Validating input parameters
         ignore_list = [
             "SWAP_EXACT_IN_SINGLE",
@@ -3135,7 +3150,7 @@ class Uniswap4:
         return int(time.time()) + 10 * 60
 
     def _get_tx_params(
-        self, value: int = 0, gas: int = 250000, custom_nonce: Optional[Nonce] = None
+        self, value: int = 0, custom_nonce: Optional[Nonce] = None
     ) -> TxParams:
         """Get generic transaction parameters."""
         if custom_nonce is not None:
