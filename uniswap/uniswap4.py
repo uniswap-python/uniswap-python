@@ -11,7 +11,7 @@ from eth_abi.packed import encode_packed
 from web3 import Web3
 from web3.contract import Contract
 from web3.contract.contract import ContractFunction
-from web3.exceptions import BadFunctionCallOutput, ContractLogicError
+from web3.exceptions import BadFunctionCallOutput, ContractLogicError, NameNotFound
 from web3.types import (
     HexBytes,
     Nonce,
@@ -146,41 +146,69 @@ class Uniswap4:
             self.net_name
         ]
 
-        self.quoter_address = _str_to_addr(quoter_address)
-        self.router_address = _str_to_addr(router_address)
-        self.stateview_address = _str_to_addr(stateview_address)
-        self.permit2_address = _str_to_addr(permit2_address)
-        self.position_descriptor_address = _str_to_addr(position_descriptor_address)
-        self.pool_manager_address = _str_to_addr(pool_manager_address)
-        self.position_manager_address = _str_to_addr(position_manager_address)
+        try:
+            self.quoter_address = _str_to_addr(quoter_address)
+            self.quoter = _load_contract(
+                self.w3, abi_name="uniswap-v4/quoter", address=self.quoter_address
+            )
+        except NameNotFound as e:
+            logger.error(f"Error occurred while loading quoter contract: {e}")
 
-        self.quoter = _load_contract(
-            self.w3, abi_name="uniswap-v4/quoter", address=self.quoter_address
-        )
-        self.router = _load_contract(
-            self.w3, abi_name="uniswap-v4/router", address=self.router_address
-        )
-        self.stateview = _load_contract(
-            self.w3, abi_name="uniswap-v4/stateview", address=self.stateview_address
-        )
-        self.permit2 = _load_contract(
-            self.w3, abi_name="uniswap-v4/permit2", address=self.permit2_address
-        )
-        self.position_descriptor = _load_contract(
-            self.w3,
-            abi_name="uniswap-v4/pos_descriptor",
-            address=self.position_descriptor_address,
-        )
-        self.pool_manager = _load_contract(
-            self.w3,
-            abi_name="uniswap-v4/poolmanager",
-            address=self.pool_manager_address,
-        )
-        self.position_manager = _load_contract(
-            self.w3,
-            abi_name="uniswap-v4/pos_manager",
-            address=self.position_manager_address,
-        )
+        try:
+            self.router_address = _str_to_addr(router_address)
+            self.router = _load_contract(
+                self.w3, abi_name="uniswap-v4/router", address=self.router_address
+            )
+        except NameNotFound as e:
+            logger.error(f"Error occurred while loading router contract: {e}")
+
+        try:
+            self.stateview_address = _str_to_addr(stateview_address)
+            self.stateview = _load_contract(
+                self.w3, abi_name="uniswap-v4/stateview", address=self.stateview_address
+            )
+        except NameNotFound as e:
+            logger.error(f"Error occurred while loading stateview contract: {e}")
+
+        try:
+            self.permit2_address = _str_to_addr(permit2_address)
+            self.permit2 = _load_contract(
+                self.w3, abi_name="uniswap-v4/permit2", address=self.permit2_address
+            )
+        except NameNotFound as e:
+            logger.error(f"Error occurred while loading permit2 contract: {e}")
+
+        try:
+            self.position_descriptor_address = _str_to_addr(position_descriptor_address)
+            self.position_descriptor = _load_contract(
+                self.w3,
+                abi_name="uniswap-v4/pos_descriptor",
+                address=self.position_descriptor_address,
+            )
+        except NameNotFound as e:
+            logger.error(
+                f"Error occurred while loading position descriptor contract: {e}"
+            )
+
+        try:
+            self.pool_manager_address = _str_to_addr(pool_manager_address)
+            self.pool_manager = _load_contract(
+                self.w3,
+                abi_name="uniswap-v4/poolmanager",
+                address=self.pool_manager_address,
+            )
+        except NameNotFound as e:
+            logger.error(f"Error occurred while loading pool manager contract: {e}")
+
+        try:
+            self.position_manager_address = _str_to_addr(position_manager_address)
+            self.position_manager = _load_contract(
+                self.w3,
+                abi_name="uniswap-v4/pos_manager",
+                address=self.position_manager_address,
+            )
+        except NameNotFound as e:
+            logger.error(f"Error occurred while loading position manager contract: {e}")
 
     # Approvals
     def approve(

@@ -34,6 +34,7 @@ _netid_to_name = {
     143: "monad",
     250: "fantom",
     480: "worldchain",
+    1301: "unichain_sepolia",
     1868: "soneium",
     4326: "megaeth",
     8453: "base",
@@ -107,6 +108,7 @@ _tick_bitmap_range = {
 # Source:
 # https://developers.uniswap.org/docs/protocols/v4/deployments
 _router_contract_addresses_v4 = {
+    # Production addresses
     "mainnet": "0x66a9893cc07d91d95644aedd05d03f95e1dba8af",
     "unichain": "0xef740bf23acae26f6492b10de645d6b98dc8eaf3",
     "optimism": "0x851116d9223fabed8e56c0e6b8ad0c31d98b3507",
@@ -123,9 +125,13 @@ _router_contract_addresses_v4 = {
     "celo": "0xcb695bc5d3aa22cad1e6df07801b061a05a0233a",
     "monad": "0x0d97dc33264bfc1c226207428a79b26757fb9dc3",
     "megaeth": "0x48fd03529d2a91be835f07f6b72f53b4aad6093d",
+    # Testnet addresses
+    "unichain_sepolia": "0xf70536b3bcc1bd1a972dc186a2cf84cc6da6be5d",
+    "sepolia": "0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b",
 }
 
 _quoter_contract_addresses_v4 = {
+    # Production addresses
     "mainnet": "0x52f0e24d1c21c8a0cb1e5a5dd6198556bd9e1203",
     "unichain": "0x333e3c607b141b18ff6de9f258db6e77fe7491e0",
     "optimism": "0x1f3131a13296fb91c90870043742c3cdbff1a8d7",
@@ -142,9 +148,13 @@ _quoter_contract_addresses_v4 = {
     "celo": "0x28566da1093609182dff2cb2a91cfd72e61d66cd",
     "monad": "0xa222dd357a9076d1091ed6aa2e16c9742dd26891",
     "megaeth": "0x94bdc671f0c35f44a1daa53143fd1f868d1623b9",
+    # Testnet addresses
+    "unichain_sepolia": "0x56dcd40a3f2d466f48e7f48bdbe5cc9b92ae4472",
+    "sepolia": "0x61b3f2011a92d183c7dbadbda940a7555ccf9227",
 }
 
 _stateview_contract_addresses_v4 = {
+    # Production addresses
     "mainnet": "0x7ffe42c4a5deea5b0fec41c94c136cf115597227",
     "unichain": "0x86e8631a016f9068c3f085faf484ee3f5fdee8f2",
     "optimism": "0xc18a3169788f4f75a170290584eca6395c75ecdb",
@@ -161,9 +171,13 @@ _stateview_contract_addresses_v4 = {
     "celo": "0xbc21f8720babf4b20d195ee5c6e99c52b76f2bfb",
     "monad": "0x77395f3b2e73ae90843717371294fa97cc419d64",
     "megaeth": "0x726f84e1dfb8d375a365e0808282f40d52d3e4e8",
+    # Testnet addresses
+    "unichain_sepolia": "0xc199f1072a74d4e905aba1a84d9a45e2546b6222",
+    "sepolia": "0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c",
 }
 
 _permit2_contract_addresses_v4 = {
+    # Production addresses
     "mainnet": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "unichain": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "optimism": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
@@ -180,9 +194,13 @@ _permit2_contract_addresses_v4 = {
     "celo": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "monad": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "megaeth": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    # Testnet addresses
+    "unichain_sepolia": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    "sepolia": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
 }
 
 _poolmanager_contract_addresses_v4 = {
+    # Production addresses
     "mainnet": "0x000000000004444c5dc75cB358380D2e3dE08A90",
     "unichain": "0x1f98400000000000000000000000000000000004",
     "optimism": "0x9a13f98cb987694c9f086b1f5eb990eea8264ec3",
@@ -199,9 +217,13 @@ _poolmanager_contract_addresses_v4 = {
     "celo": "0x288dc841A52FCA2707c6947B3A777c5E56cd87BC",
     "monad": "0x188d586ddcf52439676ca21a244753fa19f9ea8e",
     "megaeth": "0xacb7e78fa05d562e0a5d3089ec896d57d057d38e",
+    # Testnet addresses
+    "unichain_sepolia": "0x00b036b58a818b1bc34d502d3fe730db729e62ac",
+    "sepolia": "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
 }
 
 _position_descriptor_contract_addresses_v4 = {
+    # Production addresses
     "mainnet": "0xd1428ba554f4c8450b763a0b2040a4935c63f06c",
     "unichain": "0x9fb28449a191cd8c03a1b7abfb0f5996ecf7f722",
     "optimism": "0xedd81496169c46df161b8513a52ffecaaaa66743",
@@ -218,9 +240,13 @@ _position_descriptor_contract_addresses_v4 = {
     "celo": "0x5727E22b25fEEe05E8dFa83C752B86F19D102D8A",
     "monad": "0x5770d2914355a6d0a39a70aeea9bcce55df4201b",
     "megaeth": "0xa9fdbb9d3dce2e1cfb91c4af1b8cf4ed62c0041a",
+    # Testnet addresses
+    "unichain_sepolia": "",
+    "sepolia": "",
 }
 
 _position_manager_contract_addresses_v4 = {
+    # Production addresses
     "mainnet": "0xbd216513d74c8cf14cf4747e6aaa6420ff64ee9e",
     "unichain": "0x4529a01c7a0410167c5740c487a8de60232617bf",
     "optimism": "0x3c3ea4b57a46241e54610e5f022e5c45859a1017",
@@ -237,6 +263,9 @@ _position_manager_contract_addresses_v4 = {
     "celo": "0xf7965f3981e4d5bc383bfbcb61501763e9068ca9",
     "monad": "0x5b7ec4a94ff9bedb700fb82ab09d5846972f4016",
     "megaeth": "0x9ae0921e981aaa7308f176f8d4f9129b9247c89d",
+    # Testnet addresses
+    "unichain_sepolia": "0xf969aee60879c54baaed9f3ed26147db216fd664",
+    "sepolia": "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4",
 }
 
 # Source: https://github.com/Uniswap/universal-router/blob/main/contracts/libraries/Commands.sol
