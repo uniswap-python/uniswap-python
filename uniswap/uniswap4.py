@@ -146,6 +146,11 @@ class Uniswap4:
             self.net_name
         ]
 
+        """
+        NOTE: Following exception handling relates to the testnets only, as production contracts are always deployed.
+        Specifically, PositionDescriptor is not deployed on Sepolia and Unichain Sepolia yet, so loading it will raise an error.
+        However, this is a periphery helper which is not critical for core functionality.
+        """
         try:
             self.quoter_address = _str_to_addr(quoter_address)
             self.quoter = _load_contract(
