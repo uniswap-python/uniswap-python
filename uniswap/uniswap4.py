@@ -2192,6 +2192,7 @@ class Uniswap4:
                 qty,
                 qtycap,
                 route,
+                min_hop_price_x_36=[],
                 custom_nonce=custom_nonce,
             )
         return result
@@ -2240,6 +2241,7 @@ class Uniswap4:
                 qty,
                 qtycap,
                 route,
+                min_hop_price_x_36=[],
                 custom_nonce=custom_nonce,
             )
         return result
