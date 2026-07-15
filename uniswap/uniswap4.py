@@ -1817,7 +1817,7 @@ class Uniswap4:
         qty: int,
         qtycap: int,
         route: List[PoolKey],
-        min_hop_price_x_36: List[int] = [],
+        min_hop_price_x_36: Optional[List[int]] = [],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
@@ -2007,7 +2007,7 @@ class Uniswap4:
         qty: int,
         qtycap: int,
         route: List[PoolKey],
-        min_hop_price_x_36: List[int] = [],
+        min_hop_price_x_36: Optional[List[int]] = [],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
