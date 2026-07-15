@@ -1729,6 +1729,7 @@ class Uniswap4:
         tick_spacing: int,
         hooks: str,
         hook_data: bytes = b"",
+        min_hop_price_x_36: int = 0,
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
@@ -1740,6 +1741,7 @@ class Uniswap4:
         :param tick_spacing: The tick spacing for the swap.
         :param hooks: The hooks for the swap.
         :param hook_data: The hook data for the swap.
+        :param min_hop_price_x_36: Optional. The minimum price for each hop in the route, expressed as an integer.
         :param custom_nonce: Optional. The nonce to use for the transaction.
 
         Swaps an exact amount of `input_token` for a minimum amount of `output_token`,
@@ -1782,6 +1784,7 @@ class Uniswap4:
                     zero_for_one,
                     qty,
                     min_tokens_bought,
+                    min_hop_price_x_36,
                     hook_data,
                 )
             ],
@@ -1907,6 +1910,7 @@ class Uniswap4:
         tick_spacing: int,
         hooks: str,
         hook_data: bytes = b"",
+        min_hop_price_x_36: int = 0,
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
@@ -1918,6 +1922,7 @@ class Uniswap4:
         :param tick_spacing: The tick spacing for the swap.
         :param hooks: The hooks for the swap.
         :param hook_data: The hook data for the swap.
+        :param min_hop_price_x_36: Optional. The minimum price for each hop in the route, expressed as an integer.
         :param custom_nonce: Optional. The nonce for the transaction.
         """
 
@@ -1964,6 +1969,7 @@ class Uniswap4:
                     zero_for_one,
                     qty,
                     amount_in_max,
+                    min_hop_price_x_36,
                     hook_data,
                 )
             ],
@@ -2184,6 +2190,7 @@ class Uniswap4:
                 swap_pool_key.tick_spacing,
                 swap_pool_key.hooks,
                 hook_data,  # type: ignore[arg-type]
+                min_hop_price_x_36=0,
                 custom_nonce=custom_nonce,
             )
         else:
@@ -2233,6 +2240,7 @@ class Uniswap4:
                 swap_pool_key.tick_spacing,
                 swap_pool_key.hooks,
                 hook_data,  # type: ignore[arg-type]
+                min_hop_price_x_36=0,
                 custom_nonce=custom_nonce,
             )
         else:

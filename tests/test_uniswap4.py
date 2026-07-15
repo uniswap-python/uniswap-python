@@ -579,6 +579,7 @@ class TestUniswap4(object):
             tick_spacing,
             hooks,
             hook_data,
+            0,  # min_hop_price_x_36
             custom_nonce,
         )
         assert tx
@@ -774,6 +775,7 @@ class TestUniswap4(object):
             tick_spacing,
             hooks,
             hook_data,
+            0,  # min_hop_price_x_36
             custom_nonce,
         )
         assert tx
