@@ -1817,6 +1817,7 @@ class Uniswap4:
         qty: int,
         qtycap: int,
         route: List[PoolKey],
+        min_hop_price_x_36: List[int] = [],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
@@ -1824,6 +1825,7 @@ class Uniswap4:
         :param qty: The amount of `input_token` to be sold.
         :param qtycap: The minimum amount of `output_token` that must be bought for the swap to succeed.
         :param route: The list of PoolKeys representing the path of the swap. The first element should be the pool containing the `input_token` and the last element should be the pool containing the `output_token`.
+        :param min_hop_price_x_36: Optional. A list of minimum prices for each hop in the route, expressed as a list of integers.
         :param custom_nonce: Optional. The nonce to use for the transaction.
 
         Swaps an exact amount of `input_token` for a minimum amount of `output_token` through a specified multi-hop route,
@@ -1861,6 +1863,7 @@ class Uniswap4:
                 (
                     input_token,
                     [astuple(path_key) for path_key in encoded_route],
+                    min_hop_price_x_36,
                     qty,
                     min_tokens_bought,
                 )
@@ -2004,6 +2007,7 @@ class Uniswap4:
         qty: int,
         qtycap: int,
         route: List[PoolKey],
+        min_hop_price_x_36: List[int] = [],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
@@ -2011,6 +2015,7 @@ class Uniswap4:
         :param qty: The amount of `output_token` to be bought.
         :param qtycap: The maximum amount of `input_token` that can be sold for the trade to proceed.
         :param route: The route for the swap in reverse order. The first element should be the pool containing `output_token` and the last element should be the pool containing `input_token`.
+        :param min_hop_price_x_36: Optional. The minimum price for each hop in the route, expressed as a list of integers.
         :param custom_nonce: Optional. The nonce for the transaction.
 
         Swaps a maximum amount of `input_token` for an exact amount of `output_token` through a specified multi-hop route,
@@ -2049,6 +2054,7 @@ class Uniswap4:
                 (
                     output_token,
                     [astuple(path_key) for path_key in encoded_route],
+                    min_hop_price_x_36,
                     qty,
                     amount_in_max,
                 )

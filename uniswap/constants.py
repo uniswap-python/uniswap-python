@@ -326,11 +326,11 @@ universal_router_commands_abis = {
         "address",
         "uint256",
     ],
-    # "PAY_PORTION_FULL_PRECISION": [
-    #     "address",
-    #     "address",
-    #     "uint256",
-    # ],
+    "PAY_PORTION_FULL_PRECISION": [
+        "address",
+        "address",
+        "uint256",
+    ],
     "V2_SWAP_EXACT_IN": [
         "address",
         "uint256",
@@ -472,13 +472,13 @@ v4_actions_abis = {
         "((address,address,uint24,int24,address),bool,uint128,uint128,bytes)",
     ],
     "SWAP_EXACT_IN": [
-        "(address,(address,uint24,int24,address,bytes)[],uint128,uint128)",
+        "(address,(address,uint24,int24,address,bytes)[],int256[],uint128,uint128)",
     ],
     "SWAP_EXACT_OUT_SINGLE": [
         "((address,address,uint24,int24,address),bool,uint128,uint128,bytes)",
     ],
     "SWAP_EXACT_OUT": [
-        "(address,(address,uint24,int24,address,bytes)[],uint128,uint128)",
+        "(address,(address,uint24,int24,address,bytes)[],int256[],uint128,uint128)",
     ],
     "SETTLE": [
         "address",
