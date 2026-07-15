@@ -32,17 +32,18 @@ _netid_to_name = {
     130: "unichain",
     137: "polygon",
     143: "monad",
+    196: "xlayer",
     250: "fantom",
     480: "worldchain",
-    1301: "unichain_sepolia",
     1868: "soneium",
+    4217: "tempo",
     4326: "megaeth",
+    4663: "robinhood",
     8453: "base",
     42161: "arbitrum",
     42220: "celo",
     43114: "avalanche",
     57073: "ink",
-    81457: "blast",
     421611: "arbitrum_testnet",
     7777777: "zora",
     1666600000: "harmony_mainnet",
@@ -109,25 +110,24 @@ _tick_bitmap_range = {
 # https://developers.uniswap.org/docs/protocols/v4/deployments
 _router_contract_addresses_v4 = {
     # Production addresses
-    "mainnet": "0x66a9893cc07d91d95644aedd05d03f95e1dba8af",
-    "unichain": "0xef740bf23acae26f6492b10de645d6b98dc8eaf3",
-    "optimism": "0x851116d9223fabed8e56c0e6b8ad0c31d98b3507",
-    "base": "0x6ff5693b99212da76ad316178a184ab56d299b43",
-    "arbitrum": "0xa51afafe0263b40edaef0df8781ea9aa03e381a3",
-    "polygon": "0x1095692a6237d83c6a72f3f5efedb9a670c49223",
-    "blast": "0xeabbcb3e8e415306207ef514f660a3f820025be3",
-    "zora": "0x3315ef7ca28db74abadc6c44570efdf06b04b020",
-    "worldchain": "0x8ac7bee993bb44dab564ea4bc9ea67bf9eb5e743",
+    "mainnet": "0x4c82d1fbfe28c977cbb58d8c7ff8fcf9f70a2cca",
+    "unichain": "0xfdf682f51fe81aa4898f0ae2163d8a55c127fbc7",
+    "optimism": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
+    "base": "0xfdf682f51fe81aa4898f0ae2163d8a55c127fbc7",
+    "arbitrum": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
+    "polygon": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
+    "zora": "0xfdf682f51fe81aa4898f0ae2163d8a55c127fbc7",
+    "worldchain": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
     "ink": "0x112908dac86e20e7241b0927479ea3bf935d1fa0",
-    "soneium": "0x4cded7edf52c8aa5259a54ec6a3ce7c6d2a455df",
-    "avalanche": "0x94b75331ae8d42c1b61065089b7d48fe14aa73b7",
-    "binance": "0x1906c1d672b88cd1b9ac7593301ca990f94eae07",
-    "celo": "0xcb695bc5d3aa22cad1e6df07801b061a05a0233a",
-    "monad": "0x0d97dc33264bfc1c226207428a79b26757fb9dc3",
-    "megaeth": "0x48fd03529d2a91be835f07f6b72f53b4aad6093d",
-    # Testnet addresses
-    "unichain_sepolia": "0xf70536b3bcc1bd1a972dc186a2cf84cc6da6be5d",
-    "sepolia": "0x3A9D48AB9751398BbFa63ad67599Bb04e4BdF98b",
+    "soneium": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
+    "avalanche": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
+    "binance": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
+    "celo": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
+    "monad": "0xfdf682f51fe81aa4898f0ae2163d8a55c127fbc7",
+    "megaeth": "0x47837eb80db5908eabba9105626d9b348bea7b02",
+    "xlayer": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
+    "tempo": "0xa2dc7d0266f0cc50b3eeaf36c9bfcecff1beea91",
+    "robinhood": "0x8876789976decbfcbbbe364623c63652db8c0904",
 }
 
 _quoter_contract_addresses_v4 = {
@@ -138,7 +138,6 @@ _quoter_contract_addresses_v4 = {
     "base": "0x0d5e0f971ed27fbff6c2837bf31316121532048d",
     "arbitrum": "0x3972c00f7ed4885e145823eb7c655375d275a1c5",
     "polygon": "0xb3d5c3dfc3a7aebff71895a7191796bffc2c81b9",
-    "blast": "0x6f71cdcb0d119ff72c6eb501abceb576fbf62bcf",
     "zora": "0x5edaccc0660e0a2c44b06e07ce8b915e625dc2c6",
     "worldchain": "0x55d235b3ff2daf7c3ede0defc9521f1d6fe6c5c0",
     "ink": "0x3972c00f7ed4885e145823eb7c655375d275a1c5",
@@ -148,9 +147,9 @@ _quoter_contract_addresses_v4 = {
     "celo": "0x28566da1093609182dff2cb2a91cfd72e61d66cd",
     "monad": "0xa222dd357a9076d1091ed6aa2e16c9742dd26891",
     "megaeth": "0x94bdc671f0c35f44a1daa53143fd1f868d1623b9",
-    # Testnet addresses
-    "unichain_sepolia": "0x56dcd40a3f2d466f48e7f48bdbe5cc9b92ae4472",
-    "sepolia": "0x61b3f2011a92d183c7dbadbda940a7555ccf9227",
+    "xlayer": "0x8928074ca1b241d8ec02815881c1af11e8bc5219",
+    "tempo": "0x20e6487c371a2086f841ef453f85378223df4f4e",
+    "robinhood": "0x8dc178efb8111bb0973dd9d722ebeff267c98f94",
 }
 
 _stateview_contract_addresses_v4 = {
@@ -161,7 +160,6 @@ _stateview_contract_addresses_v4 = {
     "base": "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71",
     "arbitrum": "0x76fd297e2d437cd7f76d50f01afe6160f86e9990",
     "polygon": "0x5ea1bd7974c8a611cbab0bdcafcb1d9cc9b3ba5a",
-    "blast": "0x12a88ae16f46dce4e8b15368008ab3380885df30",
     "zora": "0x385785af07d63b50d0a0ea57c4ff89d06adf7328",
     "worldchain": "0x51d394718bc09297262e368c1a481217fdeb71eb",
     "ink": "0x76fd297e2d437cd7f76d50f01afe6160f86e9990",
@@ -171,9 +169,9 @@ _stateview_contract_addresses_v4 = {
     "celo": "0xbc21f8720babf4b20d195ee5c6e99c52b76f2bfb",
     "monad": "0x77395f3b2e73ae90843717371294fa97cc419d64",
     "megaeth": "0x726f84e1dfb8d375a365e0808282f40d52d3e4e8",
-    # Testnet addresses
-    "unichain_sepolia": "0xc199f1072a74d4e905aba1a84d9a45e2546b6222",
-    "sepolia": "0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c",
+    "xlayer": "0x76fd297e2d437cd7f76d50f01afe6160f86e9990",
+    "tempo": "0x21b954fba3f5ddebe77ef2d47a3100c066908b2a",
+    "robinhood": "0xf3334192d15450cdd385c8b70e03f9a6bd9e673b",
 }
 
 _permit2_contract_addresses_v4 = {
@@ -184,7 +182,6 @@ _permit2_contract_addresses_v4 = {
     "base": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "arbitrum": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "polygon": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
-    "blast": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "zora": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "worldchain": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "ink": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
@@ -194,9 +191,9 @@ _permit2_contract_addresses_v4 = {
     "celo": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "monad": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "megaeth": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
-    # Testnet addresses
-    "unichain_sepolia": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
-    "sepolia": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    "xlayer": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    "tempo": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    "robinhood": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
 }
 
 _poolmanager_contract_addresses_v4 = {
@@ -207,7 +204,6 @@ _poolmanager_contract_addresses_v4 = {
     "base": "0x498581ff718922c3f8e6a244956af099b2652b2b",
     "arbitrum": "0x360e68faccca8ca495c1b759fd9eee466db9fb32",
     "polygon": "0x67366782805870060151383f4bbff9dab53e5cd6",
-    "blast": "0x1631559198a9e474033433b2958dabc135ab6446",
     "zora": "0x0575338e4c17006ae181b47900a84404247ca30f",
     "worldchain": "0xb1860d529182ac3bc1f51fa2abd56662b7d13f33",
     "ink": "0x360e68faccca8ca495c1b759fd9eee466db9fb32",
@@ -217,9 +213,9 @@ _poolmanager_contract_addresses_v4 = {
     "celo": "0x288dc841A52FCA2707c6947B3A777c5E56cd87BC",
     "monad": "0x188d586ddcf52439676ca21a244753fa19f9ea8e",
     "megaeth": "0xacb7e78fa05d562e0a5d3089ec896d57d057d38e",
-    # Testnet addresses
-    "unichain_sepolia": "0x00b036b58a818b1bc34d502d3fe730db729e62ac",
-    "sepolia": "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543",
+    "xlayer": "0x360e68faccca8ca495c1b759fd9eee466db9fb32",
+    "tempo": "0x33620f62c5b9b2086dd6b62f4a297a9f30347029",
+    "robinhood": "0x8366a39cc670b4001a1121b8f6a443a643e40951",
 }
 
 _position_descriptor_contract_addresses_v4 = {
@@ -230,7 +226,6 @@ _position_descriptor_contract_addresses_v4 = {
     "base": "0x25d093633990dc94bedeed76c8f3cdaa75f3e7d5",
     "arbitrum": "0xe2023f3fa515cf070e07fd9d51c1d236e07843f4",
     "polygon": "0x0892771f0c1b78ad6013d6e5536007e1c16e6794",
-    "blast": "0x0747ad2b2e1f5761b1dcf0d8672bd1ffc3676f97",
     "zora": "0x7d64630bbb4993b5578dbd65e400961c9e68d55a",
     "worldchain": "0x7da419153bd420b689f312363756d76836aeace4",
     "ink": "0x42e3ccd9b7f67b5b2ee0c12074b84ccf2a8e7f36",
@@ -240,9 +235,9 @@ _position_descriptor_contract_addresses_v4 = {
     "celo": "0x5727E22b25fEEe05E8dFa83C752B86F19D102D8A",
     "monad": "0x5770d2914355a6d0a39a70aeea9bcce55df4201b",
     "megaeth": "0xa9fdbb9d3dce2e1cfb91c4af1b8cf4ed62c0041a",
-    # Testnet addresses
-    "unichain_sepolia": "",
-    "sepolia": "",
+    "xlayer": "0x9e9fbbef0e1bd752e83de5acff3d0c936a9e5a4b",
+    "tempo": "0xc73ed2cba8c347593d1d9120aa0be8ff88c6ff77",
+    "robinhood": "0x9639443158e8c5efa35bd45287bf2effd3d8dc06",
 }
 
 _position_manager_contract_addresses_v4 = {
@@ -253,7 +248,6 @@ _position_manager_contract_addresses_v4 = {
     "base": "0x7c5f5a4bbd8fd63184577525326123b519429bdc",
     "arbitrum": "0xd88f38f930b7952f2db2432cb002e7abbf3dd869",
     "polygon": "0x1ec2ebf4f37e7363fdfe3551602425af0b3ceef9",
-    "blast": "0x4ad2f4cca2682cbb5b950d660dd458a1d3f1baad",
     "zora": "0xf66c7b99e2040f0d9b326b3b7c152e9663543d63",
     "worldchain": "0xc585e0f504613b5fbf874f21af14c65260fb41fa",
     "ink": "0x1b35d13a2e2528f192637f14b05f0dc0e7deb566",
@@ -263,9 +257,9 @@ _position_manager_contract_addresses_v4 = {
     "celo": "0xf7965f3981e4d5bc383bfbcb61501763e9068ca9",
     "monad": "0x5b7ec4a94ff9bedb700fb82ab09d5846972f4016",
     "megaeth": "0x9ae0921e981aaa7308f176f8d4f9129b9247c89d",
-    # Testnet addresses
-    "unichain_sepolia": "0xf969aee60879c54baaed9f3ed26147db216fd664",
-    "sepolia": "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4",
+    "xlayer": "0xcf1eafc6928dc385a342e7c6491d371d2871458b",
+    "tempo": "0x3fc79444f8eacc1894775493ff3fa41f1e35ce11",
+    "robinhood": "0x58daec3116aae6d93017baaea7749052e8a04fa7",
 }
 
 # Source: https://github.com/Uniswap/universal-router/blob/main/contracts/libraries/Commands.sol
@@ -277,7 +271,7 @@ universal_router_commands = {
     "SWEEP": 0x04,
     "TRANSFER": 0x05,
     "PAY_PORTION": 0x06,
-    "PAY_PORTION_FULL_PRECISION": 0x07,
+    # "PAY_PORTION_FULL_PRECISION": 0x07, NOTE: Deprecated
     "V2_SWAP_EXACT_IN": 0x08,
     "V2_SWAP_EXACT_OUT": 0x09,
     "PERMIT2_PERMIT": 0x0A,
@@ -332,11 +326,11 @@ universal_router_commands_abis = {
         "address",
         "uint256",
     ],
-    "PAY_PORTION_FULL_PRECISION": [
-        "address",
-        "address",
-        "uint256",
-    ],
+    # "PAY_PORTION_FULL_PRECISION": [
+    #     "address",
+    #     "address",
+    #     "uint256",
+    # ],
     "V2_SWAP_EXACT_IN": [
         "address",
         "uint256",
