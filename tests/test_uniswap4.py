@@ -638,7 +638,9 @@ class TestUniswap4(object):
     ):
         qtycap = client.get_quote_exact_input(token0, qty, route)
 
-        tx = client.token_to_token_swap_input(token0, qty, qtycap, route, custom_nonce)
+        tx = client.token_to_token_swap_input(
+            token0, qty, qtycap, route, min_hop_price_x_36=[], custom_nonce=custom_nonce
+        )
         assert tx
 
         tx_receipt = client.w3.eth.wait_for_transaction_receipt(
@@ -831,7 +833,9 @@ class TestUniswap4(object):
         custom_nonce: Optional[Nonce],
     ):
         qtycap = client.get_quote_exact_output(token0, qty, route)
-        tx = client.token_to_token_swap_output(token0, qty, qtycap, route, custom_nonce)
+        tx = client.token_to_token_swap_output(
+            token0, qty, qtycap, route, min_hop_price_x_36=[], custom_nonce=custom_nonce
+        )
         assert tx
 
         tx_receipt = client.w3.eth.wait_for_transaction_receipt(
