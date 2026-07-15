@@ -579,6 +579,7 @@ class TestUniswap4(object):
             tick_spacing,
             hooks,
             hook_data,
+            0,  # min_hop_price_x_36
             custom_nonce,
         )
         assert tx
@@ -638,7 +639,9 @@ class TestUniswap4(object):
     ):
         qtycap = client.get_quote_exact_input(token0, qty, route)
 
-        tx = client.token_to_token_swap_input(token0, qty, qtycap, route, custom_nonce)
+        tx = client.token_to_token_swap_input(
+            token0, qty, qtycap, route, min_hop_price_x_36=[], custom_nonce=custom_nonce
+        )
         assert tx
 
         tx_receipt = client.w3.eth.wait_for_transaction_receipt(
@@ -772,6 +775,7 @@ class TestUniswap4(object):
             tick_spacing,
             hooks,
             hook_data,
+            0,  # min_hop_price_x_36
             custom_nonce,
         )
         assert tx
@@ -831,7 +835,9 @@ class TestUniswap4(object):
         custom_nonce: Optional[Nonce],
     ):
         qtycap = client.get_quote_exact_output(token0, qty, route)
-        tx = client.token_to_token_swap_output(token0, qty, qtycap, route, custom_nonce)
+        tx = client.token_to_token_swap_output(
+            token0, qty, qtycap, route, min_hop_price_x_36=[], custom_nonce=custom_nonce
+        )
         assert tx
 
         tx_receipt = client.w3.eth.wait_for_transaction_receipt(
@@ -1164,11 +1170,8 @@ class TestUniswap4(object):
         )
 
     # ------ V4Pools tests ----------------------------------------------------------------
-    @pytest.mark.parametrize(
-        "first_block",
-        [
-            21688329,
-        ],
+    @pytest.mark.skip(
+        reason="Test node issues with fetching poolkey data, skipping for now"
     )
     def test_fetch_poolkey_data(
         self,
@@ -1702,6 +1705,7 @@ class TestUniswap4(object):
                         zero_for_one,
                         qty,
                         qtycap,
+                        0,  # min_hop_price_x_36
                         b"",
                     )
                 ],
@@ -1781,6 +1785,7 @@ class TestUniswap4(object):
                         zero_for_one,
                         qty,
                         qtycap,
+                        0,  # min_hop_price_x_36
                         b"",
                     )
                 ],
