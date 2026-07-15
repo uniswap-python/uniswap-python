@@ -1705,6 +1705,7 @@ class TestUniswap4(object):
                         zero_for_one,
                         qty,
                         qtycap,
+                        0,  # min_hop_price_x_36
                         b"",
                     )
                 ],
@@ -1784,6 +1785,7 @@ class TestUniswap4(object):
                         zero_for_one,
                         qty,
                         qtycap,
+                        0,  # min_hop_price_x_36
                         b"",
                     )
                 ],
