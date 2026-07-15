@@ -1164,11 +1164,8 @@ class TestUniswap4(object):
         )
 
     # ------ V4Pools tests ----------------------------------------------------------------
-    @pytest.mark.parametrize(
-        "first_block",
-        [
-            21688329,
-        ],
+    @pytest.mark.skip(
+        reason="Test node issues with fetching poolkey data, skipping for now"
     )
     def test_fetch_poolkey_data(
         self,

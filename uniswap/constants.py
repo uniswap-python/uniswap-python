@@ -271,7 +271,7 @@ universal_router_commands = {
     "SWEEP": 0x04,
     "TRANSFER": 0x05,
     "PAY_PORTION": 0x06,
-    # "PAY_PORTION_FULL_PRECISION": 0x07, NOTE: Deprecated
+    "PAY_PORTION_FULL_PRECISION": 0x07,  # Deprecated
     "V2_SWAP_EXACT_IN": 0x08,
     "V2_SWAP_EXACT_OUT": 0x09,
     "PERMIT2_PERMIT": 0x0A,
