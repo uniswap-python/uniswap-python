@@ -1,0 +1,996 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "expected",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "actual",
+        "type": "uint256"
+      }
+    ],
+    "name": "CursorBlockMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CursorContextMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CursorStateMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InputLengthMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidCursor",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "maxReads",
+        "type": "uint32"
+      }
+    ],
+    "name": "InvalidScanBudget",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "int24",
+        "name": "tickSpacing",
+        "type": "int24"
+      }
+    ],
+    "name": "InvalidTickSpacing",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "PoolId",
+        "name": "poolId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "LiquidityInvariantFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "firstSlot",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "lastSlot",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      }
+    ],
+    "name": "ManagerBatchReadFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "PoolId",
+        "name": "poolId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "PoolNotInitialized",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "PoolId",
+        "name": "poolId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "int256",
+        "name": "tick",
+        "type": "int256"
+      }
+    ],
+    "name": "TickInvariantFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
+      }
+    ],
+    "name": "UnsupportedCursorVersion",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IPoolManager",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "Currency",
+            "name": "currency0",
+            "type": "address"
+          },
+          {
+            "internalType": "Currency",
+            "name": "currency1",
+            "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "fee",
+            "type": "uint24"
+          },
+          {
+            "internalType": "int24",
+            "name": "tickSpacing",
+            "type": "int24"
+          },
+          {
+            "internalType": "contract IHooks",
+            "name": "hooks",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct PoolKey",
+        "name": "key",
+        "type": "tuple"
+      },
+      {
+        "internalType": "address",
+        "name": "statsProvider",
+        "type": "address"
+      }
+    ],
+    "name": "getPoolTVL",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "coreAmount0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "coreAmount1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtPriceX96",
+            "type": "uint160"
+          },
+          {
+            "internalType": "int24",
+            "name": "tick",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint128",
+            "name": "activeLiquidity",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockNumber",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "statsProvider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint16",
+            "name": "hookPermissions",
+            "type": "uint16"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasCustomAccounting",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum IReservesLens.HookStatsStatus",
+            "name": "statsStatus",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IReservesLens.PoolTVL",
+        "name": "result",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IPoolManager",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "Currency",
+            "name": "currency0",
+            "type": "address"
+          },
+          {
+            "internalType": "Currency",
+            "name": "currency1",
+            "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "fee",
+            "type": "uint24"
+          },
+          {
+            "internalType": "int24",
+            "name": "tickSpacing",
+            "type": "int24"
+          },
+          {
+            "internalType": "contract IHooks",
+            "name": "hooks",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct PoolKey",
+        "name": "key",
+        "type": "tuple"
+      }
+    ],
+    "name": "getPoolTVL",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "coreAmount0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "coreAmount1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtPriceX96",
+            "type": "uint160"
+          },
+          {
+            "internalType": "int24",
+            "name": "tick",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint128",
+            "name": "activeLiquidity",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockNumber",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "statsProvider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint16",
+            "name": "hookPermissions",
+            "type": "uint16"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasCustomAccounting",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum IReservesLens.HookStatsStatus",
+            "name": "statsStatus",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IReservesLens.PoolTVL",
+        "name": "result",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IPoolManager",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "Currency",
+            "name": "currency0",
+            "type": "address"
+          },
+          {
+            "internalType": "Currency",
+            "name": "currency1",
+            "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "fee",
+            "type": "uint24"
+          },
+          {
+            "internalType": "int24",
+            "name": "tickSpacing",
+            "type": "int24"
+          },
+          {
+            "internalType": "contract IHooks",
+            "name": "hooks",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct PoolKey[]",
+        "name": "keys",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "getPoolTVLBatch",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "coreAmount0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "coreAmount1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtPriceX96",
+            "type": "uint160"
+          },
+          {
+            "internalType": "int24",
+            "name": "tick",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint128",
+            "name": "activeLiquidity",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockNumber",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "statsProvider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint16",
+            "name": "hookPermissions",
+            "type": "uint16"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasCustomAccounting",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum IReservesLens.HookStatsStatus",
+            "name": "statsStatus",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IReservesLens.PoolTVL[]",
+        "name": "results",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IPoolManager",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "Currency",
+            "name": "currency0",
+            "type": "address"
+          },
+          {
+            "internalType": "Currency",
+            "name": "currency1",
+            "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "fee",
+            "type": "uint24"
+          },
+          {
+            "internalType": "int24",
+            "name": "tickSpacing",
+            "type": "int24"
+          },
+          {
+            "internalType": "contract IHooks",
+            "name": "hooks",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct PoolKey[]",
+        "name": "keys",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "statsProviders",
+        "type": "address[]"
+      }
+    ],
+    "name": "getPoolTVLBatch",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "coreAmount0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "coreAmount1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtPriceX96",
+            "type": "uint160"
+          },
+          {
+            "internalType": "int24",
+            "name": "tick",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint128",
+            "name": "activeLiquidity",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockNumber",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "statsProvider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint16",
+            "name": "hookPermissions",
+            "type": "uint16"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasCustomAccounting",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum IReservesLens.HookStatsStatus",
+            "name": "statsStatus",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IReservesLens.PoolTVL[]",
+        "name": "results",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IPoolManager",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "Currency",
+            "name": "currency0",
+            "type": "address"
+          },
+          {
+            "internalType": "Currency",
+            "name": "currency1",
+            "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "fee",
+            "type": "uint24"
+          },
+          {
+            "internalType": "int24",
+            "name": "tickSpacing",
+            "type": "int24"
+          },
+          {
+            "internalType": "contract IHooks",
+            "name": "hooks",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct PoolKey",
+        "name": "key",
+        "type": "tuple"
+      },
+      {
+        "internalType": "address",
+        "name": "statsProvider",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "cursor",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint32",
+        "name": "maxReads",
+        "type": "uint32"
+      }
+    ],
+    "name": "getPoolTVLPaged",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "coreAmount0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "coreAmount1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtPriceX96",
+            "type": "uint160"
+          },
+          {
+            "internalType": "int24",
+            "name": "tick",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint128",
+            "name": "activeLiquidity",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockNumber",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "statsProvider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint16",
+            "name": "hookPermissions",
+            "type": "uint16"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasCustomAccounting",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum IReservesLens.HookStatsStatus",
+            "name": "statsStatus",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IReservesLens.PoolTVL",
+        "name": "result",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "nextCursor",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bool",
+        "name": "done",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IPoolManager",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "Currency",
+            "name": "currency0",
+            "type": "address"
+          },
+          {
+            "internalType": "Currency",
+            "name": "currency1",
+            "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "fee",
+            "type": "uint24"
+          },
+          {
+            "internalType": "int24",
+            "name": "tickSpacing",
+            "type": "int24"
+          },
+          {
+            "internalType": "contract IHooks",
+            "name": "hooks",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct PoolKey",
+        "name": "key",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "cursor",
+        "type": "bytes"
+      }
+    ],
+    "name": "getPoolTVLPaged",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "coreAmount0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "coreAmount1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookReserves1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective0",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "hookEffective1",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint160",
+            "name": "sqrtPriceX96",
+            "type": "uint160"
+          },
+          {
+            "internalType": "int24",
+            "name": "tick",
+            "type": "int24"
+          },
+          {
+            "internalType": "uint128",
+            "name": "activeLiquidity",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "blockNumber",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "statsProvider",
+            "type": "address"
+          },
+          {
+            "internalType": "uint16",
+            "name": "hookPermissions",
+            "type": "uint16"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasCustomAccounting",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum IReservesLens.HookStatsStatus",
+            "name": "statsStatus",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IReservesLens.PoolTVL",
+        "name": "result",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "nextCursor",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bool",
+        "name": "done",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IPoolManager",
+        "name": "manager",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "Currency",
+            "name": "currency0",
+            "type": "address"
+          },
+          {
+            "internalType": "Currency",
+            "name": "currency1",
+            "type": "address"
+          },
+          {
+            "internalType": "uint24",
+            "name": "fee",
+            "type": "uint24"
+          },
+          {
+            "internalType": "int24",
+            "name": "tickSpacing",
+            "type": "int24"
+          },
+          {
+            "internalType": "contract IHooks",
+            "name": "hooks",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct PoolKey",
+        "name": "key",
+        "type": "tuple"
+      },
+      {
+        "internalType": "int16",
+        "name": "wordPos",
+        "type": "int16"
+      }
+    ],
+    "name": "getPopulatedTicksInWord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "int24",
+            "name": "tick",
+            "type": "int24"
+          },
+          {
+            "internalType": "int128",
+            "name": "liquidityNet",
+            "type": "int128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "liquidityGross",
+            "type": "uint128"
+          }
+        ],
+        "internalType": "struct IReservesLens.PopulatedTick[]",
+        "name": "populatedTicks",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
