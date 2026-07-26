@@ -587,7 +587,7 @@ class Uniswap4:
         return return_value
 
     def reserves_lens_get_pool_tvl_batch(
-        self, pool_keys: list[PoolKey], custom_provider: str = ""
+        self, pool_keys: list[PoolKey], custom_provider: list[str] | None = None
     ) -> list[dict]:
         """
         Retrieves the total value locked (TVL) of multiple pools in a batch.
@@ -597,8 +597,10 @@ class Uniswap4:
         :param custom_provider: The custom provider address, empty string for default.
         :returns: A list of dictionaries containing the reserves of each pool.
         """
-        if custom_provider == "":
-            reserves_list: list[dict] = self.reserves_lens.functions.getPoolTVLBatch(
+        if custom_provider is None:
+            custom_provider = [""] * len(pool_keys)
+
+            reserves_list: list = self.reserves_lens.functions.getPoolTVLBatch(
                 _addr_to_str(self.pool_manager_address),
                 [astuple(pool_key) for pool_key in pool_keys],
             ).call()
@@ -606,7 +608,7 @@ class Uniswap4:
             reserves_list = self.reserves_lens.functions.getPoolTVLBatch(
                 _addr_to_str(self.pool_manager_address),
                 [astuple(pool_key) for pool_key in pool_keys],
-                [custom_provider] * len(pool_keys),
+                custom_provider,
             ).call()
 
         return_value = []
