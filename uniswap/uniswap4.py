@@ -606,7 +606,7 @@ class Uniswap4:
             reserves_list = self.reserves_lens.functions.getPoolTVLBatch(
                 _addr_to_str(self.pool_manager_address),
                 [astuple(pool_key) for pool_key in pool_keys],
-                custom_provider,
+                [custom_provider] * len(pool_keys),
             ).call()
 
         return_value = []
