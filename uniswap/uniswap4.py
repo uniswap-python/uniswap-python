@@ -594,7 +594,7 @@ class Uniswap4:
         See https://github.com/Uniswap/v4-periphery/blob/main/src/interfaces/IReservesLens.sol for more details.
 
         :param pool_keys: A list of PoolKey objects representing the pools.
-        :param custom_provider: The custom provider address, empty string for default.
+        :param custom_provider: The custom provider addresses for each pool. If None, will use default for all pools.
         :returns: A list of dictionaries containing the reserves of each pool.
         """
         if custom_provider is None:
