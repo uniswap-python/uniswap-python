@@ -1,9 +1,17 @@
+# ruff: noqa: UP035
+# ruff: noqa: UP006
+# ruff: noqa: UP007
+# ruff: noqa: UP045
+# ruff: noqa: TRY002
+# ruff: noqa: B006
+# ruff: noqa: BLE001
+# ruff: noqa: SIM102
 import logging
 import os
 import time
 from dataclasses import astuple
 from decimal import Decimal
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import eth_abi.abi
 from eth_abi import encode
@@ -29,6 +37,7 @@ from .constants import (
     _position_descriptor_contract_addresses_v4,
     _position_manager_contract_addresses_v4,
     _quoter_contract_addresses_v4,
+    _reserves_lens_contract_addresses_v4,
     _router_contract_addresses_v4,
     _stateview_contract_addresses_v4,
     universal_router_commands,
@@ -71,7 +80,7 @@ class Uniswap4:
     def __init__(
         self,
         address: Union[str, AddressLike],
-        private_key: Optional[str],
+        private_key: Optional[str] = None,
         provider: Optional[str] = None,
         web3: Optional[Web3] = None,
         max_slippage: float = 0.01,
@@ -145,6 +154,7 @@ class Uniswap4:
         position_manager_address = _position_manager_contract_addresses_v4[
             self.net_name
         ]
+        reserves_lens_address = _reserves_lens_contract_addresses_v4[self.net_name]
 
         """
         NOTE: Following exception handling relates to the testnets only, as production contracts are always deployed.
@@ -215,6 +225,16 @@ class Uniswap4:
         except NameNotFound as e:
             logger.error(f"Error occurred while loading position manager contract: {e}")
 
+        try:
+            self.reserves_lens_address = _str_to_addr(reserves_lens_address)
+            self.reserves_lens = _load_contract(
+                self.w3,
+                abi_name="uniswap-v4/reserves_lens",
+                address=self.reserves_lens_address,
+            )
+        except NameNotFound as e:
+            logger.error(f"Error occurred while loading reserves lens contract: {e}")
+
     # Approvals
     def approve(
         self,
@@ -246,7 +266,7 @@ class Uniswap4:
             raise ValueError("ETH needs no approval.")
         # Give an exchange/router max approval for a token.
         max_approval = 2**100 - 1
-        expiration: int = int(10**12)
+        expiration: int = 10**12
         logger.info(f"Setting permit for {_addr_to_str(token)} at router contract...")
         function = self.permit2.functions.approve(
             _str_to_addr(token), self.router_address, max_approval, expiration
@@ -264,7 +284,7 @@ class Uniswap4:
 
             time.sleep(delay_interval)
             max_approval = 2**100 - 1
-            expiration = int(10**12)
+            expiration = 10**12
             logger.info(
                 f"Setting permit for {_addr_to_str(token)} at position manager contract..."
             )
@@ -533,6 +553,177 @@ class Uniswap4:
             "feeGrowthOutside0X128": tick_info[2],
             "feeGrowthOutside1X128": tick_info[3],
         }
+        return return_value
+
+    # ReservesLens methods
+    def reserves_lens_get_pool_tvl(
+        self, pool_key: PoolKey, custom_provider: str = ""
+    ) -> Dict:
+        """
+        Retrieves the total value locked (TVL) of a pool.
+        See https://github.com/Uniswap/v4-periphery/blob/main/src/interfaces/IReservesLens.sol for more details.
+
+        :param pool_key: The PoolKey object representing the pool.
+        :param custom_provider: The custom provider address, empty string for default.
+        :returns: A dictionary containing the reserves of the pool.
+        """
+        if custom_provider == "":
+            reserves: Dict = self.reserves_lens.functions.getPoolTVL(
+                _addr_to_str(self.pool_manager_address), astuple(pool_key)
+            ).call()
+        else:
+            reserves = self.reserves_lens.functions.getPoolTVL(
+                _addr_to_str(self.pool_manager_address),
+                astuple(pool_key),
+                custom_provider,
+            ).call()
+        return_value = {
+            "coreAmount0": reserves[0],
+            "coreAmount1": reserves[1],
+            "hookReserves0": reserves[2],
+            "hookReserves1": reserves[3],
+            "hookEffective0": reserves[4],
+            "hookEffective1": reserves[5],
+            "sqrtPriceX96": reserves[6],
+            "tick": reserves[7],
+            "activeLiquidity": reserves[8],
+            "blockNumber": reserves[9],
+            "statsProvider": reserves[10],
+            "hookPermissions": reserves[11],
+            "hasCustomAccounting": reserves[12],
+            "statsStatus": reserves[13],
+        }
+        return return_value
+
+    def reserves_lens_get_pool_tvl_batch(
+        self, pool_keys: List[PoolKey], custom_provider: Optional[List[str]] = None
+    ) -> List[Dict]:
+        """
+        Retrieves the total value locked (TVL) of multiple pools in a batch.
+        See https://github.com/Uniswap/v4-periphery/blob/main/src/interfaces/IReservesLens.sol for more details.
+
+        :param pool_keys: A list of PoolKey objects representing the pools.
+        :param custom_provider: The custom provider addresses for each pool. If None, will use default for all pools.
+        :returns: A list of dictionaries containing the reserves of each pool.
+        """
+        if custom_provider is None:
+            custom_provider = [""] * len(pool_keys)
+
+            reserves_list: List = self.reserves_lens.functions.getPoolTVLBatch(
+                _addr_to_str(self.pool_manager_address),
+                [astuple(pool_key) for pool_key in pool_keys],
+            ).call()
+        else:
+            reserves_list = self.reserves_lens.functions.getPoolTVLBatch(
+                _addr_to_str(self.pool_manager_address),
+                [astuple(pool_key) for pool_key in pool_keys],
+                custom_provider,
+            ).call()
+
+        return_value = []
+        for reserves in reserves_list:
+            return_value.append(
+                {
+                    "coreAmount0": reserves[0],
+                    "coreAmount1": reserves[1],
+                    "hookReserves0": reserves[2],
+                    "hookReserves1": reserves[3],
+                    "hookEffective0": reserves[4],
+                    "hookEffective1": reserves[5],
+                    "sqrtPriceX96": reserves[6],
+                    "tick": reserves[7],
+                    "activeLiquidity": reserves[8],
+                    "blockNumber": reserves[9],
+                    "statsProvider": reserves[10],
+                    "hookPermissions": reserves[11],
+                    "hasCustomAccounting": reserves[12],
+                    "statsStatus": reserves[13],
+                }
+            )
+
+        return return_value
+
+    def reserves_lens_get_tvl_paged(
+        self,
+        pool_key: PoolKey,
+        cursor: bytes,
+        custom_provider: str = "",
+        max_reads: int = 0,
+    ) -> Tuple[Dict, bytes, bool]:
+        """
+        Retrieves the total value locked (TVL) of multiple pools in a paged manner.
+        See https://github.com/Uniswap/v4-periphery/blob/main/src/interfaces/IReservesLens.sol for more details.
+
+        :param pool_key: A list of PoolKey objects representing the pools.
+        :param cursor: The cursor for paged retrieval.
+        :param custom_provider: The custom provider address, empty string for default.
+        :param max_reads: The maximum number of reads to perform using custom provider.
+        :returns: A tuple containing the reserves dictionary, the next cursor, and a boolean indicating if the paged retrieval is done.
+        """
+        if custom_provider == "":
+            reserves_tuple, next_cursor, done = (
+                self.reserves_lens.functions.getPoolTVLPaged(
+                    _addr_to_str(self.pool_manager_address),
+                    astuple(pool_key),
+                    cursor,
+                ).call()
+            )
+        else:
+            reserves_tuple, next_cursor, done = (
+                self.reserves_lens.functions.getPoolTVLPaged(
+                    _addr_to_str(self.pool_manager_address),
+                    astuple(pool_key),
+                    custom_provider,
+                    cursor,
+                    max_reads,
+                ).call()
+            )
+
+        reserves: Dict = {
+            "coreAmount0": reserves_tuple[0],
+            "coreAmount1": reserves_tuple[1],
+            "hookReserves0": reserves_tuple[2],
+            "hookReserves1": reserves_tuple[3],
+            "hookEffective0": reserves_tuple[4],
+            "hookEffective1": reserves_tuple[5],
+            "sqrtPriceX96": reserves_tuple[6],
+            "tick": reserves_tuple[7],
+            "activeLiquidity": reserves_tuple[8],
+            "blockNumber": reserves_tuple[9],
+            "statsProvider": reserves_tuple[10],
+            "hookPermissions": reserves_tuple[11],
+            "hasCustomAccounting": reserves_tuple[12],
+            "statsStatus": reserves_tuple[13],
+        }
+
+        return_value = (reserves, next_cursor, done)
+        return return_value
+
+    def reserves_lens_get_populated_ticks_in_word(
+        self, pool_key: PoolKey, word_position: int
+    ) -> List[Dict]:
+        """
+        Retrieves the populated ticks in a specific word of a pool.
+        See https://github.com/Uniswap/v4-periphery/blob/main/src/interfaces/IReservesLens.sol for more details.
+
+        :param pool_key: The PoolKey object representing the pool.
+        :param word_position: The position of the word to retrieve.
+        :returns: A list of dictionaries containing the populated ticks.
+        """
+        results: List = self.reserves_lens.functions.getPopulatedTicksInWord(
+            _addr_to_str(self.pool_manager_address),
+            astuple(pool_key),
+            word_position,
+        ).call()
+        return_value: List[Dict] = []
+        for result in results:
+            return_value.append(
+                {
+                    "tick": result[0],
+                    "liquidityNet": result[1],
+                    "liquidityGross": result[2],
+                }
+            )
         return return_value
 
     # PositionDescriptor methods
@@ -1460,7 +1651,7 @@ class Uniswap4:
         fee: int = 500,
         tick_spacing: int = 10,
         hooks: str = ZERO_HOOK,
-        hook_data: bytes = bytes(),
+        hook_data: bytes = b"",
     ) -> float:
         """
         :param token0: The token to be sold.
@@ -1820,7 +2011,7 @@ class Uniswap4:
         qty: int,
         qtycap: int,
         route: List[PoolKey],
-        min_hop_price_x_36: Optional[List[int]] = [],
+        min_hop_price_x_36: List[int] = [],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
@@ -1879,7 +2070,7 @@ class Uniswap4:
         take_all_params: bytes = encode(
             v4_actions_abis["TAKE_ALL"],
             [
-                _addr_to_str((encoded_route[-1].intermediate_currency)),  # type: ignore[arg-type]
+                _addr_to_str(encoded_route[-1].intermediate_currency),  # type: ignore[arg-type]
                 min_tokens_bought,
             ],
         )
@@ -2013,7 +2204,7 @@ class Uniswap4:
         qty: int,
         qtycap: int,
         route: List[PoolKey],
-        min_hop_price_x_36: Optional[List[int]] = [],
+        min_hop_price_x_36: List[int] = [],
         custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
@@ -3057,7 +3248,7 @@ class Uniswap4:
         rest_part: int = position_info >> pool_id_offset
         pool_id: bytes = rest_part.to_bytes(25, byteorder="big")
 
-        return_value = {
+        return_value: Dict = {
             "tickLower": tick_lower,
             "tickUpper": tick_upper,
             "poolID": pool_id,

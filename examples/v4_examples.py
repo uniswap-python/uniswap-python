@@ -58,8 +58,8 @@ def pool_tests():
     else:
         print("Test failed.")
 
-    print("")
-    print("")
+    print()
+    print()
 
 
 def quoter_tests():
@@ -73,8 +73,8 @@ def quoter_tests():
     print(f"Testing getSlot0() for {Fore.GREEN}USDC-ETH{Style.RESET_ALL}")
     test_result = str(uniV4_test.get_token_token_spot_price(test_USDC, test_ETH))
     print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL}")
-    print("")
-    print("")
+    print()
+    print()
 
     test_pool_key1 = PoolKey(
         test_ETH,
@@ -164,8 +164,8 @@ def quoter_tests():
         + test_result_alt
         + f"{Style.RESET_ALL} ETH"
     )
-    print("")
-    print("")
+    print()
+    print()
 
     # Testing get_quote_exact_input()
     test_volume = 1
@@ -247,8 +247,8 @@ def quoter_tests():
         + f"{Style.RESET_ALL} USDT"
     )
 
-    print("")
-    print("")
+    print()
+    print()
 
     # Testing get_quote_exact_output_single()
     test_volume = 3000
@@ -401,8 +401,8 @@ def quoter_tests():
         + f"{Style.RESET_ALL} USDT"
     )
 
-    print("")
-    print("")
+    print()
+    print()
 
 
 def price_impact_tests():
@@ -448,8 +448,8 @@ def price_impact_tests():
     )
     print(f"Result: {Fore.GREEN}" + test_result + f"{Style.RESET_ALL} %")
 
-    print("")
-    print("")
+    print()
+    print()
 
 
 def state_view_tests():
@@ -571,9 +571,8 @@ def state_view_tests():
         test_tick,
     )
     print(f"Result: {Fore.GREEN}" + str(test_result7) + f"{Style.RESET_ALL}")
-    #
-    print("")
-    print("")
+    print()
+    print()
 
 
 def swap_tests():
@@ -652,8 +651,8 @@ def swap_tests():
         test_pool_key1,
     )
     print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
-    print("")
-    print("")
+    print()
+    print()
 
     # Testing make_swap_input(), 2-hop test, token0 is ETH
     test_volume_in = 1
@@ -699,8 +698,8 @@ def swap_tests():
     )
     print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
 
-    print("")
-    print("")
+    print()
+    print()
 
     # Testing make_swap_output(), single hop, token0 is ETH
     test_volume_out = 1
@@ -794,8 +793,8 @@ def swap_tests():
 
     print(f"Result: {Fore.GREEN}" + test_result.hex() + f"{Style.RESET_ALL}")
 
-    print("")
-    print("")
+    print()
+    print()
 
 
 def liquidity_tests():
@@ -826,8 +825,8 @@ def liquidity_tests():
         + f"{test_pool_id_check.hex()}"
         + f"{Style.RESET_ALL}"
     )
-    print("")
-    print("")
+    print()
+    print()
 
     # get_position_info() test
     print(
@@ -835,8 +834,8 @@ def liquidity_tests():
     )
     test_result1 = uniV4_test.get_position_value(test_token_id, 18, 6)
     print("Result: " + str(test_result1))
-    print("")
-    print("")
+    print()
+    print()
 
     test_token_id = 206788
     print(
@@ -844,8 +843,8 @@ def liquidity_tests():
     )
     test_result1 = uniV4_test.get_position_value(test_token_id, 18, 8)
     print("Result: " + str(test_result1))
-    print("")
-    print("")
+    print()
+    print()
 
     test_transaction_hash: str = (
         "0xb30d3dde98f715e5880da9f8833f99823623229e193e04661cb7ce193e4028f8"
@@ -856,8 +855,8 @@ def liquidity_tests():
     )
     test_result_token_id = uniV4_test.get_minted_token_id(test_transaction_hash)
     print("Result: " + str(test_result_token_id))
-    print("")
-    print("")
+    print()
+    print()
 
     test_transaction_hash = (
         "0xfe0389d167acbe1bb10f2ef0487ae123beab8a5b334799d68632957e3d16ff6e"
@@ -868,9 +867,28 @@ def liquidity_tests():
     )
     test_result_token_id = uniV4_test.get_minted_token_id(test_transaction_hash)
     print("Result: " + str(test_result_token_id))
-    print("")
-    print("")
-    #
+    print()
+    print()
+
+
+def reserves_lens_tests():
+    ##reserves lens tests
+    print(
+        f"Testing reserves_lens_get_pool_tvl() for ({Fore.GREEN}ETH{Style.RESET_ALL}, {Fore.GREEN}USDC{Style.RESET_ALL}) liquidity pool"
+    )
+    test_result = uniV4_test.reserves_lens_get_pool_tvl(
+        PoolKey(
+            test_ETH,
+            test_USDC,
+            default_test_fee,
+            default_test_tick_spacing,
+            default_test_hooks,
+        )
+    )
+
+    print("Result: " + str(test_result))
+    print()
+    print()
 
 
 if __name__ == "__main__":
@@ -902,14 +920,15 @@ if __name__ == "__main__":
 
     ##TESTS
     print("Started.")
-    print("")
-    print("")
+    print()
+    print()
 
     # pool_tests()
     quoter_tests()
     price_impact_tests()
     state_view_tests()
     liquidity_tests()
+    reserves_lens_tests()
     # swap_tests()
 
     print("Done.")

@@ -262,6 +262,29 @@ _position_manager_contract_addresses_v4 = {
     "robinhood": "0x58daec3116aae6d93017baaea7749052e8a04fa7",
 }
 
+_reserves_lens_contract_addresses_v4 = {
+    # Production addresses
+    "mainnet": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "unichain": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "optimism": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "base": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "arbitrum": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "polygon": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "zora": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "worldchain": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "ink": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "soneium": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "avalanche": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "binance": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "celo": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "monad": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "megaeth": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "xlayer": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "tempo": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "robinhood": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+}
+
+
 # Source: https://github.com/Uniswap/universal-router/blob/main/contracts/libraries/Commands.sol
 universal_router_commands = {
     "V3_SWAP_EXACT_IN": 0x00,
