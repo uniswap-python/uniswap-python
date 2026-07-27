@@ -1,8 +1,17 @@
+# ruff: noqa: UP035
+# ruff: noqa: UP006
+# ruff: noqa: UP007
+# ruff: noqa: UP045
+# ruff: noqa: TRY002
+# ruff: noqa: B006
+# ruff: noqa: BLE001
+# ruff: noqa: SIM102
 import logging
 import os
 import time
 from dataclasses import astuple
 from decimal import Decimal
+from typing import Dict, List, Optional, Tuple, Union
 
 import eth_abi.abi
 from eth_abi import encode
@@ -70,10 +79,10 @@ class Uniswap4:
 
     def __init__(
         self,
-        address: str | AddressLike,
-        private_key: str | None,
-        provider: str | None = None,
-        web3: Web3 | None = None,
+        address: Union[str, AddressLike],
+        private_key: Optional[str] = None,
+        provider: Optional[str] = None,
+        web3: Optional[Web3] = None,
         max_slippage: float = 0.01,
         gas_limit: float = 250000.0,
         gas_price: float = 1.80,
@@ -230,8 +239,8 @@ class Uniswap4:
     def approve(
         self,
         token: AddressLike,
-        max_approval: int | None = None,
-        delay_interval: int | None = 7,
+        max_approval: Optional[int] = None,
+        delay_interval: Optional[int] = 7,
         approve_position_manager: bool = False,
     ) -> HexBytes:
         """Approve the router to spend a token on the user's behalf, or set up a permit for the position manager to pull the token from the user's wallet. For ETH, the router can pull from the user's wallet directly, so no approval is necessary.
@@ -348,7 +357,7 @@ class Uniswap4:
         fee: int,
         tick_spacing: int,
         hooks: str,
-    ) -> dict:
+    ) -> Dict:
         """
         Retrieves the global fee growth of a pool.
         """
@@ -357,7 +366,7 @@ class Uniswap4:
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
         pool_id = self.get_pool_id(pool)
-        fee_growth_globals: dict = self.stateview.functions.getFeeGrowthGlobals(
+        fee_growth_globals: Dict = self.stateview.functions.getFeeGrowthGlobals(
             pool_id
         ).call()
         return_value = {
@@ -375,7 +384,7 @@ class Uniswap4:
         hooks: str,
         tick_lower: int,
         tick_upper: int,
-    ) -> dict:
+    ) -> Dict:
         """
         Calculates the fee growth inside a tick range of a pool
         """
@@ -384,7 +393,7 @@ class Uniswap4:
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
         pool_id = self.get_pool_id(pool)
-        fee_growth_inside: dict = self.stateview.functions.getFeeGrowthInside(
+        fee_growth_inside: Dict = self.stateview.functions.getFeeGrowthInside(
             pool_id, tick_lower, tick_upper
         ).call()
         return_value = {
@@ -422,7 +431,7 @@ class Uniswap4:
         tick_lower: int,
         tick_upper: int,
         token_id: int,
-    ) -> dict:
+    ) -> Dict:
         """
         Retrieves position info in a pool.
 
@@ -435,7 +444,7 @@ class Uniswap4:
         pool_id = self.get_pool_id(pool)
 
         salt = HexBytes(token_id.to_bytes(32, byteorder="big"))
-        position_info: dict = self.stateview.functions.getPositionInfo(
+        position_info: Dict = self.stateview.functions.getPositionInfo(
             pool_id, owner, tick_lower, tick_upper, salt
         ).call()
         return_value = {
@@ -452,7 +461,7 @@ class Uniswap4:
         fee: int,
         tick_spacing: int,
         hooks: str,
-    ) -> dict:
+    ) -> Dict:
         """
         Returns current state of the pool.
         """
@@ -462,7 +471,7 @@ class Uniswap4:
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
         pool_id = self.get_pool_id(pool)
 
-        slot: dict = self.stateview.functions.getSlot0(pool_id).call()
+        slot: Dict = self.stateview.functions.getSlot0(pool_id).call()
         return_value = {
             "sqrtPriceX96": slot[0],
             "tick": slot[1],
@@ -502,7 +511,7 @@ class Uniswap4:
         tick_spacing: int,
         hooks: str,
         tick: int,
-    ) -> dict:
+    ) -> Dict:
         """
         Retrieves the fee growth outside a tick range of a pool
         """
@@ -511,7 +520,7 @@ class Uniswap4:
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
         pool_id = self.get_pool_id(pool)
-        fee_growth_outside: dict = self.stateview.functions.getTickFeeGrowthOutside(
+        fee_growth_outside: Dict = self.stateview.functions.getTickFeeGrowthOutside(
             pool_id, tick
         ).call()
         return_value = {
@@ -528,7 +537,7 @@ class Uniswap4:
         tick_spacing: int,
         hooks: str,
         tick: int,
-    ) -> dict:
+    ) -> Dict:
         """
         Retrieves the tick information of a pool at a specific tick.
         """
@@ -537,7 +546,7 @@ class Uniswap4:
 
         pool = PoolKey(token0, token1, fee, tick_spacing, hooks)
         pool_id = self.get_pool_id(pool)
-        tick_info: dict = self.stateview.functions.getTickInfo(pool_id, tick).call()
+        tick_info: Dict = self.stateview.functions.getTickInfo(pool_id, tick).call()
         return_value = {
             "liquidityGross": tick_info[0],
             "liquidityNet": tick_info[1],
@@ -549,7 +558,7 @@ class Uniswap4:
     # ReservesLens methods
     def reserves_lens_get_pool_tvl(
         self, pool_key: PoolKey, custom_provider: str = ""
-    ) -> dict:
+    ) -> Dict:
         """
         Retrieves the total value locked (TVL) of a pool.
         See https://github.com/Uniswap/v4-periphery/blob/main/src/interfaces/IReservesLens.sol for more details.
@@ -559,7 +568,7 @@ class Uniswap4:
         :returns: A dictionary containing the reserves of the pool.
         """
         if custom_provider == "":
-            reserves: dict = self.reserves_lens.functions.getPoolTVL(
+            reserves: Dict = self.reserves_lens.functions.getPoolTVL(
                 _addr_to_str(self.pool_manager_address), astuple(pool_key)
             ).call()
         else:
@@ -587,8 +596,8 @@ class Uniswap4:
         return return_value
 
     def reserves_lens_get_pool_tvl_batch(
-        self, pool_keys: list[PoolKey], custom_provider: list[str] | None = None
-    ) -> list[dict]:
+        self, pool_keys: List[PoolKey], custom_provider: Optional[List[str]] = None
+    ) -> List[Dict]:
         """
         Retrieves the total value locked (TVL) of multiple pools in a batch.
         See https://github.com/Uniswap/v4-periphery/blob/main/src/interfaces/IReservesLens.sol for more details.
@@ -600,7 +609,7 @@ class Uniswap4:
         if custom_provider is None:
             custom_provider = [""] * len(pool_keys)
 
-            reserves_list: list = self.reserves_lens.functions.getPoolTVLBatch(
+            reserves_list: List = self.reserves_lens.functions.getPoolTVLBatch(
                 _addr_to_str(self.pool_manager_address),
                 [astuple(pool_key) for pool_key in pool_keys],
             ).call()
@@ -640,7 +649,7 @@ class Uniswap4:
         cursor: bytes,
         custom_provider: str = "",
         max_reads: int = 0,
-    ) -> tuple[dict, bytes, bool]:
+    ) -> Tuple[Dict, bytes, bool]:
         """
         Retrieves the total value locked (TVL) of multiple pools in a paged manner.
         See https://github.com/Uniswap/v4-periphery/blob/main/src/interfaces/IReservesLens.sol for more details.
@@ -649,7 +658,7 @@ class Uniswap4:
         :param cursor: The cursor for paged retrieval.
         :param custom_provider: The custom provider address, empty string for default.
         :param max_reads: The maximum number of reads to perform using custom provider.
-        :returns: A list of dictionaries containing the reserves of each pool.
+        :returns: A tuple containing the reserves dictionary, the next cursor, and a boolean indicating if the paged retrieval is done.
         """
         if custom_provider == "":
             reserves_tuple, next_cursor, done = (
@@ -670,7 +679,7 @@ class Uniswap4:
                 ).call()
             )
 
-        reserves = {
+        reserves: Dict = {
             "coreAmount0": reserves_tuple[0],
             "coreAmount1": reserves_tuple[1],
             "hookReserves0": reserves_tuple[2],
@@ -692,7 +701,7 @@ class Uniswap4:
 
     def reserves_lens_get_populated_ticks_in_word(
         self, pool_key: PoolKey, word_position: int
-    ) -> list[dict]:
+    ) -> List[Dict]:
         """
         Retrieves the populated ticks in a specific word of a pool.
         See https://github.com/Uniswap/v4-periphery/blob/main/src/interfaces/IReservesLens.sol for more details.
@@ -701,12 +710,12 @@ class Uniswap4:
         :param word_position: The position of the word to retrieve.
         :returns: A list of dictionaries containing the populated ticks.
         """
-        results: list = self.reserves_lens.functions.getPopulatedTicksInWord(
+        results: List = self.reserves_lens.functions.getPopulatedTicksInWord(
             _addr_to_str(self.pool_manager_address),
             astuple(pool_key),
             word_position,
         ).call()
-        return_value: list[dict] = []
+        return_value: List[Dict] = []
         for result in results:
             return_value.append(
                 {
@@ -826,7 +835,7 @@ class Uniswap4:
         return_value = operator
         return return_value
 
-    def position_manager_get_pool_and_position_info(self, token_id: int) -> dict:
+    def position_manager_get_pool_and_position_info(self, token_id: int) -> Dict:
         """
         :returns: The PoolKey class object and position info of a position
         """
@@ -1049,7 +1058,7 @@ class Uniswap4:
         return tx
 
     def position_manager_modify_liquidities_without_unlock(
-        self, actions: bytes, params: list[bytes], payable_amount: int
+        self, actions: bytes, params: List[bytes], payable_amount: int
     ) -> HexBytes:
         """
         Batches actions for modifying liquidity without unlocking v4 PoolManager
@@ -1065,7 +1074,7 @@ class Uniswap4:
         return tx
 
     def position_manager_multicall(
-        self, data: list[bytes], payable_amount: int
+        self, data: List[bytes], payable_amount: int
     ) -> HexBytes:
         """
         Call multiple functions in the current contract in a single transaction, with the possibility of sending ETH along with the calls.
@@ -1284,29 +1293,29 @@ class Uniswap4:
 
     def pool_manager_get_extsload_sequence(
         self, start_slot: bytes, slots_count: int
-    ) -> list[bytes]:
+    ) -> List[bytes]:
         """
         Called by external contracts to access a sequence of storage slots
         """
-        value: list[bytes] = self.pool_manager.functions.extsload(
+        value: List[bytes] = self.pool_manager.functions.extsload(
             start_slot, slots_count
         ).call()
         return_value = value
         return return_value
 
-    def pool_manager_get_extsload_sparse(self, slots: list[bytes]) -> list[bytes]:
+    def pool_manager_get_extsload_sparse(self, slots: List[bytes]) -> List[bytes]:
         """
         Called by external contracts to access a sparse set of storage slots
         """
-        value: list[bytes] = self.pool_manager.functions.extsload(slots).call()
+        value: List[bytes] = self.pool_manager.functions.extsload(slots).call()
         return_value = value
         return return_value
 
-    def pool_manager_get_exttload_sparse(self, slots: list[bytes]) -> list[bytes]:
+    def pool_manager_get_exttload_sparse(self, slots: List[bytes]) -> List[bytes]:
         """
         Called by external contracts to access sparse transient pool state
         """
-        value: list[bytes] = self.pool_manager.functions.exttload(slots).call()
+        value: List[bytes] = self.pool_manager.functions.exttload(slots).call()
         return_value = value
         return return_value
 
@@ -1730,7 +1739,7 @@ class Uniswap4:
         self,
         token_exact: str,
         qty: int,
-        route: list[PoolKey],
+        route: List[PoolKey],
     ) -> int:
         """
         :param token_exact: The token for which the qty parameter is specified.
@@ -1793,7 +1802,7 @@ class Uniswap4:
         self,
         token_exact: str,
         qty: int,
-        route: list[PoolKey],
+        route: List[PoolKey],
     ) -> int:
         """
         :param token_exact: The token for which the qty parameter is specified, either the input or output token depending on the quote type.
@@ -1818,11 +1827,11 @@ class Uniswap4:
         token0: str,
         token1: str,
         qty: int,
-        fee: int | None = None,
-        tick_spacing: int | None = None,
-        hooks: str | None = ZERO_HOOK,
-        hook_data: bytes | None = b"",
-        route: list[PoolKey] | None = None,
+        fee: Optional[int] = None,
+        tick_spacing: Optional[int] = None,
+        hooks: Optional[str] = ZERO_HOOK,
+        hook_data: Optional[bytes] = b"",
+        route: Optional[List[PoolKey]] = None,
     ) -> int:
         """
         :param token0: The token to be sold.
@@ -1862,11 +1871,11 @@ class Uniswap4:
         token0: str,
         token1: str,
         qty: int,
-        fee: int | None = None,
-        tick_spacing: int | None = None,
-        hooks: str | None = ZERO_HOOK,
-        hook_data: bytes | None = b"",
-        route: list[PoolKey] | None = None,
+        fee: Optional[int] = None,
+        tick_spacing: Optional[int] = None,
+        hooks: Optional[str] = ZERO_HOOK,
+        hook_data: Optional[bytes] = b"",
+        route: Optional[List[PoolKey]] = None,
     ) -> int:
         """
         :param token0: The token to be sold.
@@ -1912,7 +1921,7 @@ class Uniswap4:
         hooks: str,
         hook_data: bytes = b"",
         min_hop_price_x_36: int = 0,
-        custom_nonce: Nonce | None = None,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         :param input_token: The token to be sold.
@@ -2001,9 +2010,9 @@ class Uniswap4:
         input_token: str,
         qty: int,
         qtycap: int,
-        route: list[PoolKey],
-        min_hop_price_x_36: list[int] | None = [],
-        custom_nonce: Nonce | None = None,
+        route: List[PoolKey],
+        min_hop_price_x_36: List[int] = [],
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         :param input_token: The token to be sold.
@@ -2093,7 +2102,7 @@ class Uniswap4:
         hooks: str,
         hook_data: bytes = b"",
         min_hop_price_x_36: int = 0,
-        custom_nonce: Nonce | None = None,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         :param input_token: The token to be sold.
@@ -2194,9 +2203,9 @@ class Uniswap4:
         output_token: str,
         qty: int,
         qtycap: int,
-        route: list[PoolKey],
-        min_hop_price_x_36: list[int] | None = [],
-        custom_nonce: Nonce | None = None,
+        route: List[PoolKey],
+        min_hop_price_x_36: List[int] = [],
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         :param output_token: The token to be bought.
@@ -2286,7 +2295,7 @@ class Uniswap4:
         address_to: AddressLike,
         gas_price: float,
         priority_fee: int = 10,
-        custom_nonce: Nonce | None = None,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Replaces pending transaction with zero-value ETH transfer
@@ -2342,10 +2351,10 @@ class Uniswap4:
         output_token: str,
         qty: int,
         qtycap: int,
-        swap_pool_key: PoolKey | None = None,
-        hook_data: bytes | None = b"",
-        route: list[PoolKey] | None = None,
-        custom_nonce: Nonce | None = None,
+        swap_pool_key: Optional[PoolKey] = None,
+        hook_data: Optional[bytes] = b"",
+        route: Optional[List[PoolKey]] = None,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         :param input_token: The token to be sold.
@@ -2359,7 +2368,7 @@ class Uniswap4:
 
         Make a trade by defining the qty of the input token.
          If `route` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap."""
-        result: HexBytes | None = None
+        result: Optional[HexBytes] = None
         if route is None:
             if swap_pool_key is None:
                 raise ValueError("swap_pool_key must be provided for single hop swaps")
@@ -2392,10 +2401,10 @@ class Uniswap4:
         output_token: str,
         qty: int,
         qtycap: int,
-        swap_pool_key: PoolKey | None = None,
-        hook_data: bytes | None = b"",
-        route: list[PoolKey] | None = None,
-        custom_nonce: Nonce | None = None,
+        swap_pool_key: Optional[PoolKey] = None,
+        hook_data: Optional[bytes] = b"",
+        route: Optional[List[PoolKey]] = None,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         :param input_token: The token to be sold.
@@ -2409,7 +2418,7 @@ class Uniswap4:
         Make a trade by defining the qty of the output token.
         If `route` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap.
         """
-        result: HexBytes | None = None
+        result: Optional[HexBytes] = None
         if route is None:
             if swap_pool_key is None:
                 raise ValueError("swap_pool_key must be provided for single hop swaps")
@@ -2437,7 +2446,7 @@ class Uniswap4:
         return result
 
     # Liquidity management functions
-    def get_position_info(self, token_id: int) -> dict:
+    def get_position_info(self, token_id: int) -> Dict:
         """
                 Get information about a liquidity position given its token ID.
                 :return: A dictionary with the following keys:
@@ -2459,7 +2468,7 @@ class Uniswap4:
         pool_info = position_info["info"]
         pool_info_decoded = self.decode_position_info(pool_info)
         owner_of = self.position_manager_get_owner_of(token_id)
-        return_value: dict = {
+        return_value: Dict = {
             "currency0": pool_key.currency0,
             "currency1": pool_key.currency1,
             "fee": pool_key.fee,
@@ -2475,7 +2484,7 @@ class Uniswap4:
 
     def get_position_value(
         self, token_id: int, token0_decimals: int, token1_decimals: int
-    ) -> dict:
+    ) -> Dict:
         """
         Get the value of a liquidity position given its token ID.
         """
@@ -2508,7 +2517,7 @@ class Uniswap4:
         )
         amount0: Decimal = Decimal(amounts["amount0"]) / Decimal(10**token0_decimals)
         amount1: Decimal = Decimal(amounts["amount1"]) / Decimal(10**token1_decimals)
-        return_value: dict = {
+        return_value: Dict = {
             "amount0": amounts["amount0"],
             "amount1": amounts["amount1"],
             # NOTE: unclaimed fees are not yet computed; total values equal principal only
@@ -2525,7 +2534,7 @@ class Uniswap4:
         self,
         pool_key: PoolKey,
         sqrt_price_x96: int,
-        custom_nonce: Nonce | None = None,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Creates a new liquidity pool without initial liquidity with the specified parameters and a starting price.
@@ -2549,9 +2558,9 @@ class Uniswap4:
         liquidity: int,
         amount0: int,
         amount1: int,
-        recipient: str | None = None,
-        hook_data: bytes | None = b"",
-        custom_nonce: Nonce | None = None,
+        recipient: Optional[str] = None,
+        hook_data: Optional[bytes] = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Mints a new liquidity position with the specified parameters.
@@ -2618,7 +2627,7 @@ class Uniswap4:
             v4_actions_abis["SWEEP"],
             [pool_key.currency1, recipient],
         )
-        params: list[bytes] = [
+        params: List[bytes] = [
             mint_position_params,
             settle_pair_params,
             sweep0_params,
@@ -2647,9 +2656,9 @@ class Uniswap4:
         amount0_max: int,
         amount1_max: int,
         liquidity: int,
-        recipient: str | None = None,
-        hook_data: bytes | None = b"",
-        custom_nonce: Nonce | None = None,
+        recipient: Optional[str] = None,
+        hook_data: Optional[bytes] = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Increases the liquidity of an existing position.
@@ -2703,7 +2712,7 @@ class Uniswap4:
             v4_actions_abis["SWEEP"],
             [pool_key.currency1, recipient],
         )
-        params: list[bytes] = [
+        params: List[bytes] = [
             increase_liquidity_params,
             settle_pair_params,
             sweep0_params,
@@ -2732,9 +2741,9 @@ class Uniswap4:
         amount0_min: int,
         amount1_min: int,
         liquidity: int,
-        recipient: str | None = None,
-        hook_data: bytes | None = b"",
-        custom_nonce: Nonce | None = None,
+        recipient: Optional[str] = None,
+        hook_data: Optional[bytes] = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Decreases the liquidity of an existing position.
@@ -2774,7 +2783,7 @@ class Uniswap4:
             ["address", "address", "address"],
             [pool_key.currency0, pool_key.currency1, recipient],
         )
-        params: list[bytes] = [decrease_liquidity_params, take_pair_params]
+        params: List[bytes] = [decrease_liquidity_params, take_pair_params]
 
         # Encoding unlock data
         unlock_data: bytes = encode(
@@ -2795,9 +2804,9 @@ class Uniswap4:
         self,
         pool_key: PoolKey,
         token_id: int,
-        recipient: str | None = None,
-        hook_data: bytes | None = b"",
-        custom_nonce: Nonce | None = None,
+        recipient: Optional[str] = None,
+        hook_data: Optional[bytes] = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Collects the fees accrued by an existing position.
@@ -2834,7 +2843,7 @@ class Uniswap4:
             ["address", "address", "address"],
             [pool_key.currency0, pool_key.currency1, recipient],
         )
-        params: list[bytes] = [decrease_liquidity_params, take_pair_params]
+        params: List[bytes] = [decrease_liquidity_params, take_pair_params]
 
         # Encoding unlock data
         unlock_data: bytes = encode(
@@ -2857,9 +2866,9 @@ class Uniswap4:
         token_id: int,
         amount0_min: int,
         amount1_min: int,
-        recipient: str | None = None,
-        hook_data: bytes | None = b"",
-        custom_nonce: Nonce | None = None,
+        recipient: Optional[str] = None,
+        hook_data: Optional[bytes] = b"",
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Burns an existing liquidity position.
@@ -2897,7 +2906,7 @@ class Uniswap4:
             ["address", "address", "address"],
             [pool_key.currency0, pool_key.currency1, recipient],
         )
-        params: list[bytes] = [burn_position_params, take_pair_params]
+        params: List[bytes] = [burn_position_params, take_pair_params]
 
         # Encoding unlock data
         unlock_data: bytes = encode(
@@ -2916,11 +2925,11 @@ class Uniswap4:
 
     def universal_router_execute(
         self,
-        commands: list[int],
-        actions: list[list[int]],
-        params: list[list[list]],
+        commands: List[int],
+        actions: List[List[int]],
+        params: List[List[List]],
         ether_amount: int = 0,
-        custom_nonce: Nonce | None = None,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """
         Executes a transaction with the Universal Router with the specified commands, actions, and parameters.
@@ -2972,7 +2981,7 @@ class Uniswap4:
         # Encoding data
         commands_abi = ["uint8"] * len(commands)
         encoded_commands: bytes = encode_packed(commands_abi, commands)
-        encoded_inputs: list[bytes] = []
+        encoded_inputs: List[bytes] = []
         for commands_item, actions_item, params_item in zip(commands, actions, params):
             command_key = self._get_dict_key_by_value(
                 universal_router_commands, commands_item
@@ -3007,25 +3016,25 @@ class Uniswap4:
 
     # Helper functions
     def encode_actions_with_params(
-        self, actions: list[int], params: list[list]
-    ) -> dict:
+        self, actions: List[int], params: List[List]
+    ) -> Dict:
         encoded_actions_abi = ["uint8"] * len(actions)
         encoded_actions: bytes = encode_packed(encoded_actions_abi, actions)
-        encoded_params: list[bytes] = []
+        encoded_params: List[bytes] = []
         for actions_item, params_item in zip(actions, params):
             action_key = self._get_dict_key_by_value(v4_actions, actions_item)
             encoded_params_item: bytes = encode(
                 v4_actions_abis[action_key], params_item
             )
             encoded_params.append(encoded_params_item)
-        return_value: dict = {
+        return_value: Dict = {
             "actions": encoded_actions,
             "params": encoded_params,
         }
         return return_value
 
     @staticmethod
-    def _get_dict_key_by_value(param_dict: dict, value: int) -> str:
+    def _get_dict_key_by_value(param_dict: Dict, value: int) -> str:
         return_value = next((k for k, v in param_dict.items() if v == value), None)
         if return_value is None:
             raise IndexError("Key is not found.")
@@ -3127,7 +3136,7 @@ class Uniswap4:
         sqrt_ratio_b_x96: int,
         sqrt_ratio_current_x96: int,
         liquidity: int,
-    ) -> dict:
+    ) -> Dict:
         """
         Helper function to calculate the amounts of `token0` and `token1` that can be provided for a given amount of liquidity and price range defined by `sqrt_ratio_a_x96` and `sqrt_ratio_b_x96`.
         """
@@ -3151,7 +3160,7 @@ class Uniswap4:
             amount1 = self.get_amount1_for_liquidity(
                 sqrt_ratio_a_x96, sqrt_ratio_b_x96, liquidity
             )
-        return_value: dict = {
+        return_value: Dict = {
             "amount0": amount0,
             "amount1": amount1,
         }
@@ -3159,10 +3168,10 @@ class Uniswap4:
 
     def get_amounts_for_liquidity_by_ticks(
         self, ratio_current_x96: int, tick_lower: int, tick_upper: int, liquidity: int
-    ) -> dict:
+    ) -> Dict:
         sqrt_ratio_a_x96 = get_sqrt_ratio_at_tick(tick_lower)
         sqrt_ratio_b_x96 = get_sqrt_ratio_at_tick(tick_upper)
-        return_value: dict = self.get_amounts_for_liquidity(
+        return_value: Dict = self.get_amounts_for_liquidity(
             sqrt_ratio_a_x96, sqrt_ratio_b_x96, ratio_current_x96, liquidity
         )
         return return_value
@@ -3182,7 +3191,7 @@ class Uniswap4:
         )
         return liquidity
 
-    def get_minted_token_id(self, tx_hash: str) -> list[int]:
+    def get_minted_token_id(self, tx_hash: str) -> List[int]:
         """
         Helper function to extract the token ID of a newly minted position from the transaction receipt of the minting transaction.
 
@@ -3192,7 +3201,7 @@ class Uniswap4:
         logs = self.position_manager.events.Transfer().process_receipt(
             transaction_receipt
         )
-        return_value: list[int] = []
+        return_value: List[int] = []
         for log in logs:
             try:
                 if _addr_to_str(log.args["from"]) == ZERO_HOOK:
@@ -3206,7 +3215,7 @@ class Uniswap4:
         return return_value
 
     @staticmethod
-    def decode_position_info(position_info: int) -> dict:
+    def decode_position_info(position_info: int) -> Dict:
         """
 
                 :return:
@@ -3239,7 +3248,7 @@ class Uniswap4:
         rest_part: int = position_info >> pool_id_offset
         pool_id: bytes = rest_part.to_bytes(25, byteorder="big")
 
-        return_value = {
+        return_value: Dict = {
             "tickLower": tick_lower,
             "tickUpper": tick_upper,
             "poolID": pool_id,
@@ -3249,14 +3258,14 @@ class Uniswap4:
 
     @staticmethod
     def encode_path_keys_input(
-        path: list[PoolKey],
+        path: List[PoolKey],
         currency_in: str,
-        hook_data_list: list[bytes] | None = None,
-    ) -> list[PathKey]:
+        hook_data_list: Optional[List[bytes]] = None,
+    ) -> List[PathKey]:
         """
         Encodes a list of PoolKeys into the format expected by the quoter for multi-hop ExactInput quotes.
         """
-        encoded_path: list[PathKey] = []
+        encoded_path: List[PathKey] = []
         if hook_data_list is None:
             hook_data_list = [b""] * len(path)
         else:
@@ -3281,15 +3290,15 @@ class Uniswap4:
 
     @staticmethod
     def encode_path_keys_output(
-        path: list[PoolKey],
+        path: List[PoolKey],
         currency_out: str,
-        hook_data_list: list[bytes] | None = None,
-    ) -> list[PathKey]:
+        hook_data_list: Optional[List[bytes]] = None,
+    ) -> List[PathKey]:
         """
         Encodes a list of PoolKeys into the format expected by the quoter for multi-hop ExactOutput quotes.
 
         """
-        encoded_path: list[PathKey] = []
+        encoded_path: List[PathKey] = []
         if hook_data_list is None:
             hook_data_list = [b""] * len(path)
         else:
@@ -3386,7 +3395,7 @@ class Uniswap4:
         return int(time.time()) + 10 * 60
 
     def _get_tx_params(
-        self, value: int = 0, custom_nonce: Nonce | None = None
+        self, value: int = 0, custom_nonce: Optional[Nonce] = None
     ) -> TxParams:
         """Get generic transaction parameters."""
         if custom_nonce is not None:
@@ -3419,8 +3428,8 @@ class Uniswap4:
     def _build_and_send_tx(
         self,
         function: ContractFunction,
-        tx_params: TxParams | None = None,
-        custom_nonce: Nonce | None = None,
+        tx_params: Optional[TxParams] = None,
+        custom_nonce: Optional[Nonce] = None,
     ) -> HexBytes:
         """Build and send a transaction."""
         if not tx_params:
