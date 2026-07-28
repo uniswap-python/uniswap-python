@@ -1,0 +1,892 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Uniswap v4 &#8212; uniswap-python</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'v4';</script>
+    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api.html" />
+    <link rel="prev" title="Getting started" href="getting-started.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="_static/logo.png" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Uniswap v4</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command line interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="supported-deployments.html">Supported deployments</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/shanefontaine/uniswap-python" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/shanefontaine/uniswap-python/edit/main/docs/v4.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/v4.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Uniswap v4</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-poolkey">The PoolKey</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connecting-to-uniswap-v4">Connecting to Uniswap v4</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-the-spot-price">Getting the spot price</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quoting-a-trade">Quoting a trade</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exact-input-how-much-output-do-i-get">Exact input — how much output do I get?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exact-output-how-much-input-do-i-need">Exact output — how much input do I need?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#estimating-price-impact">Estimating price impact</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#making-a-swap">Making a swap</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#discovering-pools">Discovering pools</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#managing-liquidity">Managing liquidity</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-pool">Creating a pool</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minting-a-position">Minting a position</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-position-state">Reading position state</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#collecting-fees-and-removing-liquidity">Collecting fees and removing liquidity</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-pool-state-via-stateview">Reading pool state via StateView</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="uniswap-v4">
+<h1>Uniswap v4<a class="headerlink" href="#uniswap-v4" title="Permalink to this heading">#</a></h1>
+<p>Uniswap v4 introduces a fundamentally different architecture from v2 and v3.
+All pools live inside a single <strong>PoolManager</strong> singleton; positions are ERC-721
+tokens managed by the <strong>PositionManager</strong>; and every pool is uniquely identified
+by a <code class="xref py py-class docutils literal notranslate"><span class="pre">PoolKey</span></code> struct instead of a standalone contract address.</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#the-poolkey" id="id1">The PoolKey</a></p></li>
+<li><p><a class="reference internal" href="#connecting-to-uniswap-v4" id="id2">Connecting to Uniswap v4</a></p></li>
+<li><p><a class="reference internal" href="#getting-the-spot-price" id="id3">Getting the spot price</a></p></li>
+<li><p><a class="reference internal" href="#quoting-a-trade" id="id4">Quoting a trade</a></p>
+<ul>
+<li><p><a class="reference internal" href="#exact-input-how-much-output-do-i-get" id="id5">Exact input — how much output do I get?</a></p></li>
+<li><p><a class="reference internal" href="#exact-output-how-much-input-do-i-need" id="id6">Exact output — how much input do I need?</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#estimating-price-impact" id="id7">Estimating price impact</a></p></li>
+<li><p><a class="reference internal" href="#making-a-swap" id="id8">Making a swap</a></p></li>
+<li><p><a class="reference internal" href="#discovering-pools" id="id9">Discovering pools</a></p></li>
+<li><p><a class="reference internal" href="#managing-liquidity" id="id10">Managing liquidity</a></p>
+<ul>
+<li><p><a class="reference internal" href="#creating-a-pool" id="id11">Creating a pool</a></p></li>
+<li><p><a class="reference internal" href="#minting-a-position" id="id12">Minting a position</a></p></li>
+<li><p><a class="reference internal" href="#reading-position-state" id="id13">Reading position state</a></p></li>
+<li><p><a class="reference internal" href="#collecting-fees-and-removing-liquidity" id="id14">Collecting fees and removing liquidity</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#reading-pool-state-via-stateview" id="id15">Reading pool state via StateView</a></p></li>
+</ul>
+</nav>
+<section id="the-poolkey">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">The PoolKey</a><a class="headerlink" href="#the-poolkey" title="Permalink to this heading">#</a></h2>
+<p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">PoolKey</span></code> is a five-field tuple that uniquely identifies a pool:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniswap.types</span> <span class="kn">import</span> <span class="n">PoolKey</span>
+<span class="kn">from</span> <span class="nn">uniswap.constants</span> <span class="kn">import</span> <span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">ZERO_HOOK</span>
+
+<span class="n">eth_usdc_pool</span> <span class="o">=</span> <span class="n">PoolKey</span><span class="p">(</span>
+    <span class="n">currency0</span><span class="o">=</span><span class="n">ETH_ADDRESS</span><span class="p">,</span>  <span class="c1"># &quot;0x000...000&quot; — ETH is the zero address in v4</span>
+    <span class="n">currency1</span><span class="o">=</span><span class="s2">&quot;0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&quot;</span><span class="p">,</span>  <span class="c1"># USDC</span>
+    <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>           <span class="c1"># 0.05% fee tier</span>
+    <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>   <span class="c1"># tick spacing that matches the fee tier</span>
+    <span class="n">hooks</span><span class="o">=</span><span class="n">ZERO_HOOK</span><span class="p">,</span>   <span class="c1"># &quot;0x000...000&quot; means no hook contract</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In Uniswap v4, native ETH is represented by the <strong>zero address</strong>
+(<code class="docutils literal notranslate"><span class="pre">0x000...000</span></code>), not WETH. The two currencies in a pool are always ordered
+so that <code class="docutils literal notranslate"><span class="pre">currency0</span> <span class="pre">&lt;</span> <span class="pre">currency1</span></code> (lexicographic address ordering).</p>
+</div>
+<p>Common fee tiers and their tick spacings:</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">fee</span></code></p></th>
+<th class="head"><p>Rate</p></th>
+<th class="head"><p>Tick spacing</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
+<td><p>0.01%</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">500</span></code></p></td>
+<td><p>0.05%</p></td>
+<td><p>10</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">3000</span></code></p></td>
+<td><p>0.30%</p></td>
+<td><p>60</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">10000</span></code></p></td>
+<td><p>1.00%</p></td>
+<td><p>200</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="connecting-to-uniswap-v4">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Connecting to Uniswap v4</a><a class="headerlink" href="#connecting-to-uniswap-v4" title="Permalink to this heading">#</a></h2>
+<p>Import <code class="xref py py-class docutils literal notranslate"><span class="pre">Uniswap4</span></code> and provide a wallet address, private key, and
+a mainnet Web3 provider. Omit <code class="docutils literal notranslate"><span class="pre">private_key</span></code> for read-only use.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniswap</span> <span class="kn">import</span> <span class="n">Uniswap4</span>
+
+<span class="n">address</span> <span class="o">=</span> <span class="s2">&quot;0xYOUR_ADDRESS&quot;</span>
+<span class="n">private_key</span> <span class="o">=</span> <span class="s2">&quot;0xYOUR_PRIVATE_KEY&quot;</span>  <span class="c1"># or None for read-only</span>
+
+<span class="n">uni</span> <span class="o">=</span> <span class="n">Uniswap4</span><span class="p">(</span>
+    <span class="n">address</span><span class="o">=</span><span class="n">address</span><span class="p">,</span>
+    <span class="n">private_key</span><span class="o">=</span><span class="n">private_key</span><span class="p">,</span>
+    <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;https://mainnet.infura.io/v3/YOUR_PROJECT_ID&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Or pass a Web3 instance directly:</span>
+<span class="kn">from</span> <span class="nn">web3</span> <span class="kn">import</span> <span class="n">Web3</span>
+<span class="n">w3</span> <span class="o">=</span> <span class="n">Web3</span><span class="p">(</span><span class="n">Web3</span><span class="o">.</span><span class="n">HTTPProvider</span><span class="p">(</span><span class="s2">&quot;https://mainnet.infura.io/v3/YOUR_PROJECT_ID&quot;</span><span class="p">))</span>
+<span class="n">uni</span> <span class="o">=</span> <span class="n">Uniswap4</span><span class="p">(</span><span class="n">address</span><span class="o">=</span><span class="n">address</span><span class="p">,</span> <span class="n">private_key</span><span class="o">=</span><span class="n">private_key</span><span class="p">,</span> <span class="n">web3</span><span class="o">=</span><span class="n">w3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">PROVIDER</span></code> environment variable is also accepted:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">PROVIDER</span><span class="o">=</span><span class="s2">&quot;https://mainnet.infura.io/v3/YOUR_PROJECT_ID&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="getting-the-spot-price">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Getting the spot price</a><a class="headerlink" href="#getting-the-spot-price" title="Permalink to this heading">#</a></h2>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">get_token_token_spot_price()</span></code> returns the current price
+of <code class="docutils literal notranslate"><span class="pre">token0</span></code> denominated in <code class="docutils literal notranslate"><span class="pre">token1</span></code>, derived from the pool’s <code class="docutils literal notranslate"><span class="pre">sqrtPriceX96</span></code>
+slot via the v4 StateView contract.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniswap.constants</span> <span class="kn">import</span> <span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">ZERO_HOOK</span>
+
+<span class="n">USDC</span> <span class="o">=</span> <span class="s2">&quot;0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&quot;</span>
+
+<span class="c1"># How many USDC per 1 ETH?</span>
+<span class="n">price</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">get_token_token_spot_price</span><span class="p">(</span>
+    <span class="n">token0</span><span class="o">=</span><span class="n">ETH_ADDRESS</span><span class="p">,</span>
+    <span class="n">token1</span><span class="o">=</span><span class="n">USDC</span><span class="p">,</span>
+    <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">hooks</span><span class="o">=</span><span class="n">ZERO_HOOK</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ETH/USDC spot price: </span><span class="si">{</span><span class="n">price</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># e.g. 3412.54</span>
+
+<span class="c1"># Inverse: ETH price in USDC terms</span>
+<span class="n">price_inv</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">get_token_token_spot_price</span><span class="p">(</span><span class="n">USDC</span><span class="p">,</span> <span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="quoting-a-trade">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Quoting a trade</a><a class="headerlink" href="#quoting-a-trade" title="Permalink to this heading">#</a></h2>
+<p>The quote functions call the on-chain v4 Quoter contract and account for
+liquidity depth and fees. Use them instead of the spot price whenever you need
+an accurate estimate for a specific trade size.</p>
+<section id="exact-input-how-much-output-do-i-get">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Exact input — how much output do I get?</a><a class="headerlink" href="#exact-input-how-much-output-do-i-get" title="Permalink to this heading">#</a></h3>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_input()</span></code> returns the amount of <code class="docutils literal notranslate"><span class="pre">token1</span></code>
+received for a fixed amount of <code class="docutils literal notranslate"><span class="pre">token0</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniswap.constants</span> <span class="kn">import</span> <span class="n">ETH_ADDRESS</span>
+
+<span class="n">USDC</span> <span class="o">=</span> <span class="s2">&quot;0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&quot;</span>
+<span class="n">ONE_ETH</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">18</span>
+
+<span class="c1"># How much USDC do I get for 1 ETH?</span>
+<span class="n">usdc_out</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">get_price_input</span><span class="p">(</span>
+    <span class="n">token0</span><span class="o">=</span><span class="n">ETH_ADDRESS</span><span class="p">,</span>
+    <span class="n">token1</span><span class="o">=</span><span class="n">USDC</span><span class="p">,</span>
+    <span class="n">qty</span><span class="o">=</span><span class="n">ONE_ETH</span><span class="p">,</span>
+    <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;1 ETH → </span><span class="si">{</span><span class="n">usdc_out</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> USDC&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For a 2-hop route (e.g. ETH → USDC → USDT), pass a <code class="docutils literal notranslate"><span class="pre">route</span></code> list of
+<code class="xref py py-class docutils literal notranslate"><span class="pre">PoolKey</span></code> objects instead of <code class="docutils literal notranslate"><span class="pre">fee</span></code>/<code class="docutils literal notranslate"><span class="pre">tick_spacing</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniswap.types</span> <span class="kn">import</span> <span class="n">PoolKey</span>
+<span class="kn">from</span> <span class="nn">uniswap.constants</span> <span class="kn">import</span> <span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">ZERO_HOOK</span>
+
+<span class="n">USDC</span> <span class="o">=</span> <span class="s2">&quot;0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&quot;</span>
+<span class="n">USDT</span> <span class="o">=</span> <span class="s2">&quot;0xdAC17F958D2ee523a2206206994597C13D831ec7&quot;</span>
+
+<span class="n">eth_usdc</span> <span class="o">=</span> <span class="n">PoolKey</span><span class="p">(</span><span class="n">currency0</span><span class="o">=</span><span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">currency1</span><span class="o">=</span><span class="n">USDC</span><span class="p">,</span> <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">hooks</span><span class="o">=</span><span class="n">ZERO_HOOK</span><span class="p">)</span>
+<span class="n">usdc_usdt</span> <span class="o">=</span> <span class="n">PoolKey</span><span class="p">(</span><span class="n">currency0</span><span class="o">=</span><span class="n">USDC</span><span class="p">,</span> <span class="n">currency1</span><span class="o">=</span><span class="n">USDT</span><span class="p">,</span> <span class="n">fee</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">hooks</span><span class="o">=</span><span class="n">ZERO_HOOK</span><span class="p">)</span>
+
+<span class="n">usdt_out</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">get_price_input</span><span class="p">(</span>
+    <span class="n">token0</span><span class="o">=</span><span class="n">ETH_ADDRESS</span><span class="p">,</span>
+    <span class="n">token1</span><span class="o">=</span><span class="n">USDT</span><span class="p">,</span>
+    <span class="n">qty</span><span class="o">=</span><span class="n">ONE_ETH</span><span class="p">,</span>
+    <span class="n">route</span><span class="o">=</span><span class="p">[</span><span class="n">eth_usdc</span><span class="p">,</span> <span class="n">usdc_usdt</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="exact-output-how-much-input-do-i-need">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Exact output — how much input do I need?</a><a class="headerlink" href="#exact-output-how-much-input-do-i-need" title="Permalink to this heading">#</a></h3>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_output()</span></code> returns the amount of <code class="docutils literal notranslate"><span class="pre">token0</span></code>
+required to receive a fixed amount of <code class="docutils literal notranslate"><span class="pre">token1</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">USDC</span> <span class="o">=</span> <span class="s2">&quot;0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&quot;</span>
+
+<span class="c1"># How much ETH do I need to buy exactly 1000 USDC?</span>
+<span class="n">eth_needed</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">get_price_output</span><span class="p">(</span>
+    <span class="n">token0</span><span class="o">=</span><span class="n">ETH_ADDRESS</span><span class="p">,</span>
+    <span class="n">token1</span><span class="o">=</span><span class="n">USDC</span><span class="p">,</span>
+    <span class="n">qty</span><span class="o">=</span><span class="mi">1000</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="p">,</span>  <span class="c1"># 1000 USDC in smallest unit</span>
+    <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ETH needed for 1000 USDC: </span><span class="si">{</span><span class="n">eth_needed</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="estimating-price-impact">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Estimating price impact</a><a class="headerlink" href="#estimating-price-impact" title="Permalink to this heading">#</a></h2>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate_price_impact()</span></code> compares the quoted price to
+the pool spot price to estimate slippage.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ONE_ETH</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">18</span>
+
+<span class="n">impact</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">estimate_price_impact</span><span class="p">(</span>
+    <span class="n">token0</span><span class="o">=</span><span class="n">ETH_ADDRESS</span><span class="p">,</span>
+    <span class="n">token1</span><span class="o">=</span><span class="n">USDC</span><span class="p">,</span>
+    <span class="n">qty</span><span class="o">=</span><span class="n">ONE_ETH</span><span class="p">,</span>
+    <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Price impact: </span><span class="si">{</span><span class="n">impact</span><span class="si">:</span><span class="s2">.4%</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># e.g. &quot;Price impact: 0.0152%&quot;</span>
+
+<span class="k">if</span> <span class="n">impact</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">:</span>  <span class="c1"># warn above 1%</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;High price impact — consider splitting the trade.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="making-a-swap">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Making a swap</a><a class="headerlink" href="#making-a-swap" title="Permalink to this heading">#</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Always verify the expected output (via <code class="xref py py-func docutils literal notranslate"><span class="pre">get_price_input()</span></code>
+or <code class="xref py py-func docutils literal notranslate"><span class="pre">estimate_price_impact()</span></code>) before executing a swap.
+Low-liquidity pools can cause large, unexpected losses.</p>
+</div>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">make_swap_input()</span></code> executes a swap for a fixed input
+amount. Pass the quoted output as <code class="docutils literal notranslate"><span class="pre">qtycap</span></code>; the client applies its configured
+<code class="docutils literal notranslate"><span class="pre">max_slippage</span></code> tolerance when it builds the transaction.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniswap.types</span> <span class="kn">import</span> <span class="n">PoolKey</span>
+<span class="kn">from</span> <span class="nn">uniswap.constants</span> <span class="kn">import</span> <span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">ZERO_HOOK</span>
+
+<span class="n">USDC</span> <span class="o">=</span> <span class="s2">&quot;0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&quot;</span>
+<span class="n">ONE_ETH</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">18</span>
+<span class="n">SELL_AMOUNT</span> <span class="o">=</span> <span class="n">ONE_ETH</span> <span class="o">//</span> <span class="mi">10</span>  <span class="c1"># 0.1 ETH</span>
+
+<span class="n">pool_key</span> <span class="o">=</span> <span class="n">PoolKey</span><span class="p">(</span>
+    <span class="n">currency0</span><span class="o">=</span><span class="n">ETH_ADDRESS</span><span class="p">,</span>
+    <span class="n">currency1</span><span class="o">=</span><span class="n">USDC</span><span class="p">,</span>
+    <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+    <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">hooks</span><span class="o">=</span><span class="n">ZERO_HOOK</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Uniswap4 applies its configured max_slippage (1% by default) to this quote</span>
+<span class="n">expected_usdc</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">get_price_input</span><span class="p">(</span><span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">USDC</span><span class="p">,</span> <span class="n">SELL_AMOUNT</span><span class="p">,</span> <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">tx_hash</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">make_swap_input</span><span class="p">(</span>
+    <span class="n">input_token</span><span class="o">=</span><span class="n">ETH_ADDRESS</span><span class="p">,</span>
+    <span class="n">output_token</span><span class="o">=</span><span class="n">USDC</span><span class="p">,</span>
+    <span class="n">qty</span><span class="o">=</span><span class="n">SELL_AMOUNT</span><span class="p">,</span>
+    <span class="n">qtycap</span><span class="o">=</span><span class="n">expected_usdc</span><span class="p">,</span>
+    <span class="n">swap_pool_key</span><span class="o">=</span><span class="n">pool_key</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">receipt</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">w3</span><span class="o">.</span><span class="n">eth</span><span class="o">.</span><span class="n">wait_for_transaction_receipt</span><span class="p">(</span><span class="n">tx_hash</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Swap mined in block </span><span class="si">{</span><span class="n">receipt</span><span class="p">[</span><span class="s1">&#39;blockNumber&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">make_swap_output()</span></code> buys an exact output amount. Pass the
+quoted input as <code class="docutils literal notranslate"><span class="pre">qtycap</span></code>; the client applies <code class="docutils literal notranslate"><span class="pre">max_slippage</span></code> to derive the
+maximum input:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Buy exactly 100 USDC; max_slippage is applied to this quoted ETH input</span>
+<span class="n">expected_eth</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">get_price_output</span><span class="p">(</span><span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">USDC</span><span class="p">,</span> <span class="mi">100</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="p">,</span> <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">tx_hash</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">make_swap_output</span><span class="p">(</span>
+    <span class="n">input_token</span><span class="o">=</span><span class="n">ETH_ADDRESS</span><span class="p">,</span>
+    <span class="n">output_token</span><span class="o">=</span><span class="n">USDC</span><span class="p">,</span>
+    <span class="n">qty</span><span class="o">=</span><span class="mi">100</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="p">,</span>
+    <span class="n">qtycap</span><span class="o">=</span><span class="n">expected_eth</span><span class="p">,</span>
+    <span class="n">swap_pool_key</span><span class="o">=</span><span class="n">pool_key</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="discovering-pools">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Discovering pools</a><a class="headerlink" href="#discovering-pools" title="Permalink to this heading">#</a></h2>
+<p><a class="reference internal" href="api.html#uniswap.util.V4pools" title="uniswap.util.V4pools"><code class="xref py py-class docutils literal notranslate"><span class="pre">V4pools</span></code></a> scans <code class="docutils literal notranslate"><span class="pre">PoolManager</span> <span class="pre">Initialize</span></code> events to find
+all pools for a given pair of tokens.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">web3</span> <span class="kn">import</span> <span class="n">Web3</span>
+<span class="kn">from</span> <span class="nn">uniswap.util</span> <span class="kn">import</span> <span class="n">V4pools</span>
+<span class="kn">from</span> <span class="nn">uniswap.constants</span> <span class="kn">import</span> <span class="n">ETH_ADDRESS</span>
+
+<span class="n">USDC</span> <span class="o">=</span> <span class="s2">&quot;0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&quot;</span>
+
+<span class="n">w3</span> <span class="o">=</span> <span class="n">Web3</span><span class="p">(</span><span class="n">Web3</span><span class="o">.</span><span class="n">HTTPProvider</span><span class="p">(</span><span class="s2">&quot;https://mainnet.infura.io/v3/YOUR_PROJECT_ID&quot;</span><span class="p">))</span>
+<span class="n">pools</span> <span class="o">=</span> <span class="n">V4pools</span><span class="p">(</span><span class="n">w3</span><span class="p">)</span>
+
+<span class="c1"># Scan the chain (slow on first run — save to disk for reuse)</span>
+<span class="n">pools</span><span class="o">.</span><span class="n">fetch_poolkey_data</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+<span class="n">pools</span><span class="o">.</span><span class="n">save_poolkeys_list</span><span class="p">(</span><span class="s2">&quot;/tmp/v4_pools.json&quot;</span><span class="p">)</span>
+
+<span class="c1"># Load from disk on subsequent runs</span>
+<span class="n">pools</span><span class="o">.</span><span class="n">load_poolkeys_list</span><span class="p">(</span><span class="s2">&quot;/tmp/v4_pools.json&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get all ETH/USDC pools</span>
+<span class="n">eth_usdc_pools</span> <span class="o">=</span> <span class="n">pools</span><span class="o">.</span><span class="n">get_poolkeys_sublist</span><span class="p">(</span><span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">USDC</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">pk</span> <span class="ow">in</span> <span class="n">eth_usdc_pools</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;fee=</span><span class="si">{</span><span class="n">pk</span><span class="o">.</span><span class="n">fee</span><span class="si">}</span><span class="s2">, tick_spacing=</span><span class="si">{</span><span class="n">pk</span><span class="o">.</span><span class="n">tick_spacing</span><span class="si">}</span><span class="s2">, hooks=</span><span class="si">{</span><span class="n">pk</span><span class="o">.</span><span class="n">hooks</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="managing-liquidity">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Managing liquidity</a><a class="headerlink" href="#managing-liquidity" title="Permalink to this heading">#</a></h2>
+<p>Uniswap v4 positions are ERC-721 tokens managed by the PositionManager.</p>
+<section id="creating-a-pool">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Creating a pool</a><a class="headerlink" href="#creating-a-pool" title="Permalink to this heading">#</a></h3>
+<p>New pools are created via <code class="xref py py-func docutils literal notranslate"><span class="pre">create_pool()</span></code>, which sets the
+initial price. The price is expressed as <code class="docutils literal notranslate"><span class="pre">sqrtPriceX96</span></code> (an integer).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">uniswap.types</span> <span class="kn">import</span> <span class="n">PoolKey</span>
+<span class="kn">from</span> <span class="nn">uniswap.constants</span> <span class="kn">import</span> <span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">ZERO_HOOK</span>
+
+<span class="n">USDC</span> <span class="o">=</span> <span class="s2">&quot;0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&quot;</span>
+<span class="n">pool_key</span> <span class="o">=</span> <span class="n">PoolKey</span><span class="p">(</span>
+    <span class="n">currency0</span><span class="o">=</span><span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">currency1</span><span class="o">=</span><span class="n">USDC</span><span class="p">,</span> <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">hooks</span><span class="o">=</span><span class="n">ZERO_HOOK</span>
+<span class="p">)</span>
+
+<span class="c1"># Encode an initial price of ~3400 USDC per ETH as sqrtPriceX96</span>
+<span class="c1"># price_ratio = token1_amount / token0_amount (in smallest units)</span>
+<span class="n">price_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3400</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="o">**</span><span class="mi">18</span>
+<span class="n">sqrt_price_x96</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">price_ratio</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="o">**</span><span class="mi">96</span><span class="p">)</span>
+
+<span class="n">tx</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">create_pool</span><span class="p">(</span><span class="n">pool_key</span><span class="o">=</span><span class="n">pool_key</span><span class="p">,</span> <span class="n">sqrt_price_x96</span><span class="o">=</span><span class="n">sqrt_price_x96</span><span class="p">)</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">w3</span><span class="o">.</span><span class="n">eth</span><span class="o">.</span><span class="n">wait_for_transaction_receipt</span><span class="p">(</span><span class="n">tx</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="minting-a-position">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Minting a position</a><a class="headerlink" href="#minting-a-position" title="Permalink to this heading">#</a></h3>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">mint_position()</span></code> adds liquidity to a tick range and
+returns an ERC-721 NFT representing the position.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ONE_ETH</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">18</span>
+
+<span class="n">tx</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">mint_position</span><span class="p">(</span>
+    <span class="n">pool_key</span><span class="o">=</span><span class="n">pool_key</span><span class="p">,</span>
+    <span class="n">tick_lower</span><span class="o">=-</span><span class="mi">887270</span><span class="p">,</span>      <span class="c1"># near minimum tick</span>
+    <span class="n">tick_upper</span><span class="o">=</span><span class="mi">887270</span><span class="p">,</span>       <span class="c1"># near maximum tick (full range)</span>
+    <span class="n">liquidity</span><span class="o">=</span><span class="mi">10</span><span class="o">**</span><span class="mi">18</span><span class="p">,</span>        <span class="c1"># amount of liquidity to provide</span>
+    <span class="n">amount0</span><span class="o">=</span><span class="n">ONE_ETH</span> <span class="o">//</span> <span class="mi">10</span><span class="p">,</span>   <span class="c1"># max ETH to spend</span>
+    <span class="n">amount1</span><span class="o">=</span><span class="mi">340</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="p">,</span>     <span class="c1"># max USDC to spend</span>
+<span class="p">)</span>
+
+<span class="c1"># Retrieve the ERC-721 token ID(s) minted by this transaction</span>
+<span class="n">token_ids</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">get_minted_token_id</span><span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">hex</span><span class="p">())</span>
+<span class="n">token_id</span> <span class="o">=</span> <span class="n">token_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Minted position with token ID: </span><span class="si">{</span><span class="n">token_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="reading-position-state">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Reading position state</a><a class="headerlink" href="#reading-position-state" title="Permalink to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniswap.types</span> <span class="kn">import</span> <span class="n">PoolKey</span>
+
+<span class="n">position</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">get_position_info</span><span class="p">(</span><span class="n">token_id</span><span class="p">)</span>
+<span class="n">liquidity</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">position_manager_get_position_liquidity</span><span class="p">(</span><span class="n">token_id</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Liquidity: </span><span class="si">{</span><span class="n">liquidity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Read the position value (amounts of token0/token1 at current price)</span>
+<span class="n">ETH_DECIMALS</span> <span class="o">=</span> <span class="mi">18</span>
+<span class="n">USDC_DECIMALS</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">value</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">get_position_value</span><span class="p">(</span><span class="n">token_id</span><span class="p">,</span> <span class="n">ETH_DECIMALS</span><span class="p">,</span> <span class="n">USDC_DECIMALS</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;token0 amount: </span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="s1">&#39;amount0&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, token1 amount: </span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="s1">&#39;amount1&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="collecting-fees-and-removing-liquidity">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Collecting fees and removing liquidity</a><a class="headerlink" href="#collecting-fees-and-removing-liquidity" title="Permalink to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniswap.types</span> <span class="kn">import</span> <span class="n">PoolKey</span>
+
+<span class="c1"># Build the PoolKey from position info</span>
+<span class="n">position</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">get_position_info</span><span class="p">(</span><span class="n">token_id</span><span class="p">)</span>
+<span class="n">pool_key</span> <span class="o">=</span> <span class="n">PoolKey</span><span class="p">(</span>
+    <span class="n">position</span><span class="p">[</span><span class="s2">&quot;currency0&quot;</span><span class="p">],</span> <span class="n">position</span><span class="p">[</span><span class="s2">&quot;currency1&quot;</span><span class="p">],</span>
+    <span class="n">position</span><span class="p">[</span><span class="s2">&quot;fee&quot;</span><span class="p">],</span> <span class="n">position</span><span class="p">[</span><span class="s2">&quot;tickSpacing&quot;</span><span class="p">],</span> <span class="n">position</span><span class="p">[</span><span class="s2">&quot;hooks&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Collect all accumulated fees</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">collect_fees</span><span class="p">(</span><span class="n">pool_key</span><span class="o">=</span><span class="n">pool_key</span><span class="p">,</span> <span class="n">token_id</span><span class="o">=</span><span class="n">token_id</span><span class="p">)</span>
+
+<span class="c1"># Remove all liquidity (burn requires the position to be fully empty)</span>
+<span class="n">liquidity</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">position_manager_get_position_liquidity</span><span class="p">(</span><span class="n">token_id</span><span class="p">)</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">decrease_liquidity</span><span class="p">(</span>
+    <span class="n">pool_key</span><span class="o">=</span><span class="n">pool_key</span><span class="p">,</span>
+    <span class="n">token_id</span><span class="o">=</span><span class="n">token_id</span><span class="p">,</span>
+    <span class="n">liquidity</span><span class="o">=</span><span class="n">liquidity</span><span class="p">,</span>
+    <span class="n">amount0_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">amount1_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Burn the position NFT once fully emptied</span>
+<span class="n">uni</span><span class="o">.</span><span class="n">burn_position</span><span class="p">(</span><span class="n">pool_key</span><span class="o">=</span><span class="n">pool_key</span><span class="p">,</span> <span class="n">token_id</span><span class="o">=</span><span class="n">token_id</span><span class="p">,</span> <span class="n">amount0_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">amount1_min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="reading-pool-state-via-stateview">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">Reading pool state via StateView</a><a class="headerlink" href="#reading-pool-state-via-stateview" title="Permalink to this heading">#</a></h2>
+<p>The StateView contract gives read-only access to pool state without making a
+swap.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">uniswap.constants</span> <span class="kn">import</span> <span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">ZERO_HOOK</span>
+
+<span class="n">USDC</span> <span class="o">=</span> <span class="s2">&quot;0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&quot;</span>
+
+<span class="c1"># Current pool price and tick</span>
+<span class="n">slot0</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">stateview_get_slot0</span><span class="p">(</span><span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">USDC</span><span class="p">,</span> <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">hooks</span><span class="o">=</span><span class="n">ZERO_HOOK</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;sqrtPriceX96: </span><span class="si">{</span><span class="n">slot0</span><span class="p">[</span><span class="s1">&#39;sqrtPriceX96&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;current tick: </span><span class="si">{</span><span class="n">slot0</span><span class="p">[</span><span class="s1">&#39;tick&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Total in-range liquidity</span>
+<span class="n">liquidity</span> <span class="o">=</span> <span class="n">uni</span><span class="o">.</span><span class="n">stateview_get_liquidity</span><span class="p">(</span><span class="n">ETH_ADDRESS</span><span class="p">,</span> <span class="n">USDC</span><span class="p">,</span> <span class="n">fee</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">tick_spacing</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">hooks</span><span class="o">=</span><span class="n">ZERO_HOOK</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;in-range liquidity: </span><span class="si">{</span><span class="n">liquidity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="getting-started.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Getting started</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="api.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">API Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-poolkey">The PoolKey</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#connecting-to-uniswap-v4">Connecting to Uniswap v4</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-the-spot-price">Getting the spot price</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quoting-a-trade">Quoting a trade</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exact-input-how-much-output-do-i-get">Exact input — how much output do I get?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exact-output-how-much-input-do-i-need">Exact output — how much input do I need?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#estimating-price-impact">Estimating price impact</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#making-a-swap">Making a swap</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#discovering-pools">Discovering pools</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#managing-liquidity">Managing liquidity</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-pool">Creating a pool</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minting-a-position">Minting a position</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-position-state">Reading position state</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#collecting-fees-and-removing-liquidity">Collecting fees and removing liquidity</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-pool-state-via-stateview">Reading pool state via StateView</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner">
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Shane Fontaine, Erik Bjäreholt, and contributors
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2021, Shane Fontaine, Erik Bjäreholt, and contributors.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div></div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

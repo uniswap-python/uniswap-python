@@ -1,0 +1,409 @@
+Uniswap v4
+==========
+
+Uniswap v4 introduces a fundamentally different architecture from v2 and v3.
+All pools live inside a single **PoolManager** singleton; positions are ERC-721
+tokens managed by the **PositionManager**; and every pool is uniquely identified
+by a :class:`~uniswap.types.PoolKey` struct instead of a standalone contract address.
+
+.. contents:: Table of contents
+    :local:
+    :depth: 2
+
+The PoolKey
+-----------
+
+A :class:`~uniswap.types.PoolKey` is a five-field tuple that uniquely identifies a pool:
+
+.. code:: python
+
+    from uniswap.types import PoolKey
+    from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
+
+    eth_usdc_pool = PoolKey(
+        currency0=ETH_ADDRESS,  # "0x000...000" — ETH is the zero address in v4
+        currency1="0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",  # USDC
+        fee=500,           # 0.05% fee tier
+        tick_spacing=10,   # tick spacing that matches the fee tier
+        hooks=ZERO_HOOK,   # "0x000...000" means no hook contract
+    )
+
+.. note::
+
+    In Uniswap v4, native ETH is represented by the **zero address**
+    (``0x000...000``), not WETH. The two currencies in a pool are always ordered
+    so that ``currency0 < currency1`` (lexicographic address ordering).
+
+Common fee tiers and their tick spacings:
+
++------------+--------+--------------+
+| ``fee``    | Rate   | Tick spacing |
++============+========+==============+
+| ``100``    | 0.01%  | 1            |
++------------+--------+--------------+
+| ``500``    | 0.05%  | 10           |
++------------+--------+--------------+
+| ``3000``   | 0.30%  | 60           |
++------------+--------+--------------+
+| ``10000``  | 1.00%  | 200          |
++------------+--------+--------------+
+
+Connecting to Uniswap v4
+------------------------
+
+Import :class:`~uniswap.Uniswap4` and provide a wallet address, private key, and
+a mainnet Web3 provider. Omit ``private_key`` for read-only use.
+
+.. code:: python
+
+    from uniswap import Uniswap4
+
+    address = "0xYOUR_ADDRESS"
+    private_key = "0xYOUR_PRIVATE_KEY"  # or None for read-only
+
+    uni = Uniswap4(
+        address=address,
+        private_key=private_key,
+        provider="https://mainnet.infura.io/v3/YOUR_PROJECT_ID",
+    )
+
+    # Or pass a Web3 instance directly:
+    from web3 import Web3
+    w3 = Web3(Web3.HTTPProvider("https://mainnet.infura.io/v3/YOUR_PROJECT_ID"))
+    uni = Uniswap4(address=address, private_key=private_key, web3=w3)
+
+The ``PROVIDER`` environment variable is also accepted:
+
+.. code:: sh
+
+    export PROVIDER="https://mainnet.infura.io/v3/YOUR_PROJECT_ID"
+
+Getting the spot price
+----------------------
+
+:func:`~uniswap.Uniswap4.get_token_token_spot_price` returns the current price
+of ``token0`` denominated in ``token1``, derived from the pool's ``sqrtPriceX96``
+slot via the v4 StateView contract.
+
+.. code:: python
+
+    from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
+
+    USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+
+    # How many USDC per 1 ETH?
+    price = uni.get_token_token_spot_price(
+        token0=ETH_ADDRESS,
+        token1=USDC,
+        fee=500,
+        tick_spacing=10,
+        hooks=ZERO_HOOK,
+    )
+    print(f"ETH/USDC spot price: {price:.2f}")  # e.g. 3412.54
+
+    # Inverse: ETH price in USDC terms
+    price_inv = uni.get_token_token_spot_price(USDC, ETH_ADDRESS, fee=500, tick_spacing=10)
+
+Quoting a trade
+---------------
+
+The quote functions call the on-chain v4 Quoter contract and account for
+liquidity depth and fees. Use them instead of the spot price whenever you need
+an accurate estimate for a specific trade size.
+
+Exact input — how much output do I get?
+```````````````````````````````````````
+
+:func:`~uniswap.Uniswap4.get_price_input` returns the amount of ``token1``
+received for a fixed amount of ``token0``.
+
+.. code:: python
+
+    from uniswap.constants import ETH_ADDRESS
+
+    USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    ONE_ETH = 10**18
+
+    # How much USDC do I get for 1 ETH?
+    usdc_out = uni.get_price_input(
+        token0=ETH_ADDRESS,
+        token1=USDC,
+        qty=ONE_ETH,
+        fee=500,
+        tick_spacing=10,
+    )
+    print(f"1 ETH → {usdc_out / 10**6:.2f} USDC")
+
+For a 2-hop route (e.g. ETH → USDC → USDT), pass a ``route`` list of
+:class:`~uniswap.types.PoolKey` objects instead of ``fee``/``tick_spacing``:
+
+.. code:: python
+
+    from uniswap.types import PoolKey
+    from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
+
+    USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    USDT = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+
+    eth_usdc = PoolKey(currency0=ETH_ADDRESS, currency1=USDC, fee=500, tick_spacing=10, hooks=ZERO_HOOK)
+    usdc_usdt = PoolKey(currency0=USDC, currency1=USDT, fee=100, tick_spacing=1, hooks=ZERO_HOOK)
+
+    usdt_out = uni.get_price_input(
+        token0=ETH_ADDRESS,
+        token1=USDT,
+        qty=ONE_ETH,
+        route=[eth_usdc, usdc_usdt],
+    )
+
+Exact output — how much input do I need?
+`````````````````````````````````````````
+
+:func:`~uniswap.Uniswap4.get_price_output` returns the amount of ``token0``
+required to receive a fixed amount of ``token1``.
+
+.. code:: python
+
+    USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+
+    # How much ETH do I need to buy exactly 1000 USDC?
+    eth_needed = uni.get_price_output(
+        token0=ETH_ADDRESS,
+        token1=USDC,
+        qty=1000 * 10**6,  # 1000 USDC in smallest unit
+        fee=500,
+        tick_spacing=10,
+    )
+    print(f"ETH needed for 1000 USDC: {eth_needed / 10**18:.4f}")
+
+Estimating price impact
+-----------------------
+
+:func:`~uniswap.Uniswap4.estimate_price_impact` compares the quoted price to
+the pool spot price to estimate slippage.
+
+.. code:: python
+
+    ONE_ETH = 10**18
+
+    impact = uni.estimate_price_impact(
+        token0=ETH_ADDRESS,
+        token1=USDC,
+        qty=ONE_ETH,
+        fee=500,
+        tick_spacing=10,
+    )
+    print(f"Price impact: {impact:.4%}")  # e.g. "Price impact: 0.0152%"
+
+    if impact > 0.01:  # warn above 1%
+        print("High price impact — consider splitting the trade.")
+
+Making a swap
+-------------
+
+.. warning::
+
+    Always verify the expected output (via :func:`~uniswap.Uniswap4.get_price_input`
+    or :func:`~uniswap.Uniswap4.estimate_price_impact`) before executing a swap.
+    Low-liquidity pools can cause large, unexpected losses.
+
+:func:`~uniswap.Uniswap4.make_swap_input` executes a swap for a fixed input
+amount. Pass the quoted output as ``qtycap``; the client applies its configured
+``max_slippage`` tolerance when it builds the transaction.
+
+.. code:: python
+
+    from uniswap.types import PoolKey
+    from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
+
+    USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    ONE_ETH = 10**18
+    SELL_AMOUNT = ONE_ETH // 10  # 0.1 ETH
+
+    pool_key = PoolKey(
+        currency0=ETH_ADDRESS,
+        currency1=USDC,
+        fee=500,
+        tick_spacing=10,
+        hooks=ZERO_HOOK,
+    )
+
+    # Uniswap4 applies its configured max_slippage (1% by default) to this quote
+    expected_usdc = uni.get_price_input(ETH_ADDRESS, USDC, SELL_AMOUNT, fee=500, tick_spacing=10)
+
+    tx_hash = uni.make_swap_input(
+        input_token=ETH_ADDRESS,
+        output_token=USDC,
+        qty=SELL_AMOUNT,
+        qtycap=expected_usdc,
+        swap_pool_key=pool_key,
+    )
+    receipt = uni.w3.eth.wait_for_transaction_receipt(tx_hash)
+    print(f"Swap mined in block {receipt['blockNumber']}")
+
+:func:`~uniswap.Uniswap4.make_swap_output` buys an exact output amount. Pass the
+quoted input as ``qtycap``; the client applies ``max_slippage`` to derive the
+maximum input:
+
+.. code:: python
+
+    # Buy exactly 100 USDC; max_slippage is applied to this quoted ETH input
+    expected_eth = uni.get_price_output(ETH_ADDRESS, USDC, 100 * 10**6, fee=500, tick_spacing=10)
+
+    tx_hash = uni.make_swap_output(
+        input_token=ETH_ADDRESS,
+        output_token=USDC,
+        qty=100 * 10**6,
+        qtycap=expected_eth,
+        swap_pool_key=pool_key,
+    )
+
+Discovering pools
+-----------------
+
+:class:`~uniswap.util.V4pools` scans ``PoolManager Initialize`` events to find
+all pools for a given pair of tokens.
+
+.. code:: python
+
+    from web3 import Web3
+    from uniswap.util import V4pools
+    from uniswap.constants import ETH_ADDRESS
+
+    USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+
+    w3 = Web3(Web3.HTTPProvider("https://mainnet.infura.io/v3/YOUR_PROJECT_ID"))
+    pools = V4pools(w3)
+
+    # Scan the chain (slow on first run — save to disk for reuse)
+    pools.fetch_poolkey_data(chunk_size=2000)
+    pools.save_poolkeys_list("/tmp/v4_pools.json")
+
+    # Load from disk on subsequent runs
+    pools.load_poolkeys_list("/tmp/v4_pools.json")
+
+    # Get all ETH/USDC pools
+    eth_usdc_pools = pools.get_poolkeys_sublist(ETH_ADDRESS, USDC)
+    for pk in eth_usdc_pools:
+        print(f"fee={pk.fee}, tick_spacing={pk.tick_spacing}, hooks={pk.hooks}")
+
+Managing liquidity
+------------------
+
+Uniswap v4 positions are ERC-721 tokens managed by the PositionManager.
+
+Creating a pool
+```````````````
+
+New pools are created via :func:`~uniswap.Uniswap4.create_pool`, which sets the
+initial price. The price is expressed as ``sqrtPriceX96`` (an integer).
+
+.. code:: python
+
+    import math
+    from uniswap.types import PoolKey
+    from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
+
+    USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    pool_key = PoolKey(
+        currency0=ETH_ADDRESS, currency1=USDC, fee=500, tick_spacing=10, hooks=ZERO_HOOK
+    )
+
+    # Encode an initial price of ~3400 USDC per ETH as sqrtPriceX96
+    # price_ratio = token1_amount / token0_amount (in smallest units)
+    price_ratio = (3400 * 10**6) / 10**18
+    sqrt_price_x96 = int(math.sqrt(price_ratio) * 2**96)
+
+    tx = uni.create_pool(pool_key=pool_key, sqrt_price_x96=sqrt_price_x96)
+    uni.w3.eth.wait_for_transaction_receipt(tx)
+
+Minting a position
+``````````````````
+
+:func:`~uniswap.Uniswap4.mint_position` adds liquidity to a tick range and
+returns an ERC-721 NFT representing the position.
+
+.. code:: python
+
+    ONE_ETH = 10**18
+
+    tx = uni.mint_position(
+        pool_key=pool_key,
+        tick_lower=-887270,      # near minimum tick
+        tick_upper=887270,       # near maximum tick (full range)
+        liquidity=10**18,        # amount of liquidity to provide
+        amount0=ONE_ETH // 10,   # max ETH to spend
+        amount1=340 * 10**6,     # max USDC to spend
+    )
+
+    # Retrieve the ERC-721 token ID(s) minted by this transaction
+    token_ids = uni.get_minted_token_id(tx.hex())
+    token_id = token_ids[0]
+    print(f"Minted position with token ID: {token_id}")
+
+Reading position state
+``````````````````````
+
+.. code:: python
+
+    from uniswap.types import PoolKey
+
+    position = uni.get_position_info(token_id)
+    liquidity = uni.position_manager_get_position_liquidity(token_id)
+    print(f"Liquidity: {liquidity}")
+
+    # Read the position value (amounts of token0/token1 at current price)
+    ETH_DECIMALS = 18
+    USDC_DECIMALS = 6
+    value = uni.get_position_value(token_id, ETH_DECIMALS, USDC_DECIMALS)
+    print(f"token0 amount: {value['amount0']}, token1 amount: {value['amount1']}")
+
+Collecting fees and removing liquidity
+```````````````````````````````````````
+
+.. code:: python
+
+    from uniswap.types import PoolKey
+
+    # Build the PoolKey from position info
+    position = uni.get_position_info(token_id)
+    pool_key = PoolKey(
+        position["currency0"], position["currency1"],
+        position["fee"], position["tickSpacing"], position["hooks"]
+    )
+
+    # Collect all accumulated fees
+    uni.collect_fees(pool_key=pool_key, token_id=token_id)
+
+    # Remove all liquidity (burn requires the position to be fully empty)
+    liquidity = uni.position_manager_get_position_liquidity(token_id)
+    uni.decrease_liquidity(
+        pool_key=pool_key,
+        token_id=token_id,
+        liquidity=liquidity,
+        amount0_min=0,
+        amount1_min=0,
+    )
+
+    # Burn the position NFT once fully emptied
+    uni.burn_position(pool_key=pool_key, token_id=token_id, amount0_min=0, amount1_min=0)
+
+Reading pool state via StateView
+---------------------------------
+
+The StateView contract gives read-only access to pool state without making a
+swap.
+
+.. code:: python
+
+    from uniswap.constants import ETH_ADDRESS, ZERO_HOOK
+
+    USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+
+    # Current pool price and tick
+    slot0 = uni.stateview_get_slot0(ETH_ADDRESS, USDC, fee=500, tick_spacing=10, hooks=ZERO_HOOK)
+    print(f"sqrtPriceX96: {slot0['sqrtPriceX96']}")
+    print(f"current tick: {slot0['tick']}")
+
+    # Total in-range liquidity
+    liquidity = uni.stateview_get_liquidity(ETH_ADDRESS, USDC, fee=500, tick_spacing=10, hooks=ZERO_HOOK)
+    print(f"in-range liquidity: {liquidity}")
