@@ -8,68 +8,68 @@ msgstr ""
 "Language: bg\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "By the"
+msgstr "По"
+
 msgid "By"
 msgstr "От"
-
-msgid "repository"
-msgstr "хранилище"
-
-msgid "Fullscreen mode"
-msgstr "Режим на цял екран"
 
 msgid "Contents"
 msgstr "Съдържание"
 
-msgid "Download source file"
-msgstr "Изтеглете изходния файл"
-
-msgid "Edit this page"
-msgstr "Редактирайте тази страница"
-
-msgid "Last updated on"
-msgstr "Последна актуализация на"
-
-msgid "Print to PDF"
-msgstr "Печат в PDF"
-
-msgid "suggest edit"
-msgstr "предложи редактиране"
-
-msgid "Download this page"
-msgstr "Изтеглете тази страница"
-
-msgid "Toggle navigation"
-msgstr "Превключване на навигацията"
-
-msgid "By the"
-msgstr "По"
-
-msgid "Sphinx Book Theme"
-msgstr "Тема на книгата Sphinx"
-
-msgid "previous page"
-msgstr "предишна страница"
-
-msgid "Source repository"
-msgstr "Хранилище на източника"
-
-msgid "open issue"
-msgstr "отворен брой"
+msgid "Copyright"
+msgstr "Авторско право"
 
 msgid "Download notebook file"
 msgstr "Изтеглете файла на бележника"
 
-msgid "Copyright"
-msgstr "Авторско право"
+msgid "Download source file"
+msgstr "Изтеглете изходния файл"
 
-msgid "Theme by the"
-msgstr "Тема от"
+msgid "Download this page"
+msgstr "Изтеглете тази страница"
+
+msgid "Edit this page"
+msgstr "Редактирайте тази страница"
+
+msgid "Fullscreen mode"
+msgstr "Режим на цял екран"
+
+msgid "Last updated on"
+msgstr "Последна актуализация на"
+
+msgid "Launch"
+msgstr "Стартиране"
 
 msgid "Open an issue"
 msgstr "Отворете проблем"
 
+msgid "Print to PDF"
+msgstr "Печат в PDF"
+
+msgid "Source repository"
+msgstr "Хранилище на източника"
+
+msgid "Sphinx Book Theme"
+msgstr "Тема на книгата Sphinx"
+
+msgid "Theme by the"
+msgstr "Тема от"
+
+msgid "Toggle navigation"
+msgstr "Превключване на навигацията"
+
 msgid "next page"
 msgstr "Следваща страница"
 
-msgid "Launch"
-msgstr "Стартиране"
+msgid "open issue"
+msgstr "отворен брой"
+
+msgid "previous page"
+msgstr "предишна страница"
+
+msgid "repository"
+msgstr "хранилище"
+
+msgid "suggest edit"
+msgstr "предложи редактиране"
