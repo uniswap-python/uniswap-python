@@ -66,9 +66,13 @@ make test
 poetry run pytest --capture=no  # doesn't capture output (verbose)
 ```
 
-## Support our continued work!
+## Funding
 
-You can support us on [Gitcoin Grants](https://gitcoin.co/grants/2631/uniswap-python).
+Development of this library has been funded by:
+
+* The **[Uniswap Grants Program](https://www.uniswapfoundation.org/grants)**, which awarded a $15k grant (2021) that funded the development of Uniswap v3 support.
+* **Community donations** through [Gitcoin Grants](https://gitcoin.co/grants/2631/uniswap-python), which were used to compensate contributors (see [#181](https://github.com/uniswap-python/uniswap-python/discussions/181)).
+* **[Superuser Labs](https://superuserlabs.org/)**, Erik's company, which has sponsored continued development and maintenance, including funding [@liquid-8](https://github.com/liquid-8)'s work on Uniswap v4 support.
 
 ## Authors
 
@@ -76,8 +80,6 @@ You can support us on [Gitcoin Grants](https://gitcoin.co/grants/2631/uniswap-py
 * [Erik Bjäreholt](https://twitter.com/ErikBjare)
 * [@liquid-8](https://github.com/liquid-8)
 * ...and [others](https://github.com/uniswap-python/uniswap-python/graphs/contributors)
-
-*Want to help out with development? We have funding to those that do! See [#181](https://github.com/uniswap-python/uniswap-python/discussions/181)*
 
 Contributors also earn this beautiful [GitPOAP](https://gitpoap.notion.site/What-s-a-GitPOAP-5b085daac4b4429994b5231be028b3d9) for their contributions!
 
