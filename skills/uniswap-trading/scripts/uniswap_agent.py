@@ -256,6 +256,10 @@ def cmd_swap(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
 
 
 def cmd_balance(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
+    if not cfg.address:
+        raise SafetyError(
+            "balance requires UNISWAP_AGENT_ADDRESS to identify the wallet"
+        )
     client = _connect(cfg, args.version if args.version != 4 else 3)
     chain_id = _chain_id(client)
     token = resolve_token(args.token, chain_id)

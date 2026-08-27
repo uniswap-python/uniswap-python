@@ -73,6 +73,11 @@ class TestTokenResolution:
 
 
 class TestCLI:
+    def test_balance_without_address_exits_2_before_connecting(self, monkeypatch):
+        monkeypatch.setenv("PROVIDER", "http://localhost:1")
+        monkeypatch.delenv("UNISWAP_AGENT_ADDRESS", raising=False)
+        assert agent.main(["balance", "ETH"]) == 2
+
     def test_parser_covers_all_commands(self):
         parser = agent.build_parser()
         for command in agent.COMMANDS:
