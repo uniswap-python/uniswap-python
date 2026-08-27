@@ -15,7 +15,7 @@ Safety model (testnet-first):
 
 Environment:
     PROVIDER                     JSON-RPC endpoint (uniswap-python convention)
-    UNISWAP_AGENT_ADDRESS        Wallet address (read-only ops work without it)
+    UNISWAP_AGENT_ADDRESS        Wallet address; required by balance
     UNISWAP_AGENT_PRIVATE_KEY    Private key; only needed with --broadcast
     UNISWAP_AGENT_ALLOW_MAINNET  Set to 1 to allow non-testnet chains
     UNISWAP_AGENT_MAX_SLIPPAGE   Override the 0.05 slippage ceiling (float)
