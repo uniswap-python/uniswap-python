@@ -90,6 +90,24 @@ def check_broadcast_allowed(broadcast: bool, private_key: Optional[str]) -> None
         )
 
 
+def require_wallet_address(address: Optional[str]) -> str:
+    if not address:
+        raise SafetyError(
+            "balance requires UNISWAP_AGENT_ADDRESS to identify the wallet"
+        )
+    if len(address) != 42 or not address.startswith("0x"):
+        raise SafetyError("UNISWAP_AGENT_ADDRESS must be a non-zero EVM address")
+    try:
+        value = int(address[2:], 16)
+    except ValueError as error:
+        raise SafetyError(
+            "UNISWAP_AGENT_ADDRESS must be a non-zero EVM address"
+        ) from error
+    if value == 0:
+        raise SafetyError("UNISWAP_AGENT_ADDRESS must be a non-zero EVM address")
+    return address
+
+
 def resolve_token(symbol_or_addr: str, chain_id: int) -> str:
     if symbol_or_addr.startswith("0x"):
         return symbol_or_addr
@@ -256,15 +274,13 @@ def cmd_swap(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
 
 
 def cmd_balance(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
-    if not cfg.address:
-        raise SafetyError(
-            "balance requires UNISWAP_AGENT_ADDRESS to identify the wallet"
-        )
+    address = require_wallet_address(cfg.address)
+    cfg.address = address
     client = _connect(cfg, args.version if args.version != 4 else 3)
     chain_id = _chain_id(client)
     token = resolve_token(args.token, chain_id)
     if token == ETH:
-        balance = int(client.w3.eth.get_balance(cfg.address))
+        balance = int(client.w3.eth.get_balance(address))
     else:
         balance = int(client.get_token_balance(token))
     return {"chain_id": chain_id, "token": token, "balance": balance}

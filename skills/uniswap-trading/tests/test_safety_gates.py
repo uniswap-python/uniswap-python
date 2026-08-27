@@ -73,9 +73,22 @@ class TestTokenResolution:
 
 
 class TestCLI:
-    def test_balance_without_address_exits_2_before_connecting(self, monkeypatch):
+    @pytest.mark.parametrize(
+        "address",
+        [
+            None,
+            "not-an-address",
+            "0x0000000000000000000000000000000000000000",
+        ],
+    )
+    def test_balance_rejects_invalid_address_before_connecting(
+        self, monkeypatch, address
+    ):
         monkeypatch.setenv("PROVIDER", "http://localhost:1")
-        monkeypatch.delenv("UNISWAP_AGENT_ADDRESS", raising=False)
+        if address is None:
+            monkeypatch.delenv("UNISWAP_AGENT_ADDRESS", raising=False)
+        else:
+            monkeypatch.setenv("UNISWAP_AGENT_ADDRESS", address)
         assert agent.main(["balance", "ETH"]) == 2
 
     def test_parser_covers_all_commands(self):
