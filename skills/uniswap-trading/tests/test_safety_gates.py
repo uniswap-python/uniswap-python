@@ -14,19 +14,63 @@ _spec.loader.exec_module(agent)
 
 
 class TestBroadcastChainGate:
-    def test_sepolia_allowed(self):
-        agent.check_broadcast_chain_allowed(11155111, allow_mainnet=False)
+    def test_sepolia_allowed_without_arms(self):
+        agent.check_broadcast_chain_allowed(11155111, False, False)
 
     def test_mainnet_refused_by_default(self):
         with pytest.raises(agent.SafetyError, match="not a known testnet"):
-            agent.check_broadcast_chain_allowed(1, allow_mainnet=False)
+            agent.check_broadcast_chain_allowed(1, False, False)
 
-    def test_mainnet_allowed_with_optin(self):
-        agent.check_broadcast_chain_allowed(1, allow_mainnet=True)
+    def test_mainnet_env_alone_refused(self):
+        with pytest.raises(agent.SafetyError, match="--allow-mainnet"):
+            agent.check_broadcast_chain_allowed(1, True, False)
+
+    def test_mainnet_flag_alone_refused(self):
+        with pytest.raises(agent.SafetyError, match="UNISWAP_AGENT_ALLOW_MAINNET"):
+            agent.check_broadcast_chain_allowed(1, False, True)
+
+    def test_mainnet_allowed_with_both_arms(self):
+        agent.check_broadcast_chain_allowed(1, True, True)
 
     def test_unknown_chain_refused(self):
         with pytest.raises(agent.SafetyError):
-            agent.check_broadcast_chain_allowed(56, allow_mainnet=False)
+            agent.check_broadcast_chain_allowed(56, True, False)
+
+
+class TestVersionGate:
+    def test_v3_on_sepolia_refused_deterministically(self):
+        with pytest.raises(agent.SafetyError, match="mainnet-hardcoded"):
+            agent.check_version_supported(3, 11155111)
+
+    def test_v3_on_mainnet_ok(self):
+        agent.check_version_supported(3, 1)
+
+    def test_v3_on_polygon_ok(self):
+        agent.check_version_supported(3, 137)
+
+    def test_v4_on_sepolia_ok(self):
+        agent.check_version_supported(4, 11155111)
+
+
+class TestHumanize:
+    class _FailingW3:
+        class eth:  # noqa: N801 — mimics web3 attribute shape
+            @staticmethod
+            def contract(*a, **k):
+                raise RuntimeError("no network in tests")
+
+    def test_eth_gets_18_decimals_offline(self):
+        out = {"qty_in": 1500000000000000000}
+        agent._humanize(out, self._FailingW3(), {"qty_in": agent.ETH})
+        assert out["decimals_qty_in"] == 18
+        assert out["qty_in_human"] == "1.5"
+
+    def test_unknown_decimals_skips_silently(self):
+        out = {"amount_out": 123}
+        token = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
+        agent._humanize(out, self._FailingW3(), {"amount_out": token})
+        assert "amount_out_human" not in out
+        assert out["amount_out"] == 123
 
 
 class TestSlippageGate:

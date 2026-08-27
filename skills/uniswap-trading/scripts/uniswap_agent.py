@@ -7,8 +7,9 @@ machine-readable output.
 
 Safety model (testnet-first):
 - Read-only commands (status, quote, balance) work on any chain.
-- Broadcasting is only allowed on well-known testnets unless
-  ``UNISWAP_AGENT_ALLOW_MAINNET=1`` is set.
+- Broadcasting outside known testnets requires BOTH arms: the
+  ``UNISWAP_AGENT_ALLOW_MAINNET=1`` environment opt-in AND the per-call
+  ``--allow-mainnet`` flag. Either alone is refused.
 - All state-changing commands are dry-run by default; pass ``--broadcast``
   to actually sign and send. A private key is only required to broadcast.
 - Slippage is capped at 5% unless ``UNISWAP_AGENT_MAX_SLIPPAGE`` raises it.
@@ -63,15 +64,87 @@ class SafetyError(Exception):
     """A guard refused the operation. Message is agent-readable."""
 
 
-def check_broadcast_chain_allowed(chain_id: int, allow_mainnet: bool) -> None:
-    """Gate for state-changing (broadcast) operations only."""
+def check_broadcast_chain_allowed(
+    chain_id: int, allow_mainnet_env: bool, allow_mainnet_flag: bool
+) -> None:
+    """Gate for state-changing (broadcast) operations only.
+
+    Non-testnet broadcasting is double-armed: the environment opt-in
+    (a standing decision by the operator) AND the per-call --allow-mainnet
+    flag (proof this specific call means it) must both be present.
+    """
     if chain_id in TESTNET_CHAIN_IDS:
         return
-    if not allow_mainnet:
+    missing = []
+    if not allow_mainnet_env:
+        missing.append("UNISWAP_AGENT_ALLOW_MAINNET=1 (environment)")
+    if not allow_mainnet_flag:
+        missing.append("--allow-mainnet (per-call flag)")
+    if missing:
         raise SafetyError(
-            f"refusing to broadcast on chain id {chain_id} (not a known testnet). "
-            "Set UNISWAP_AGENT_ALLOW_MAINNET=1 to trade on it deliberately."
+            f"refusing to broadcast on chain id {chain_id} (not a known testnet); "
+            f"missing: {' and '.join(missing)}. Both arms are required."
         )
+
+
+def check_version_supported(version: int, chain_id: int) -> None:
+    """Refuse deterministically where uniswap-python cannot work.
+
+    The v3 client hardcodes mainnet quoter/router addresses, so v3 calls on
+    testnets fail with a confusing retryable-looking contract error. Refuse
+    up front (exit 2, non-retryable) instead.
+    """
+    if version == 3 and chain_id in TESTNET_CHAIN_IDS:
+        raise SafetyError(
+            f"uniswap-python v3 support uses mainnet-hardcoded contract "
+            f"addresses and does not work on {TESTNET_CHAIN_IDS[chain_id]}; "
+            "use --version 4 once testnet enablement lands in the library, "
+            "or quote on a production network."
+        )
+
+
+_ERC20_DECIMALS_ABI = [
+    {
+        "name": "decimals",
+        "inputs": [],
+        "outputs": [{"type": "uint8", "name": ""}],
+        "stateMutability": "view",
+        "type": "function",
+    }
+]
+
+
+def _token_decimals(w3: Any, token: str) -> Optional[int]:
+    """Best-effort ERC-20 decimals; None when the lookup fails."""
+    if token == ETH:
+        return 18
+    try:
+        contract = w3.eth.contract(
+            address=w3.to_checksum_address(token), abi=_ERC20_DECIMALS_ABI
+        )
+        return int(contract.functions.decimals().call())
+    except Exception:  # noqa: BLE001 — decimals are advisory, never fatal
+        return None
+
+
+def _humanize(amounts: dict[str, Any], w3: Any, tokens: dict[str, str]) -> None:
+    """Annotate an output dict with decimals + human-readable amounts.
+
+    ``tokens`` maps an existing amount key (e.g. "qty_in") to the token
+    address it is denominated in. Adds ``<key>_human`` and ``decimals_<key>``
+    fields; skips silently when decimals can't be read (advisory data must
+    never break the machine-readable core)."""
+    cache: dict[str, Optional[int]] = {}
+    for key, token in tokens.items():
+        if token not in cache:
+            cache[token] = _token_decimals(w3, token)
+        decimals = cache[token]
+        if decimals is None or key not in amounts:
+            continue
+        amounts[f"decimals_{key}"] = decimals
+        amounts[f"{key}_human"] = f"{amounts[key] / 10**decimals:.8f}".rstrip(
+            "0"
+        ).rstrip(".")
 
 
 def check_slippage(slippage: float, ceiling: float) -> None:
@@ -187,6 +260,7 @@ def cmd_status(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
 def cmd_quote(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
     client = _connect(cfg, args.version)
     chain_id = _chain_id(client)
+    check_version_supported(args.version, chain_id)
     token_in = resolve_token(args.token_in, chain_id)
     token_out = resolve_token(args.token_out, chain_id)
     if args.version == 4:
@@ -199,7 +273,7 @@ def cmd_quote(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
         )
     else:
         amount_out = client.get_price_input(token_in, token_out, args.qty, fee=args.fee)
-    return {
+    result = {
         "chain_id": chain_id,
         "version": args.version,
         "token_in": token_in,
@@ -207,6 +281,8 @@ def cmd_quote(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
         "qty_in": args.qty,
         "amount_out": int(amount_out),
     }
+    _humanize(result, client.w3, {"qty_in": token_in, "amount_out": token_out})
+    return result
 
 
 def cmd_swap(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
@@ -214,8 +290,9 @@ def cmd_swap(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
     check_slippage(args.slippage, cfg.max_slippage)
     client = _connect(cfg, args.version)
     chain_id = _chain_id(client)
+    check_version_supported(args.version, chain_id)
     if args.broadcast:
-        check_broadcast_chain_allowed(chain_id, cfg.allow_mainnet)
+        check_broadcast_chain_allowed(chain_id, cfg.allow_mainnet, args.allow_mainnet)
     token_in = resolve_token(args.token_in, chain_id)
     token_out = resolve_token(args.token_out, chain_id)
 
@@ -246,6 +323,11 @@ def cmd_swap(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
         "slippage": args.slippage,
         "broadcast": args.broadcast,
     }
+    _humanize(
+        plan,
+        client.w3,
+        {"qty_in": token_in, "quoted_out": token_out, "min_out": token_out},
+    )
     if not args.broadcast:
         plan["note"] = "dry-run: pass --broadcast to sign and send"
         return plan
@@ -283,7 +365,9 @@ def cmd_balance(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
         balance = int(client.w3.eth.get_balance(address))
     else:
         balance = int(client.get_token_balance(token))
-    return {"chain_id": chain_id, "token": token, "balance": balance}
+    result = {"chain_id": chain_id, "token": token, "balance": balance}
+    _humanize(result, client.w3, {"balance": token})
+    return result
 
 
 def cmd_approve(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
@@ -291,7 +375,7 @@ def cmd_approve(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
     client = _connect(cfg, args.version)
     chain_id = _chain_id(client)
     if args.broadcast:
-        check_broadcast_chain_allowed(chain_id, cfg.allow_mainnet)
+        check_broadcast_chain_allowed(chain_id, cfg.allow_mainnet, args.allow_mainnet)
     token = resolve_token(args.token, chain_id)
     if not args.broadcast:
         return {
@@ -333,6 +417,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_swap.add_argument("--tick-spacing", type=int, default=60, help="v4 only")
     p_swap.add_argument("--slippage", type=float, default=0.01)
     p_swap.add_argument("--broadcast", action="store_true", help="sign and send")
+    p_swap.add_argument(
+        "--allow-mainnet",
+        action="store_true",
+        help="second arm (with UNISWAP_AGENT_ALLOW_MAINNET=1) for non-testnet broadcast",
+    )
 
     p_bal = sub.add_parser("balance", help="wallet balance of a token")
     p_bal.add_argument("token")
@@ -340,6 +429,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_appr = sub.add_parser("approve", help="approve the router for a token")
     p_appr.add_argument("token")
     p_appr.add_argument("--broadcast", action="store_true", help="sign and send")
+    p_appr.add_argument(
+        "--allow-mainnet",
+        action="store_true",
+        help="second arm (with UNISWAP_AGENT_ALLOW_MAINNET=1) for non-testnet broadcast",
+    )
 
     return parser
 

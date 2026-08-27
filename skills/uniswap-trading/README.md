@@ -34,6 +34,11 @@ No network needed — tests cover the safety gates and argument surface.
 
 Skeleton (grant deliverable D3 groundwork). Verified working: v3 + v4
 mainnet quotes over public RPCs, dry-run swap plans, all safety gates.
+Cross-agent dogfood (Gordon, 2026-08-27): install clean, mainnet v3/v4 +
+Polygon v3 quoting verified; his four corrections are folded in — human
+amounts in JSON, deterministic v3-testnet refusal, branch-install setup
+docs, double-armed mainnet broadcast (`UNISWAP_AGENT_ALLOW_MAINNET=1` +
+`--allow-mainnet`).
 TODO before production:
 
 - [ ] **Sepolia enablement in the library** (blocks the D3 testnet tx demo):

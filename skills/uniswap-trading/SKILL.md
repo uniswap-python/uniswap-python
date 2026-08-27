@@ -12,7 +12,15 @@ passed, and non-testnet chains are refused unless explicitly allowed.
 
 ## Setup
 
-Requires `uniswap-python >= 0.8.0` (`pip install uniswap-python`) and:
+Requires uniswap-python **with this skill included** — until the next PyPI
+release contains it, install from the PR branch:
+
+```bash
+pip install "uniswap-python @ git+https://github.com/TimeToBuildBob/uniswap-python.git@feat/agent-skill-skeleton"
+# after the skill ships in a release: pip install "uniswap-python>=0.8.1"
+```
+
+Then:
 
 ```bash
 export PROVIDER=https://ethereum-sepolia-rpc.publicnode.com  # any JSON-RPC endpoint
@@ -52,11 +60,16 @@ chains pass 0x token addresses.
 ## Safety rules (enforced by the CLI, exit code 2 on refusal)
 
 1. Read-only commands (status, quote, balance) work on any chain. Broadcasting
-   is limited to known testnets (Sepolia, Arbitrum/Base/Optimism Sepolia)
-   unless `UNISWAP_AGENT_ALLOW_MAINNET=1` is set. Never set that variable
-   yourself — ask the human operator.
+   outside known testnets (Sepolia, Arbitrum/Base/Optimism Sepolia) is
+   **double-armed**: it requires BOTH `UNISWAP_AGENT_ALLOW_MAINNET=1` in the
+   environment AND `--allow-mainnet` on the specific call. Never set the
+   environment arm yourself — that is the human operator's standing decision;
+   the flag is your per-call confirmation.
 2. Nothing is signed or sent without `--broadcast`.
 3. Slippage above 5% is refused (`UNISWAP_AGENT_MAX_SLIPPAGE` to override).
+4. v3 on testnets is refused deterministically (exit 2) — the library's v3
+   contracts are mainnet-hardcoded; don't retry, use a production network or
+   v4.
 
 ## Current network coverage (uniswap-python 0.8.0)
 
@@ -76,4 +89,7 @@ safety guard refused (do not retry with workarounds — report to the human),
 retry or a different fee tier).
 
 Amounts are integers in the token's base units (wei for ETH/WETH: 1 ETH =
-10^18). Convert before showing humans.
+10^18). Where token decimals are readable on-chain, outputs also carry
+advisory `<field>_human` (decimal string) and `decimals_<field>` companions —
+prefer those when showing humans, but treat the integer fields as the source
+of truth (the human fields are omitted when a decimals lookup fails).
