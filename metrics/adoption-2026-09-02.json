@@ -1,0 +1,62 @@
+{
+  "snapshot_at": "2026-09-02T01:29:29.972374+00:00",
+  "repo": "uniswap-python/uniswap-python",
+  "package": "uniswap-python",
+  "github": {
+    "stars": 1011,
+    "forks": 375,
+    "watchers": 23,
+    "open_issues": 66
+  },
+  "github_traffic": {
+    "note": "Skipped \u2014 set ADOPTION_GITHUB_TOKEN (PAT with Administration:read) to capture traffic (14-day window only). The default Actions GITHUB_TOKEN cannot read /traffic/*."
+  },
+  "pypi": {
+    "downloads_last_day": 19,
+    "downloads_last_week": 210,
+    "downloads_last_month": 1044,
+    "version_split_note": "Per-version counts require BigQuery (pypistats.org does not expose them). To check v4 pickup specifically, compare release-date-filtered BigQuery results."
+  },
+  "pypi_versions": [
+    {
+      "version": "0.8.0",
+      "released": "2026-08-03T09:45:06"
+    },
+    {
+      "version": "0.7.1",
+      "released": "2023-09-09T12:22:42"
+    },
+    {
+      "version": "0.7.0",
+      "released": "2023-03-30T13:21:25"
+    },
+    {
+      "version": "0.6.2",
+      "released": "2022-11-08T13:36:42"
+    },
+    {
+      "version": "0.6.1",
+      "released": "2022-10-18T12:25:29"
+    },
+    {
+      "version": "0.6.0",
+      "released": "2022-08-29T10:03:46"
+    },
+    {
+      "version": "0.5.5",
+      "released": "2022-01-03T09:02:11"
+    },
+    {
+      "version": "0.5.4",
+      "released": "2021-12-21T09:53:51"
+    },
+    {
+      "version": "0.5.3",
+      "released": "2021-10-19T10:34:58"
+    },
+    {
+      "version": "0.5.2",
+      "released": "2021-06-23T13:58:55"
+    }
+  ]
+}

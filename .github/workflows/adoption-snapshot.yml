@@ -1,0 +1,54 @@
+name: Adoption Snapshot
+
+on:
+  schedule:
+    # Daily at 06:00 UTC — captures GitHub traffic before the 14-day window rolls off
+    - cron: "0 6 * * *"
+  workflow_dispatch:  # allow manual runs
+
+# The default GITHUB_TOKEN cannot call GET /repos/.../traffic/* (always 403).
+# Add repo secret ADOPTION_GITHUB_TOKEN: a PAT with Administration:read
+# (fine-grained) or public_repo (classic). Contents:write on GITHUB_TOKEN
+# is still what commits the snapshot files.
+permissions:
+  contents: write
+
+concurrency:
+  group: adoption-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      # Pin checkout: this job has contents: write.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          fetch-depth: 0
+
+      - name: Run adoption snapshot
+        env:
+          GITHUB_TOKEN: ${{ secrets.ADOPTION_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        run: python3 scripts/adoption_snapshot.py --out metrics/ --strict
+
+      - name: Commit snapshot
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add metrics/
+          if git diff --staged --quiet; then
+            echo "No changes to commit (snapshot already up to date)"
+            exit 0
+          fi
+          git commit -m "chore(metrics): daily adoption snapshot $(date -u +%Y-%m-%d)"
+          branch="${GITHUB_REF_NAME}"
+          for attempt in 1 2 3; do
+            if git pull --rebase origin "$branch" && git push origin "HEAD:$branch"; then
+              exit 0
+            fi
+            echo "push attempt ${attempt} failed; retrying"
+            sleep $((attempt * 5))
+          done
+          echo "Failed to push snapshot after 3 rebase retries"
+          exit 1

@@ -198,6 +198,8 @@ class TestUniswap(object):
         ],
     )
     def test_get_price_output(self, client: Uniswap, tokens, token0, token1, qty):
+        if client.version == 1 and "UNI" in (token0, token1):
+            pytest.xfail("Uniswap v1 UNI exchange has no liquidity — InvalidJump")
         token0, token1 = tokens[token0], tokens[token1]
         if client.version == 1 and ETH_ADDRESS not in [token0, token1]:
             pytest.skip("Not supported in this version of Uniswap")
