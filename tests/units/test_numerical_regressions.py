@@ -32,20 +32,24 @@ def clients(monkeypatch):
     v3.factory_contract.functions.getPool.return_value.call.return_value = TOKEN0
     v4 = object.__new__(Uniswap4)
     for client in (v3, v4):
-        client.get_token = lambda token: NS(
-            decimals=state.decimals[
-                0 if Web3.to_checksum_address(token).lower() == TOKEN0 else 1
-            ]
+        setattr(
+            client,
+            "get_token",
+            lambda token: NS(
+                decimals=state.decimals[
+                    0 if Web3.to_checksum_address(token).lower() == TOKEN0 else 1
+                ]
+            ),
         )
-    v4.stateview_get_slot0 = lambda *a: {"sqrtPriceX96": state.q}
-    v3.get_pool_immutables = lambda p: {
-        "fee": state.fee,
-        "token0": TOKEN0,
-        "token1": TOKEN1,
-    }
-    v3.get_pool_state = lambda p: {"sqrtPriceX96": state.q}
-    v3.find_tick_from_bitmap = lambda *a: state.high if a[-1] else state.low
-    v3.multicall = lambda batch, types: [(0, 10**30)] * len(batch)
+    setattr(v4, "stateview_get_slot0", lambda *a: {"sqrtPriceX96": state.q})
+    setattr(
+        v3,
+        "get_pool_immutables",
+        lambda p: {"fee": state.fee, "token0": TOKEN0, "token1": TOKEN1},
+    )
+    setattr(v3, "get_pool_state", lambda p: {"sqrtPriceX96": state.q})
+    setattr(v3, "find_tick_from_bitmap", lambda *a: state.high if a[-1] else state.low)
+    setattr(v3, "multicall", lambda batch, types: [(0, 10**30)] * len(batch))
     return state, pool, v3, v4
 
 
