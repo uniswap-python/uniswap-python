@@ -9,7 +9,8 @@ on:
 env:
   # The repo secret still points at a rate-limited Infura URL, so CI must use
   # the public endpoint directly instead of preferring the secret on push runs.
-  PROVIDER_MAINNET: 'https://ethereum.publicnode.com'
+  # PROVIDER_MAINNET: 'https://ethereum.publicnode.com'
+  PROVIDER_MAINNET: 'https://eth.drpc.org'
   PROVIDER_ARBITRUM: 'https://arb1.arbitrum.io/rpc'
   PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
 
