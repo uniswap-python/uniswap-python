@@ -1218,7 +1218,7 @@ class TestAsyncUniswap4:
     ):
         result: int = await pool_service.fetch_poolkey_data(
             first_block,
-            chunk_size=50,
+            chunk_size=5,
             clear_list=False,
             retry_attempts=1,
             minutes_between_retries=1,

@@ -284,7 +284,7 @@ class V4pools:
     def fetch_poolkey_data(
         self,
         first_block: int,
-        chunk_size: int = 500,
+        chunk_size: int = 5,
         clear_list: bool = True,
         retry_attempts: int = 3,
         minutes_between_retries: int = 3,
@@ -348,6 +348,7 @@ class V4pools:
                 # Exception occurs when chunk size value is too big so RPC endpoint rejects
                 # requests OR RPC endpoint has issues.
                 # In such cases, we will try to resume log retrieval process for a defined number of attempts. If all attempts fail, the method will be aborted and `-1`` value will be returned.
+                print(f"Error retrieving logs: {e}")
                 while retry_attempts_done < retry_attempts:
                     print()
                     print()
@@ -500,7 +501,7 @@ class AsyncV4pools:
     async def fetch_poolkey_data(
         self,
         first_block: int,
-        chunk_size: int = 500,
+        chunk_size: int = 5,
         clear_list: bool = True,
         retry_attempts: int = 3,
         minutes_between_retries: int = 3,
@@ -565,6 +566,7 @@ class AsyncV4pools:
                 # Exception occurs when chunk size value is too big so RPC endpoint rejects
                 # requests OR RPC endpoint has issues.
                 # In such cases, we will try to resume log retrieval process for a defined number of attempts. If all attempts fail, the method will be aborted and `-1`` value will be returned.
+                print(f"Error retrieving logs: {e}")
                 while retry_attempts_done < retry_attempts:
                     print()
                     print()
