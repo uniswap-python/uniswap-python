@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import List, Union
 
 from eth_typing.evm import Address, ChecksumAddress
 
-AddressLike = Union[Address, ChecksumAddress]
+AddressLike = Address | ChecksumAddress
 
 
 # Uniswap V4 classes
@@ -42,7 +41,7 @@ class PermitSingle:
 
 @dataclass
 class PermitBatch:
-    details: List[PermitDetails]
+    details: list[PermitDetails]
     spender: str
     sig_deadline: int
 

@@ -44,7 +44,7 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 extlinks = {
-    "issue": ("https://github.com/shanefontaine/uniswap-python/issues/%s", "issue #"),
+    "issue": ("https://github.com/shanefontaine/uniswap-python/issues/%s", "issue #%s"),
 }
 
 

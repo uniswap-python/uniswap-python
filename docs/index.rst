@@ -28,8 +28,9 @@ A good place to start is the :doc:`getting-started` guide.
    :caption: Contents:
 
    getting-started
+   v4
    api
-   cli 
+   cli
    examples
    supported-deployments
 

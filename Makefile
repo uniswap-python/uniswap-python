@@ -7,10 +7,10 @@ typecheck:
 	poetry run mypy --pretty
 
 lint:
-	poetry run flake8
+	poetry run ruff check uniswap
 
 format:
-	black uniswap
+	poetry run ruff format uniswap
 
 format-abis:
 	npx prettier --write --parser=json uniswap/assets/*/*.abi

@@ -1,0 +1,651 @@
+import logging
+import os
+import shutil
+import subprocess
+from collections.abc import Generator
+from contextlib import contextmanager
+from dataclasses import dataclass
+from time import sleep
+
+import pytest
+import pytest_asyncio
+from web3 import AsyncWeb3
+from web3.types import Wei
+
+from uniswap import AsyncUniswap
+from uniswap.constants import ETH_ADDRESS
+from uniswap.exceptions import InvalidFeeTier
+from uniswap.fee import FeeTier
+from uniswap.tokens import get_tokens
+from uniswap.util import (
+    _addr_to_str,
+    _str_to_addr,
+    default_tick_range,
+)
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("UNISWAP_VERSION") == "4",
+    reason="This test file is for Uniswap v1, v2, and v3. For Uniswap v4 tests, see test_uniswap4.py",
+)
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+ENV_UNISWAP_VERSION = os.getenv("UNISWAP_VERSION", None)
+if ENV_UNISWAP_VERSION:
+    UNISWAP_VERSIONS = [int(ENV_UNISWAP_VERSION)]
+else:
+    UNISWAP_VERSIONS = [1, 2, 3]
+
+RECEIPT_TIMEOUT = 5
+
+
+ONE_ETH = 10**18
+ONE_DAI = 10**18
+ONE_USDC = 10**6
+
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+
+@dataclass
+class AnvilInstance:
+    provider: str
+    eth_address: str
+    eth_privkey: str
+
+
+@pytest.fixture(scope="module", params=UNISWAP_VERSIONS)
+def client(request, web3: AsyncWeb3, anvil: AnvilInstance):
+    return AsyncUniswap(
+        anvil.eth_address,
+        anvil.eth_privkey,
+        web3=web3,
+        version=request.param,
+        use_estimate_gas=False,  # see note in _build_and_send_tx
+    )
+
+
+@pytest.fixture(scope="function")
+def tokens(client: AsyncUniswap):
+    return get_tokens(client.netname)
+
+
+@pytest.fixture(scope="module")
+@pytest.mark.asyncio
+async def test_assets(client: AsyncUniswap):
+    """
+    Buy some DAI and USDC to test with.
+    """
+    tokens = get_tokens(client.netname)
+
+    for token_name, amount in [
+        ("DAI", 10_000 * ONE_DAI),
+        ("USDC", 10_000 * ONE_USDC),
+    ]:
+        token_addr = tokens[token_name]
+        price = await client.get_price_output(
+            _str_to_addr(ETH_ADDRESS), token_addr, amount, fee=FeeTier.TIER_3000
+        )
+        logger.info(f"Cost of {amount} {token_name}: {price}")
+        logger.info("Buying...")
+
+        txid = await client.make_trade_output(
+            tokens["ETH"], token_addr, amount, fee=FeeTier.TIER_3000
+        )
+        tx = await client.w3.eth.wait_for_transaction_receipt(
+            txid, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx["status"] == 1, f"Transaction failed: {tx}"
+
+
+@pytest_asyncio.fixture(scope="module")
+async def web3(anvil: AnvilInstance):
+    w3: AsyncWeb3 = AsyncWeb3(
+        AsyncWeb3.AsyncHTTPProvider(anvil.provider, request_kwargs={"timeout": 30})
+    )
+    if 1 != int(await w3.net.version):
+        logger.warning("PROVIDER was not a mainnet provider, which the tests require")
+    return w3
+
+
+@pytest.fixture(scope="module")
+def anvil() -> Generator[AnvilInstance, None, None]:
+    """Fixture that runs anvil which has forked off mainnet"""
+    if not shutil.which("anvil"):
+        raise ValueError(
+            "anvil was not found in PATH, install Foundry: https://getfoundry.sh"
+        )
+    if "PROVIDER" not in os.environ:
+        raise ValueError(
+            "PROVIDER was not set, you need to set it to a mainnet provider (such as Infura) so that we can fork off our testnet"
+        )
+
+    port = 11999
+    defaultGasPrice = 100_000_000_000  # 100 gwei
+    p = subprocess.Popen(
+        f"""anvil
+        --port {port}
+        --chain-id 1
+        --fork-url {os.environ["PROVIDER"]}
+        --gas-price {defaultGasPrice}
+        """.replace("\n", " "),
+        shell=True,
+    )
+    # Account #9 from anvil's default test mnemonic, starts with 1000 ETH
+    eth_address = "0xa0Ee7A142d267C1f36714E4a8F75612F20a79720"
+    eth_privkey = "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6"
+
+    sleep(3)
+    yield AnvilInstance(f"http://127.0.0.1:{port}", eth_address, eth_privkey)
+    p.kill()
+    p.wait()
+
+
+@contextmanager
+def does_not_raise():
+    yield
+
+
+ONE_ETH = 10**18
+ONE_USDC = 10**6
+
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
+
+@pytest.mark.usefixtures("client", "web3")
+class TestAsyncUniswap:
+    # ------ Exchange ------------------------------------------------------------------
+    @pytest.mark.asyncio
+    async def test_get_fee_maker(self, client: AsyncUniswap):
+        if client.version not in [1, 2]:
+            pytest.skip("Tested method not supported in this Uniswap version")
+        r = client.get_fee_maker()
+        assert r == 0
+
+    @pytest.mark.asyncio
+    async def test_get_fee_taker(self, client: AsyncUniswap):
+        if client.version not in [1, 2]:
+            pytest.skip("Tested method not supported in this Uniswap version")
+        r = client.get_fee_taker()
+        assert r == 0.003
+
+    # ------ Market --------------------------------------------------------------------
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "token0",
+        [
+            ("UNI"),
+            ("DAI"),
+            ("USDC"),
+        ],
+    )
+    async def test_approve(self, client: AsyncUniswap, tokens, token0):
+        token0 = tokens[token0]
+        if client.version == 1 and ETH_ADDRESS == token0:
+            pytest.skip("Not supported in this version of Uniswap")
+        r = await client.approve(token0)
+        assert r
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "token0, token1, qty",
+        [
+            ("ETH", "UNI", ONE_ETH),
+            ("UNI", "ETH", ONE_ETH),
+            ("ETH", "DAI", ONE_ETH),
+            ("DAI", "ETH", ONE_ETH),
+            ("ETH", "UNI", 2 * ONE_ETH),
+            ("UNI", "ETH", 2 * ONE_ETH),
+            ("WETH", "DAI", ONE_ETH),
+            ("DAI", "WETH", ONE_ETH),
+            ("DAI", "USDC", ONE_ETH),
+        ],
+    )
+    async def test_get_price_input(
+        self, client: AsyncUniswap, tokens, token0, token1, qty
+    ):
+        token0, token1 = tokens[token0], tokens[token1]
+        if client.version == 1 and ETH_ADDRESS not in [token0, token1]:
+            pytest.skip("Not supported in this version of Uniswap")
+        r = await client.get_price_input(token0, token1, qty, fee=FeeTier.TIER_3000)
+        assert r
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "token0, token1, qty",
+        [
+            ("ETH", "UNI", ONE_ETH),
+            ("UNI", "ETH", ONE_ETH // 100),
+            ("ETH", "DAI", ONE_ETH),
+            ("DAI", "ETH", ONE_ETH),
+            ("ETH", "UNI", 2 * ONE_ETH),
+            ("WETH", "DAI", ONE_ETH),
+            ("DAI", "WETH", ONE_ETH),
+            ("DAI", "USDC", ONE_USDC),
+        ],
+    )
+    async def test_get_price_output(
+        self, client: AsyncUniswap, tokens, token0, token1, qty
+    ):
+        token0, token1 = tokens[token0], tokens[token1]
+        if client.version == 1 and ETH_ADDRESS not in [token0, token1]:
+            pytest.skip("Not supported in this version of Uniswap")
+        r = await client.get_price_output(token0, token1, qty, fee=FeeTier.TIER_3000)
+        assert r
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "token0, token1, fee", [("DAI", "USDC", FeeTier.TIER_3000)]
+    )
+    async def test_get_raw_price(
+        self, client: AsyncUniswap, tokens, token0, token1, fee
+    ):
+        token0, token1 = tokens[token0], tokens[token1]
+        if client.version == 1:
+            pytest.skip("Only supported on Uniswap v2 and v3")
+        r = await client.get_raw_price(token0, token1, fee=fee)
+        assert r
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            ("WETH", "DAI", {"fee": FeeTier.TIER_3000}),
+        ],
+    )
+    async def test_get_pool_instance(
+        self, client: AsyncUniswap, tokens, token0, token1, kwargs
+    ):
+        token0, token1 = tokens[token0], tokens[token1]
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        r = await client.get_pool_instance(token0, token1, **kwargs)
+        assert r
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            ("WETH", "DAI", {"fee": FeeTier.TIER_3000}),
+        ],
+    )
+    async def test_get_pool_immutables(
+        self, client: AsyncUniswap, tokens, token0, token1, kwargs
+    ):
+        token0, token1 = tokens[token0], tokens[token1]
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = await client.get_pool_instance(token0, token1, **kwargs)
+        r = await client.get_pool_immutables(pool)
+        print(r)
+        assert r
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "token0, token1, kwargs",
+        [
+            ("WETH", "DAI", {"fee": FeeTier.TIER_3000}),
+        ],
+    )
+    async def test_get_pool_state(
+        self, client: AsyncUniswap, tokens, token0, token1, kwargs
+    ):
+        token0, token1 = tokens[token0], tokens[token1]
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = await client.get_pool_instance(token0, token1, **kwargs)
+        r = await client.get_pool_state(pool)
+        print(r)
+        assert r
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "amount0, amount1, token0, token1, kwargs",
+        [
+            (1, 10, "WETH", "DAI", {"fee": FeeTier.TIER_3000}),
+        ],
+    )
+    async def test_mint_position(
+        self, client: AsyncUniswap, tokens, amount0, amount1, token0, token1, kwargs
+    ):
+        token0, token1 = tokens[token0], tokens[token1]
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        pool = await client.get_pool_instance(token0, token1, **kwargs)
+        r = await client.mint_position(pool, amount0, amount1)
+        print(r)
+        assert r
+
+    # ------ ERC20 Pool ----------------------------------------------------------------
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("token", [("UNI"), ("DAI")])
+    async def test_get_ex_eth_balance(
+        self,
+        client: AsyncUniswap,
+        tokens,
+        token,
+    ):
+        if client.version != 1:
+            pytest.skip("Only supported on Uniswap v1")
+        r = await client.get_ex_eth_balance(tokens[token])
+        assert r
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("token", [("UNI"), ("DAI")])
+    async def test_get_ex_token_balance(
+        self,
+        client: AsyncUniswap,
+        tokens,
+        token,
+    ):
+        if client.version != 1:
+            pytest.skip("Only supported on Uniswap v1")
+        r = await client.get_ex_token_balance(tokens[token])
+        assert r
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("token", [("UNI"), ("DAI")])
+    async def test_get_exchange_rate(
+        self,
+        client: AsyncUniswap,
+        tokens,
+        token,
+    ):
+        if client.version != 1:
+            pytest.skip("Only supported on Uniswap v1")
+        r = await client.get_exchange_rate(tokens[token])
+        assert r
+
+    # ------ Liquidity -----------------------------------------------------------------
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "token0, token1, amount0, amount1, qty, fee",
+        [
+            ("DAI", "USDC", ONE_ETH, ONE_USDC, ONE_ETH, FeeTier.TIER_3000),
+        ],
+    )
+    async def test_v3_deploy_pool_with_liquidity(
+        self, client: AsyncUniswap, tokens, token0, token1, amount0, amount1, qty, fee
+    ):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+
+        try:
+            pool = await client.create_pool_instance(
+                tokens[token0], tokens[token1], fee
+            )
+        except Exception:
+            pool = await client.get_pool_instance(tokens[token0], tokens[token1], fee)
+
+        print(pool.address)
+        # Ensuring client has sufficient balance of both tokens
+        eth_to_dai = await client.make_trade(
+            tokens["ETH"],
+            tokens[token0],
+            qty,
+            client.address,
+            fee=fee,
+        )
+        eth_to_dai_tx = await client.w3.eth.wait_for_transaction_receipt(
+            eth_to_dai, timeout=RECEIPT_TIMEOUT
+        )
+        assert eth_to_dai_tx["status"]
+        dai_to_usdc = await client.make_trade(
+            tokens[token0],
+            tokens[token1],
+            qty * 10,
+            client.address,
+            fee=fee,
+        )
+        dai_to_usdc_tx = await client.w3.eth.wait_for_transaction_receipt(
+            dai_to_usdc, timeout=RECEIPT_TIMEOUT
+        )
+        assert dai_to_usdc_tx["status"]
+
+        balance_0 = await client.get_token_balance(tokens[token0])
+        balance_1 = await client.get_token_balance(tokens[token1])
+
+        assert balance_0 > amount0, f"Have: {balance_0} need {amount0}"
+        assert balance_1 > amount1, f"Have: {balance_1} need {amount1}"
+
+        min_tick, max_tick = default_tick_range(fee)
+        r = await client.mint_liquidity(
+            pool,
+            amount0,
+            amount1,
+            tick_lower=min_tick,
+            tick_upper=max_tick,
+            deadline=2**64,
+        )
+        assert r["status"]
+
+        position_balance = await client.nonFungiblePositionManager.functions.balanceOf(
+            _addr_to_str(client.address)
+        ).call()
+        assert position_balance > 0
+
+        position_array = await client.get_liquidity_positions()
+        assert len(position_array) > 0
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "deadline",
+        [(2**64)],
+    )
+    async def test_close_position(self, client: AsyncUniswap, deadline):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        position_array = await client.get_liquidity_positions()
+        tokenId = position_array[0]
+        r = await client.close_position(tokenId, deadline=deadline)
+        assert r["status"]
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("token0, token1", [("DAI", "USDC")])
+    async def test_get_tvl_in_pool_on_chain(
+        self, client: AsyncUniswap, tokens, token0, token1
+    ):
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+
+        pool = await client.get_pool_instance(
+            tokens[token0], tokens[token1], fee=FeeTier.TIER_3000
+        )
+        tvl_0, tvl_1 = await client.get_tvl_in_pool(pool)
+        assert tvl_0 > 0
+        assert tvl_1 > 0
+
+    @pytest.mark.asyncio
+    @pytest.mark.skip
+    @pytest.mark.parametrize(
+        "token, max_eth",
+        [
+            ("UNI", 0.00001 * ONE_ETH),
+            ("DAI", 0.00001 * ONE_ETH),
+        ],
+    )
+    async def test_add_liquidity(
+        self, client: AsyncUniswap, tokens, web3: AsyncWeb3, token, max_eth
+    ):
+        token = tokens[token]
+        r = await client.add_liquidity(token, max_eth)
+        tx = await web3.eth.wait_for_transaction_receipt(r, timeout=RECEIPT_TIMEOUT)
+        assert tx["status"]
+
+    @pytest.mark.asyncio
+    @pytest.mark.skip
+    @pytest.mark.parametrize(
+        "token, max_token, expectation",
+        [
+            ("UNI", 0.00001 * ONE_ETH, does_not_raise()),
+            ("DAI", 0.00001 * ONE_ETH, does_not_raise()),
+        ],
+    )
+    async def test_remove_liquidity(
+        self,
+        client: AsyncUniswap,
+        web3: AsyncWeb3,
+        tokens,
+        token,
+        max_token,
+        expectation,
+    ):
+        token = tokens[token]
+        with expectation:
+            r = await client.remove_liquidity(tokens[token], max_token)
+            tx = await web3.eth.wait_for_transaction_receipt(r)
+            assert tx["status"]
+
+    # ------ Make Trade ----------------------------------------------------------------
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "input_token, output_token, qty, recipient, expectation",
+        [
+            # ETH -> Token
+            ("ETH", "DAI", ONE_ETH, None, does_not_raise),
+            # Token -> Token
+            ("DAI", "USDC", ONE_ETH, None, does_not_raise),
+            # Token -> ETH
+            ("USDC", "ETH", ONE_USDC // 2, None, does_not_raise),
+            # ("ETH", "UNI", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
+            # ("UNI", "ETH", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
+            # ("DAI", "UNI", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
+        ],
+    )
+    async def test_make_trade(
+        self,
+        client: AsyncUniswap,
+        web3: AsyncWeb3,
+        tokens,
+        test_assets,
+        input_token,
+        output_token,
+        qty: int,
+        recipient,
+        expectation,
+    ):
+        input_token, output_token = tokens[input_token], tokens[output_token]
+        if client.version == 1 and ETH_ADDRESS not in [input_token, output_token]:
+            pytest.skip(
+                "Not supported in this version of Uniswap, or at least no liquidity"
+            )
+        # Uniswap v1 token-to-ETH uses Vyper 0.1.x bytecode with non-standard JUMP
+        # patterns that Ganache tolerated but Anvil's strict revm rejects (InvalidJump).
+        # xfail until v1 is formally deprecated or a compatible fork-mode is found.
+        if client.version == 1 and output_token == ETH_ADDRESS:
+            pytest.xfail(
+                "v1 token-to-ETH: EvmError: InvalidJump — Vyper 0.1.x bytecode "
+                "incompatible with Anvil revm; tracked for v1 deprecation"
+            )
+        with expectation():
+            bal_in_before = await client.get_token_balance(input_token)
+
+            txid = await client.make_trade(
+                input_token, output_token, qty, recipient, fee=FeeTier.TIER_3000
+            )
+            tx = await web3.eth.wait_for_transaction_receipt(
+                txid, timeout=RECEIPT_TIMEOUT
+            )
+            assert tx["status"], f"Transaction failed with status {tx['status']}: {tx}"
+
+            # TODO: Checks for ETH, taking gas into account
+            bal_in_after = await client.get_token_balance(input_token)
+            if input_token != tokens["ETH"]:
+                assert bal_in_before - qty == bal_in_after
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "input_token, output_token, qty, recipient, expectation",
+        [
+            # ETH -> Token
+            ("ETH", "DAI", ONE_ETH, None, does_not_raise),
+            # Token -> Token
+            ("DAI", "USDC", ONE_USDC, None, does_not_raise),
+            # Token -> ETH
+            ("DAI", "ETH", ONE_ETH // 10, None, does_not_raise),
+            # FIXME: These should probably be uncommented eventually
+            # ("ETH", "UNI", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
+            # ("UNI", "ETH", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
+            # ("DAI", "UNI", int(0.000001 * ONE_ETH), ZERO_ADDRESS),
+            ("DAI", "DAI", ONE_USDC, None, lambda: pytest.raises(ValueError)),
+        ],
+    )
+    async def test_make_trade_output(
+        self,
+        client: AsyncUniswap,
+        web3: AsyncWeb3,
+        tokens,
+        test_assets,
+        input_token,
+        output_token,
+        qty: int,
+        recipient,
+        expectation,
+    ):
+        input_token, output_token = tokens[input_token], tokens[output_token]
+        if client.version == 1 and ETH_ADDRESS not in [input_token, output_token]:
+            pytest.skip(
+                "Not supported in this version of Uniswap, or at least no liquidity"
+            )
+        # Same Anvil revm InvalidJump for v1 token-to-ETH (see test_make_trade above).
+        if client.version == 1 and output_token == ETH_ADDRESS:
+            pytest.xfail(
+                "v1 token-to-ETH: EvmError: InvalidJump — Vyper 0.1.x bytecode "
+                "incompatible with Anvil revm; tracked for v1 deprecation"
+            )
+        with expectation():
+            balance_before = await client.get_token_balance(output_token)
+
+            r = await client.make_trade_output(
+                input_token, output_token, qty, recipient, fee=FeeTier.TIER_3000
+            )
+            tx = await web3.eth.wait_for_transaction_receipt(r, timeout=RECEIPT_TIMEOUT)
+            assert tx["status"]
+
+            # # TODO: Checks for ETH, taking gas into account
+            balance_after = await client.get_token_balance(output_token)
+            if output_token != tokens["ETH"]:
+                assert balance_before + qty == balance_after
+
+    @pytest.mark.asyncio
+    async def test_fee_required_for_uniswap_v3(
+        self,
+        client: AsyncUniswap,
+        tokens,
+    ) -> None:
+        if client.version != 3:
+            pytest.skip("Not supported in this version of Uniswap")
+        with pytest.raises(InvalidFeeTier):
+            await client.get_price_input(
+                tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None
+            )
+        with pytest.raises(InvalidFeeTier):
+            await client.get_price_output(
+                tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None
+            )
+        with pytest.raises(InvalidFeeTier):
+            await client._get_eth_token_output_price(tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            await client._get_token_eth_output_price(
+                tokens["UNI"], Wei(ONE_ETH), fee=None
+            )
+        with pytest.raises(InvalidFeeTier):
+            await client._get_token_token_output_price(
+                tokens["UNI"], tokens["ETH"], ONE_ETH, fee=None
+            )
+        with pytest.raises(InvalidFeeTier):
+            await client.make_trade(tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None)
+        with pytest.raises(InvalidFeeTier):
+            await client.make_trade_output(
+                tokens["ETH"], tokens["UNI"], ONE_ETH, fee=None
+            )
+        # NOTE: (rudiemeant@gmail.com): Since in 0.7.1 we're breaking the
+        # backwards-compatibility with 0.7.0, we should check
+        # that clients now get an error when trying to call methods
+        # without explicitly specifying a fee tier.
+        with pytest.raises(InvalidFeeTier):
+            await client.get_pool_instance(tokens["ETH"], tokens["UNI"], fee=None)  # type: ignore[arg-type]
+        with pytest.raises(InvalidFeeTier):
+            await client.create_pool_instance(tokens["ETH"], tokens["UNI"], fee=None)  # type: ignore[arg-type]
+        with pytest.raises(InvalidFeeTier):
+            await client.get_raw_price(tokens["ETH"], tokens["UNI"], fee=None)

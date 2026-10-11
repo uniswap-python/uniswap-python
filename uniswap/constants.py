@@ -1,11 +1,11 @@
-from typing import Set, cast
+from typing import cast
 
-from web3.types import RPCEndpoint  # noqa: F401
+from web3.types import RPCEndpoint
 
 # look at web3/middleware/cache.py for reference
 # RPC methods that will be cached inside _get_eth_simple_cache_middleware
 SIMPLE_CACHE_RPC_WHITELIST = cast(
-    Set[RPCEndpoint],
+    set[RPCEndpoint],
     {
         "eth_chainId",
     },

@@ -20,8 +20,6 @@ The unofficial Python client for [Uniswap](https://uniswap.io/).
 
 Documentation is available at https://uniswap-python.com/
 
-**Want to help implement support for Uniswap v4?** See [issue #337](https://github.com/uniswap-python/uniswap-python/issues/337)
-
 ## Functionality
 
 *  A simple to use Python wrapper for all available contract functions and variables
@@ -30,6 +28,9 @@ Documentation is available at https://uniswap-python.com/
 
 ### Supports
 
+ - Uniswap v4 (as of v0.8.0, beta)
+    - Swaps, price quoting, liquidity management
+    - Pool discovery via pool cache service
  - Uniswap v3 (as of v0.5.0)
     - Including beta support for Arbitrum & Optimism deployments (as of v0.5.4)
  - Uniswap v2 (as of v0.4.0)
@@ -47,7 +48,13 @@ See our [Getting started guide](https://uniswap-python.com/getting-started.html)
 
 Unit tests are under development using the pytest framework. Contributions are welcome!
 
-Test are run on a fork of the main net using ganache-cli. You need to install it with `npm install -g ganache-cli` before running tests.
+Tests run on a fork of mainnet using [Anvil](https://getfoundry.sh) (part of Foundry). Install Foundry with:
+
+```sh
+curl -L https://foundry.paradigm.xyz | bash
+export PATH="$PATH:$HOME/.foundry/bin"
+foundryup
+```
 
 To run the full test suite, in the project directory set the `PROVIDER` env variable to a mainnet provider, and run:
 
@@ -59,9 +66,13 @@ make test
 poetry run pytest --capture=no  # doesn't capture output (verbose)
 ```
 
-## Support our continued work!
+## Funding
 
-You can support us on [Gitcoin Grants](https://gitcoin.co/grants/2631/uniswap-python).
+Development of this library has been funded by:
+
+* The **[Uniswap Grants Program](https://www.uniswapfoundation.org/grants)**, which awarded a $15k grant (2021) that funded the development of Uniswap v3 support.
+* **Community donations** through [Gitcoin Grants](https://gitcoin.co/grants/2631/uniswap-python), which were used to compensate contributors (see [#181](https://github.com/uniswap-python/uniswap-python/discussions/181)).
+* **[Superuser Labs](https://superuserlabs.org/)**, Erik's company, which has sponsored continued development and maintenance, including funding [@liquid-8](https://github.com/liquid-8)'s work on Uniswap v4 support.
 
 ## Authors
 
@@ -69,8 +80,6 @@ You can support us on [Gitcoin Grants](https://gitcoin.co/grants/2631/uniswap-py
 * [Erik Bjäreholt](https://twitter.com/ErikBjare)
 * [@liquid-8](https://github.com/liquid-8)
 * ...and [others](https://github.com/uniswap-python/uniswap-python/graphs/contributors)
-
-*Want to help out with development? We have funding to those that do! See [#181](https://github.com/uniswap-python/uniswap-python/discussions/181)*
 
 Contributors also earn this beautiful [GitPOAP](https://gitpoap.notion.site/What-s-a-GitPOAP-5b085daac4b4429994b5231be028b3d9) for their contributions!
 
@@ -161,7 +170,7 @@ _A huge thank you [Erik Bjäreholt](https://github.com/ErikBjare) for adding Uni
 * Switched from setup.py to pyproject.toml/poetry
 * Switched from Travis to GitHub Actions
 * For CI to work in your repo, you need to set the secret MAINNET_PROVIDER. I use Infura.
-* Running tests on a local fork of mainnet using ganache-cli (started as a fixture)
+* Running tests on a local fork of mainnet using Anvil/Foundry (started as a fixture)
 * Fixed tests for make_trade and make_trade_output
 * Added type annotations to the entire codebase and check them with mypy in CI
 * Formatted entire codebase with black
