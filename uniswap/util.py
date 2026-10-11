@@ -301,8 +301,8 @@ class V4pools:
         """
         # Scans PoolManager contract' Initialize() event logs in order to get
         # list of all pools.  See documentation for suggested starting blocks.
-        # chunk_size default value 500 should be suitable for public RPCs;
-        # can be increased on private/local RPCs for better performance.
+        # chunk_size default value 5 should be suitable for public RPCs;
+        # can be increased on paid or local RPCs for better performance.
 
         chain_id = int(self.web3.net.version)
         net_name = _netid_to_name[chain_id]
@@ -518,8 +518,8 @@ class AsyncV4pools:
         """
         # Scans PoolManager contract' Initialize() event logs in order to get
         # list of all pools.  See documentation for suggested starting blocks.
-        # chunk_size default value 500 should be suitable for public RPCs;
-        # can be increased on private/local RPCs for better performance.
+        # chunk_size default value 5 should be suitable for public RPCs;
+        # can be increased on paid or local RPCs for better performance.
 
         chain_id: int = int(await self.web3.net.version)
         net_name = _netid_to_name[chain_id]
