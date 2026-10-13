@@ -1,0 +1,209 @@
+{
+  "snapshot_at": "2026-10-13T13:57:20.730893+00:00",
+  "repo": "uniswap-python/uniswap-python",
+  "package": "uniswap-python",
+  "github": {
+    "stars": 1017,
+    "forks": 372,
+    "watchers": 23,
+    "open_issues": 66
+  },
+  "github_traffic": {
+    "clones_14d": 873,
+    "unique_cloners_14d": 223,
+    "views_14d": 1037,
+    "unique_visitors_14d": 218,
+    "clones_daily": [
+      {
+        "date": "2026-09-29",
+        "count": 16,
+        "uniques": 15
+      },
+      {
+        "date": "2026-09-30",
+        "count": 25,
+        "uniques": 13
+      },
+      {
+        "date": "2026-10-01",
+        "count": 52,
+        "uniques": 11
+      },
+      {
+        "date": "2026-10-02",
+        "count": 68,
+        "uniques": 16
+      },
+      {
+        "date": "2026-10-03",
+        "count": 11,
+        "uniques": 8
+      },
+      {
+        "date": "2026-10-04",
+        "count": 24,
+        "uniques": 18
+      },
+      {
+        "date": "2026-10-05",
+        "count": 78,
+        "uniques": 16
+      },
+      {
+        "date": "2026-10-06",
+        "count": 100,
+        "uniques": 18
+      },
+      {
+        "date": "2026-10-07",
+        "count": 19,
+        "uniques": 14
+      },
+      {
+        "date": "2026-10-08",
+        "count": 11,
+        "uniques": 8
+      },
+      {
+        "date": "2026-10-09",
+        "count": 154,
+        "uniques": 18
+      },
+      {
+        "date": "2026-10-10",
+        "count": 23,
+        "uniques": 19
+      },
+      {
+        "date": "2026-10-11",
+        "count": 160,
+        "uniques": 28
+      },
+      {
+        "date": "2026-10-12",
+        "count": 132,
+        "uniques": 58
+      }
+    ],
+    "views_daily": [
+      {
+        "date": "2026-09-29",
+        "count": 34,
+        "uniques": 9
+      },
+      {
+        "date": "2026-09-30",
+        "count": 209,
+        "uniques": 37
+      },
+      {
+        "date": "2026-10-01",
+        "count": 57,
+        "uniques": 25
+      },
+      {
+        "date": "2026-10-02",
+        "count": 89,
+        "uniques": 22
+      },
+      {
+        "date": "2026-10-03",
+        "count": 19,
+        "uniques": 12
+      },
+      {
+        "date": "2026-10-04",
+        "count": 50,
+        "uniques": 18
+      },
+      {
+        "date": "2026-10-05",
+        "count": 87,
+        "uniques": 19
+      },
+      {
+        "date": "2026-10-06",
+        "count": 51,
+        "uniques": 20
+      },
+      {
+        "date": "2026-10-07",
+        "count": 28,
+        "uniques": 18
+      },
+      {
+        "date": "2026-10-08",
+        "count": 124,
+        "uniques": 24
+      },
+      {
+        "date": "2026-10-09",
+        "count": 16,
+        "uniques": 7
+      },
+      {
+        "date": "2026-10-10",
+        "count": 31,
+        "uniques": 10
+      },
+      {
+        "date": "2026-10-11",
+        "count": 178,
+        "uniques": 45
+      },
+      {
+        "date": "2026-10-12",
+        "count": 64,
+        "uniques": 17
+      }
+    ]
+  },
+  "pypi": {
+    "downloads_last_day": 13,
+    "downloads_last_week": 168,
+    "downloads_last_month": 609,
+    "version_split_note": "Per-version counts require BigQuery (pypistats.org does not expose them). To check v4 pickup specifically, compare release-date-filtered BigQuery results."
+  },
+  "pypi_versions": [
+    {
+      "version": "0.8.0",
+      "released": "2026-08-03T09:45:06"
+    },
+    {
+      "version": "0.7.1",
+      "released": "2023-09-09T12:22:42"
+    },
+    {
+      "version": "0.7.0",
+      "released": "2023-03-30T13:21:25"
+    },
+    {
+      "version": "0.6.2",
+      "released": "2022-11-08T13:36:42"
+    },
+    {
+      "version": "0.6.1",
+      "released": "2022-10-18T12:25:29"
+    },
+    {
+      "version": "0.6.0",
+      "released": "2022-08-29T10:03:46"
+    },
+    {
+      "version": "0.5.5",
+      "released": "2022-01-03T09:02:11"
+    },
+    {
+      "version": "0.5.4",
+      "released": "2021-12-21T09:53:51"
+    },
+    {
+      "version": "0.5.3",
+      "released": "2021-10-19T10:34:58"
+    },
+    {
+      "version": "0.5.2",
+      "released": "2021-06-23T13:58:55"
+    }
+  ]
+}
