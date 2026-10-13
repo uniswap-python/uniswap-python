@@ -101,8 +101,8 @@ def anvil() -> Generator[AnvilInstance, None, None]:
     eth_privkey = "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
     # Poll until Anvil accepts connections. Fail immediately if the process
     # exits (for example a genesis failure), rather than waiting out the deadline.
-    deadline = time.time() + 60
-    while time.time() < deadline:
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
         if p.poll() is not None:
             raise RuntimeError(
                 f"Anvil exited before listening on port {port} (code {p.returncode})"
@@ -114,6 +114,7 @@ def anvil() -> Generator[AnvilInstance, None, None]:
             time.sleep(0.5)
     else:
         p.kill()
+        p.wait()
         raise RuntimeError(f"Anvil did not start on port {port} within 60s")
     yield AnvilInstance(f"http://127.0.0.1:{port}", eth_address, eth_privkey)
     p.kill()
