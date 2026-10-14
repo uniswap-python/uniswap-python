@@ -89,6 +89,12 @@ Contributors also earn this beautiful [GitPOAP](https://gitpoap.notion.site/What
 
 ## Changelog
 
+_0.9.0_
+* Added: Async versions of Uniswap V2-V4
+* Added: V2 and V3 custom routes (untested)
+* Added: Async pool cache service for Uniswap V4
+* Removed: V1 support
+
 _0.8.0_
 
 * Added: Uniswap V4 support
