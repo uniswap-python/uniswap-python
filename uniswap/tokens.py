@@ -1,9 +1,7 @@
-from typing import Dict
-
 from eth_typing.evm import ChecksumAddress
 from web3 import Web3
 
-tokens_mainnet: Dict[str, ChecksumAddress] = {
+tokens_mainnet: dict[str, ChecksumAddress] = {
     k: Web3.to_checksum_address(v)
     for k, v in {
         "ETH": "0x0000000000000000000000000000000000000000",
@@ -16,7 +14,7 @@ tokens_mainnet: Dict[str, ChecksumAddress] = {
     }.items()
 }
 
-tokens_rinkeby: Dict[str, ChecksumAddress] = {
+tokens_rinkeby: dict[str, ChecksumAddress] = {
     k: Web3.to_checksum_address(v)
     for k, v in {
         "ETH": "0x0000000000000000000000000000000000000000",
@@ -25,7 +23,7 @@ tokens_rinkeby: Dict[str, ChecksumAddress] = {
     }.items()
 }
 
-tokens_arbitrum: Dict[str, ChecksumAddress] = {
+tokens_arbitrum: dict[str, ChecksumAddress] = {
     k: Web3.to_checksum_address(v)
     for k, v in {
         "ETH": "0x0000000000000000000000000000000000000000",
@@ -37,7 +35,7 @@ tokens_arbitrum: Dict[str, ChecksumAddress] = {
 }
 
 
-def get_tokens(netname: str) -> Dict[str, ChecksumAddress]:
+def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
     """
     Returns a dict with addresses for tokens for the current net.
     Used in testing.
@@ -49,4 +47,4 @@ def get_tokens(netname: str) -> Dict[str, ChecksumAddress]:
     elif netname == "arbitrum":
         return tokens_arbitrum
     else:
-        raise Exception(f"Unknown net '{netname}'")
+        raise ValueError(f"Unknown net '{netname}'")

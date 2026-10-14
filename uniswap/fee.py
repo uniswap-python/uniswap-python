@@ -1,6 +1,6 @@
-﻿import enum
+import enum
 import logging
-from typing import final, Final, Optional
+from typing import Final, final
 
 from .exceptions import InvalidFeeTier
 
@@ -26,7 +26,7 @@ class FeeTier(enum.IntEnum):
     TIER_10000 = 10000
 
 
-def validate_fee_tier(fee: Optional[int], version: int) -> int:
+def validate_fee_tier(fee: int | None, version: int) -> int:
     """
     Validate fee tier for a given Uniswap version.
     """

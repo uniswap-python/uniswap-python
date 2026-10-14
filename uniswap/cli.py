@@ -1,6 +1,5 @@
 import logging
 import os
-from typing import Optional
 
 import click
 from dotenv import load_dotenv
@@ -15,7 +14,7 @@ from .uniswap import AddressLike, Uniswap, _str_to_addr
 logger = logging.getLogger(__name__)
 
 # Global used in _coerce_to_checksum to look up tokens
-_uni: Optional[Uniswap] = None
+_uni: Uniswap | None = None
 
 
 def _coerce_to_checksum(addr: str) -> str:
@@ -71,7 +70,7 @@ def price(
     token_in: AddressLike,
     token_out: AddressLike,
     raw: bool,
-    quantity: Optional[int] = None,
+    quantity: int | None = None,
 ) -> None:
     """Returns the price of ``quantity`` tokens of ``token_in`` quoted in ``token_out``."""
     uni: Uniswap = ctx.obj["UNISWAP"]
@@ -81,7 +80,9 @@ def price(
         else:
             decimals = uni.get_token(token_in).decimals
         quantity = 10**decimals
-    price = uni.get_price_input(token_in, token_out, qty=quantity, fee=FeeTier.TIER_3000)
+    price = uni.get_price_input(
+        token_in, token_out, qty=quantity, fee=FeeTier.TIER_3000
+    )
     if raw:
         click.echo(price)
     else:

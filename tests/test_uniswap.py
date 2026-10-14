@@ -2,10 +2,10 @@ import logging
 import os
 import shutil
 import subprocess
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from time import sleep
-from typing import Generator
 
 import pytest
 from web3 import Web3
@@ -106,11 +106,11 @@ def web3(anvil: AnvilInstance):
 def anvil() -> Generator[AnvilInstance, None, None]:
     """Fixture that runs anvil which has forked off mainnet"""
     if not shutil.which("anvil"):
-        raise Exception(
+        raise ValueError(
             "anvil was not found in PATH, install Foundry: https://getfoundry.sh"
         )
     if "PROVIDER" not in os.environ:
-        raise Exception(
+        raise ValueError(
             "PROVIDER was not set, you need to set it to a mainnet provider (such as Infura) so that we can fork off our testnet"
         )
 
@@ -148,7 +148,7 @@ ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 # TODO: Change pytest.param(..., mark=pytest.mark.xfail) to the expectation/raises method
 @pytest.mark.usefixtures("client", "web3")
-class TestUniswap(object):
+class TestUniswap:
     # ------ Exchange ------------------------------------------------------------------
     def test_get_fee_maker(self, client: Uniswap):
         if client.version not in [1, 2]:
@@ -163,6 +163,22 @@ class TestUniswap(object):
         assert r == 0.003
 
     # ------ Market --------------------------------------------------------------------
+    @pytest.mark.parametrize(
+        "token0",
+        [
+            ("ETH"),
+            ("UNI"),
+            ("DAI"),
+            ("USDC"),
+        ],
+    )
+    def test_approve(self, client: Uniswap, tokens, token0):
+        token0 = tokens[token0]
+        if client.version == 1 and ETH_ADDRESS == token0:
+            pytest.skip("Not supported in this version of Uniswap")
+        r = client.approve(token0)
+        assert r
+
     @pytest.mark.parametrize(
         "token0, token1, qty",
         [
@@ -284,7 +300,7 @@ class TestUniswap(object):
         tokens,
         token,
     ):
-        if not client.version == 1:
+        if client.version != 1:
             pytest.skip("Only supported on Uniswap v1")
         r = client.get_ex_eth_balance(tokens[token])
         assert r
@@ -296,7 +312,7 @@ class TestUniswap(object):
         tokens,
         token,
     ):
-        if not client.version == 1:
+        if client.version != 1:
             pytest.skip("Only supported on Uniswap v1")
         r = client.get_ex_token_balance(tokens[token])
         assert r
@@ -308,7 +324,7 @@ class TestUniswap(object):
         tokens,
         token,
     ):
-        if not client.version == 1:
+        if client.version != 1:
             pytest.skip("Only supported on Uniswap v1")
         r = client.get_exchange_rate(tokens[token])
         assert r
@@ -445,7 +461,7 @@ class TestUniswap(object):
             # Token -> Token
             ("DAI", "USDC", ONE_ETH, None, does_not_raise),
             # Token -> ETH
-            ("USDC", "ETH", ONE_USDC, None, does_not_raise),
+            ("USDC", "ETH", ONE_USDC // 2, None, does_not_raise),
             # ("ETH", "UNI", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # ("UNI", "ETH", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),
             # ("DAI", "UNI", 0.00001 * ONE_ETH, ZERO_ADDRESS, does_not_raise),

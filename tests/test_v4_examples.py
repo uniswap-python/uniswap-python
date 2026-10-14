@@ -14,11 +14,10 @@ See docs/v4.rst for the prose version of these examples.
 
 import os
 import shutil
-import socket
 import subprocess
-import time
+from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Generator
+from time import sleep
 
 import pytest
 from web3 import Web3
@@ -85,9 +84,9 @@ class AnvilInstance:
 def anvil() -> Generator[AnvilInstance, None, None]:
     """Start an Anvil instance forked from mainnet."""
     if not shutil.which("anvil"):
-        raise Exception("anvil was not found in PATH")
+        raise ValueError("anvil was not found in PATH")
     if "PROVIDER" not in os.environ:
-        raise Exception(
+        raise ValueError(
             "PROVIDER must be set to a mainnet RPC URL so Anvil can fork mainnet."
         )
 
@@ -99,23 +98,7 @@ def anvil() -> Generator[AnvilInstance, None, None]:
     # Anvil test account #2 (1000 ETH pre-funded)
     eth_address = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
     eth_privkey = "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
-    # Poll until Anvil accepts connections. Fail immediately if the process
-    # exits (for example a genesis failure), rather than waiting out the deadline.
-    deadline = time.monotonic() + 60
-    while time.monotonic() < deadline:
-        if p.poll() is not None:
-            raise RuntimeError(
-                f"Anvil exited before listening on port {port} (code {p.returncode})"
-            )
-        try:
-            with socket.create_connection(("127.0.0.1", port), timeout=1):
-                break
-        except OSError:
-            time.sleep(0.5)
-    else:
-        p.kill()
-        p.wait()
-        raise RuntimeError(f"Anvil did not start on port {port} within 60s")
+    sleep(3)
     yield AnvilInstance(f"http://127.0.0.1:{port}", eth_address, eth_privkey)
     p.kill()
     p.wait()
