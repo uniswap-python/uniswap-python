@@ -132,8 +132,13 @@ class Uniswap:
 
         if enable_caching:
             self.w3.middleware_onion.inject(_get_eth_simple_cache_middleware(), layer=0)
-
-        self.netid = int(self.w3.net.version)
+            
+        try:
+            self.netid = int(self.w3.net.version)
+        except ValueError:  
+            # Happens when w3.net.version returns a hex representation of an int
+            self.netid = int(self.w3.net.version, 16)
+        
         if self.netid in _netid_to_name:
             self.netname = _netid_to_name[self.netid]
         else:
