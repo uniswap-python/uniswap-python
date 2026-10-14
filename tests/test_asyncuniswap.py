@@ -70,8 +70,7 @@ def tokens(client: AsyncUniswap):
     return get_tokens(client.netname)
 
 
-@pytest.fixture(scope="module")
-@pytest.mark.asyncio
+@pytest_asyncio.fixture(scope="module")
 async def test_assets(client: AsyncUniswap):
     """
     Buy some DAI and USDC to test with.
