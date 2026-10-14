@@ -1704,7 +1704,7 @@ class Uniswap:
     def get_weth_address(self) -> ChecksumAddress:
         """Retrieves the WETH address from the contracts (which may vary between chains)."""
         if hasattr(self, "_weth_address_cache"):
-            return self._weth_address_cache  # type: ignore[return-value]
+            return self._weth_address_cache
         if self.version == 1:
             address: ChecksumAddress = self.w3.to_checksum_address(WETH9_ADDRESS)
         elif self.version == 2:
