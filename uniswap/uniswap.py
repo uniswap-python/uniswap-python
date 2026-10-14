@@ -36,7 +36,7 @@ from .constants import (
     _tick_bitmap_range,
     _tick_spacing,
 )
-from .decorators import supports
+from .decorators import check_approval, supports
 from .exceptions import InsufficientBalance, InvalidToken
 from .fee import validate_fee_tier
 from .token import ERC20Token
@@ -337,6 +337,10 @@ class Uniswap:
         if self.version == 2:
             price: int = self.router.functions.getAmountsOut(qty, route).call()[-1]
         elif self.version == 3:
+            if route and not fees:
+                raise ValueError(
+                    "V3 custom routes require both 'route' and 'fees' parameters"
+                )
             if route and fees:
                 # NOTE: to support custom routes we need to support the Path data encoding: https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/Path.sol
                 # result: tuple = self.quoter.functions.quoteExactInput(route, qty).call()
@@ -450,6 +454,7 @@ class Uniswap:
         return price
 
     # ------ Make Trade ----------------------------------------------------------------
+    @check_approval
     def make_trade(
         self,
         input_token: AddressLike,
@@ -477,6 +482,11 @@ class Uniswap:
         if self.version != 3 and fees:
             fees = None
 
+        if self.version == 3 and route and not fees:
+            raise ValueError(
+                "V3 custom routes require both 'route' and 'fees' parameters"
+            )
+
         if input_token == ETH_ADDRESS and (route is None or fees is None):
             return self._eth_to_token_swap_input(
                 output_token, Wei(qty), recipient, fee, slippage, fee_on_transfer
@@ -502,6 +512,7 @@ class Uniswap:
                 fees,
             )
 
+    @check_approval
     def make_trade_output(
         self,
         input_token: AddressLike,
@@ -1066,13 +1077,6 @@ class Uniswap:
                 input_token, output_token, qty, fee=fee, route=path, fees=fees
             )
             amount_in_max = int((1 + slippage) * cost)
-            weth = self.get_weth_address()
-            path = (
-                [input_token, output_token]
-                if is_same_address(input_token, weth)
-                or is_same_address(output_token, weth)
-                else [input_token, weth, output_token]
-            )
             return self._build_and_send_tx(
                 self.router.functions.swapTokensForExactTokens(
                     qty,
@@ -1160,6 +1164,7 @@ class Uniswap:
         return float(token_reserve / eth_reserve)
 
     # ------ Liquidity -----------------------------------------------------------------
+    @check_approval
     @supports([1])
     def add_liquidity(
         self, token: AddressLike, max_eth: Wei, min_liquidity: int = 1
@@ -1173,6 +1178,7 @@ class Uniswap:
         function = self._exchange_contract(token).functions.addLiquidity(*func_params)
         return self._build_and_send_tx(function, tx_params)
 
+    @check_approval
     @supports([1])
     def remove_liquidity(self, token: str, max_token: int) -> HexBytes:
         """Remove liquidity from the pool."""
@@ -1697,6 +1703,8 @@ class Uniswap:
     @supports([1, 2, 3])
     def get_weth_address(self) -> ChecksumAddress:
         """Retrieves the WETH address from the contracts (which may vary between chains)."""
+        if hasattr(self, "_weth_address_cache"):
+            return self._weth_address_cache  # type: ignore[return-value]
         if self.version == 1:
             address: ChecksumAddress = self.w3.to_checksum_address(WETH9_ADDRESS)
         elif self.version == 2:
@@ -1711,6 +1719,7 @@ class Uniswap:
         # WETH9_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
         # assert address == WETH9_ADDRESS, "WETH address mismatch"
 
+        self._weth_address_cache: ChecksumAddress = address
         return address
 
     @supports([3])

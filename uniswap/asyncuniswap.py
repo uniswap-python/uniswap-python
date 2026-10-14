@@ -114,11 +114,16 @@ class AsyncUniswap:
         self.default_slippage = default_slippage
         self.use_estimate_gas = use_estimate_gas
 
-        if not provider:
-            provider = os.environ["PROVIDER"]
         if web3:
             self.w3 = web3
+            # Derive sync provider URL from the supplied async web3 so we don't
+            # require PROVIDER in the environment when a web3 instance is given.
+            if not provider:
+                _ep = getattr(self.w3.provider, "endpoint_uri", None)
+                provider = str(_ep) if _ep is not None else os.environ["PROVIDER"]
         else:
+            if not provider:
+                provider = os.environ["PROVIDER"]
             # Initialize web3. Extra provider for testing.
             self.w3 = AsyncWeb3(
                 AsyncWeb3.AsyncHTTPProvider(provider, request_kwargs={"timeout": 60})

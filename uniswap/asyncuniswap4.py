@@ -67,6 +67,7 @@ class AsyncUniswap4:
     w3: AsyncWeb3
     address: AddressLike
     last_nonce: Nonce
+    _nonce_lock: asyncio.Lock
 
     def __init__(
         self,
@@ -99,10 +100,16 @@ class AsyncUniswap4:
 
         self.max_slippage = max_slippage
 
-        self.provider = provider or os.environ["PROVIDER"]
         if web3:
             self.w3 = web3
+            # Derive sync provider URL from the supplied async web3 so we don't
+            # require PROVIDER in the environment when a web3 instance is given.
+            if not provider:
+                _ep = getattr(self.w3.provider, "endpoint_uri", None)
+                provider = str(_ep) if _ep is not None else os.environ["PROVIDER"]
+            self.provider = provider
         else:
+            self.provider = provider or os.environ["PROVIDER"]
             self.w3 = AsyncWeb3(
                 AsyncWeb3.AsyncHTTPProvider(
                     self.provider, request_kwargs={"timeout": 60}
@@ -110,6 +117,7 @@ class AsyncUniswap4:
             )
         temp_w3 = Web3(Web3.HTTPProvider(self.provider, request_kwargs={"timeout": 60}))
         self.last_nonce = temp_w3.eth.get_transaction_count(self.address)
+        self._nonce_lock = asyncio.Lock()
 
         # This code automatically approves you for trading on the exchange.
         # max_approval is to allow the contract to exchange on your behalf.
@@ -3401,11 +3409,11 @@ class AsyncUniswap4:
         except ValueError:
             raise InvalidToken(address)
         try:
-            name = await _name.decode()
+            name = _name.decode()
         except (ValueError, AttributeError):
             name = str(_name)
         try:
-            symbol = await _symbol.decode()
+            symbol = _symbol.decode()
         except (ValueError, AttributeError) as e:
             logger.warning(
                 "Error occurred while decoding symbol for %s: %s",
@@ -3478,18 +3486,17 @@ class AsyncUniswap4:
         custom_nonce: Nonce | None = None,
     ) -> HexBytes:
         """Build and send a transaction."""
-        if not tx_params:
-            tx_params = await self._get_tx_params(custom_nonce=custom_nonce)
+        async with self._nonce_lock:
+            if not tx_params:
+                tx_params = await self._get_tx_params(custom_nonce=custom_nonce)
+            # Reserve the nonce before yielding so concurrent calls never share it.
+            if custom_nonce is None:
+                self.last_nonce = Nonce(tx_params["nonce"] + 1)
         transaction = await function.build_transaction(tx_params)
         signed_txn = self.w3.eth.account.sign_transaction(
             transaction, private_key=self.private_key
         )
-        try:
-            return await self.w3.eth.send_raw_transaction(signed_txn.raw_transaction)
-        finally:
-            # logger.debug(f"nonce: {tx_params['nonce']}")
-            if custom_nonce is None:
-                self.last_nonce = Nonce(tx_params["nonce"] + 1)
+        return await self.w3.eth.send_raw_transaction(signed_txn.raw_transaction)
 
 
 def _load_contract(w3: AsyncWeb3, abi_name: str, address: AddressLike) -> AsyncContract:
