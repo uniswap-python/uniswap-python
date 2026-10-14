@@ -332,6 +332,7 @@ class Uniswap:
                 logger.warning(f"No route specified, assuming route: {route}")
 
         if self.version == 2:
+            # BL: This is where route param gets called
             price: int = self.router.functions.getAmountsOut(qty, route).call()[-1]
         elif self.version == 3:
             if route:
@@ -451,6 +452,7 @@ class Uniswap:
         fee: Optional[int] = None,
         slippage: Optional[float] = None,
         fee_on_transfer: bool = False,
+        route: Optional[List[AddressLike]] = None,
     ) -> HexBytes:
         """Make a trade by defining the qty of the input token."""
         if not isinstance(qty, int):
@@ -481,6 +483,7 @@ class Uniswap:
                 fee,
                 slippage,
                 fee_on_transfer,
+                route=route
             )
 
     @check_approval
@@ -694,6 +697,7 @@ class Uniswap:
         fee: int,
         slippage: float,
         fee_on_transfer: bool = False,
+        route: Optional[List[AddressLike]] = None,
     ) -> HexBytes:
         """Convert tokens to tokens given an input amount."""
         # Balance check
@@ -732,7 +736,7 @@ class Uniswap:
             min_tokens_bought = int(
                 (1 - slippage)
                 * self._get_token_token_input_price(
-                    input_token, output_token, qty, fee=fee
+                    input_token, output_token, qty, fee=fee, route=route
                 )
             )
             if fee_on_transfer:
