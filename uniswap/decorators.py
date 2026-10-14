@@ -1,10 +1,8 @@
 import functools
+from collections.abc import Callable
 from typing import (
     TYPE_CHECKING,
-    Callable,
     Concatenate,
-    List,
-    Optional,
     ParamSpec,
     TypeVar,
 )
@@ -29,7 +27,7 @@ def check_approval(
     @functools.wraps(method)
     def approved(self: "Uniswap", *args: P.args, **kwargs: P.kwargs) -> T:
         # Check to see if the first token is actually ETH
-        token: Optional[AddressLike] = args[0] if args[0] != ETH_ADDRESS else None  # type: ignore
+        token: AddressLike | None = args[0] if args[0] != ETH_ADDRESS else None  # type: ignore
         _token_two = None
 
         # Check second token, if needed
@@ -48,7 +46,7 @@ def check_approval(
 
 
 def supports(
-    versions: List[int],
+    versions: list[int],
 ) -> Callable[
     [Callable[Concatenate["Uniswap", P], T]], Callable[Concatenate["Uniswap", P], T]
 ]:
@@ -64,7 +62,7 @@ def supports(
         @functools.wraps(f)
         def check_version(self: "Uniswap", *args: P.args, **kwargs: P.kwargs) -> T:
             if self.version not in versions:
-                raise Exception(
+                raise ValueError(
                     f"Function {f.__name__} does not support version {self.version} of Uniswap passed to constructor"
                 )
             return f(self, *args, **kwargs)

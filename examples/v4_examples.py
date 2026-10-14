@@ -13,7 +13,7 @@ def pool_tests():
     first_block = 21688329
     print("Testing fetch_poolkey_data()...")
     try:
-        v4pools_test.fetch_poolkey_data(first_block, chunk_size=500, clear_list=False)
+        v4pools_test.fetch_poolkey_data(first_block, chunk_size=5, clear_list=False)
         print("Test passed.")
     except Exception as e:
         print(f"Test failed. {e}")
@@ -90,9 +90,9 @@ def quoter_tests():
         test_pool2_tick_spacing,
         default_test_hooks,
     )
-    test_path_1hop = list()
+    test_path_1hop: list = []
     test_path_1hop.append(test_pool_key1)
-    test_path_2hop = list()
+    test_path_2hop: list = []
     test_path_2hop.append(test_pool_key1)
     test_path_2hop.append(test_pool_key2)
 
@@ -592,9 +592,9 @@ def swap_tests():
         test_pool2_tick_spacing,
         default_test_hooks,
     )
-    test_path_1hop = list()
+    test_path_1hop: list = []
     test_path_1hop.append(test_pool_key1)
-    test_path_2hop = list()
+    test_path_2hop: list = []
     test_path_2hop.append(test_pool_key1)
     test_path_2hop.append(test_pool_key2)
 
@@ -923,7 +923,7 @@ if __name__ == "__main__":
     print()
     print()
 
-    # pool_tests()
+    pool_tests()
     quoter_tests()
     price_impact_tests()
     state_view_tests()
