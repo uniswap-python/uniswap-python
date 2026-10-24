@@ -219,7 +219,14 @@ class TestUniswap:
         token0, token1 = tokens[token0], tokens[token1]
         if client.version == 1 and ETH_ADDRESS not in [token0, token1]:
             pytest.skip("Not supported in this version of Uniswap")
-        r = client.get_price_output(token0, token1, qty, fee=FeeTier.TIER_3000)
+        try:
+            r = client.get_price_output(token0, token1, qty, fee=FeeTier.TIER_3000)
+        except ValueError as e:
+            if client.version == 1 and "InvalidJump" in str(e):
+                pytest.skip(
+                    f"V1 pool has insufficient liquidity for this trade size: {e}"
+                )
+            raise
         assert r
 
     @pytest.mark.parametrize(
