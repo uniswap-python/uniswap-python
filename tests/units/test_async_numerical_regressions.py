@@ -8,7 +8,7 @@ from types import SimpleNamespace as NS
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from web3 import Web3
+from web3 import AsyncWeb3, Web3
 
 from uniswap import AsyncUniswap, AsyncUniswap4
 import uniswap.asyncuniswap as module
@@ -37,7 +37,7 @@ def clients(monkeypatch):
     monkeypatch.setattr(module, "_load_contract_erc20", lambda *a, **k: erc20)
     v3 = object.__new__(AsyncUniswap)
     v3.version = 3
-    v3.w3 = Web3()
+    v3.w3 = AsyncWeb3()
     v3.factory_contract = Mock()
     v3.factory_contract.functions.getPool.return_value.call = AsyncMock(
         return_value=TOKEN0
