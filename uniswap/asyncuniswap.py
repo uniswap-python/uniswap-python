@@ -1458,8 +1458,8 @@ class AsyncUniswap:
                 # source: https://stackoverflow.com/questions/71814845/how-to-calculate-uniswap-v3-pools-total-value-locked-tvl-on-chain
                 liquidityNet = tickData[1]
                 liquidity_total += liquidityNet
-                sqrtPriceLow = 1.0001 ** (tick // 2)
-                sqrtPriceHigh = 1.0001 ** ((tick + TICK_SPACING) // 2)
+                sqrtPriceLow = 1.0001 ** (tick / 2)
+                sqrtPriceHigh = 1.0001 ** ((tick + TICK_SPACING) / 2)
                 token0_liquidity += self.get_token0_in_pool(
                     liquidity_total, sqrtPrice, sqrtPriceLow, sqrtPriceHigh
                 )
@@ -2007,8 +2007,8 @@ class AsyncUniswap:
                 den0 = (await self.get_token(token_out)).decimals
                 den1 = (await self.get_token(token_in)).decimals
             sqrtPriceX96 = (await pool_contract.functions.slot0().call())[0]
-            raw_price = (sqrtPriceX96 * sqrtPriceX96 * 10**den1 >> (96 * 2)) / (
-                10**den0
+            raw_price = (sqrtPriceX96 * sqrtPriceX96 * 10**den1) / (
+                (1 << 192) * 10**den0
             )
             if t1.lower() == token_in.lower():
                 raw_price = 1 / raw_price
