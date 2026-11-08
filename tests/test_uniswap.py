@@ -167,6 +167,7 @@ class TestUniswap:
         "token0",
         [
             ("ETH"),
+            ("WETH"),
             ("UNI"),
             ("DAI"),
             ("USDC"),
