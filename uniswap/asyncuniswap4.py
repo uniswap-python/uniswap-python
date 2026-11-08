@@ -1675,8 +1675,8 @@ class AsyncUniswap4:
             await self.stateview_get_slot0(token0, token1, fee, tick_spacing, hooks)
         )["sqrtPriceX96"]
 
-        spot_price: float = (spot_price_x96 * spot_price_x96 * 10**den0 >> (96 * 2)) / (
-            10**den1
+        spot_price: float = (spot_price_x96 * spot_price_x96 * 10**den0) / (
+            (1 << 192) * 10**den1
         )
         if not zero_for_one:
             spot_price = 1 / spot_price
