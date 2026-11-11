@@ -1839,7 +1839,7 @@ class Uniswap:
         positionManager = self.nonFungiblePositionManager
 
         approve0 = _load_contract_erc20(self.w3, token0).functions.approve(
-            self.positionManager_addr, amount0 * 1000
+            self.positionManager_addr, amount0
         )
         logger.warning(f"Approving {_addr_to_str(token0)}...")
         tx0 = self._build_and_send_tx(approve0)

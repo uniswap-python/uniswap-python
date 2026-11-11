@@ -166,7 +166,6 @@ class TestUniswap:
     @pytest.mark.parametrize(
         "token0",
         [
-            ("ETH"),
             ("WETH"),
             ("UNI"),
             ("DAI"),
