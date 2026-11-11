@@ -1846,7 +1846,7 @@ class Uniswap:
         self.w3.eth.wait_for_transaction_receipt(tx0, timeout=6000)
 
         approve1 = _load_contract_erc20(self.w3, token1).functions.approve(
-            self.positionManager_addr, amount1 * 1000
+            self.positionManager_addr, amount1
         )
         logger.warning(f"Approving {_addr_to_str(token1)}...")
         tx1 = self._build_and_send_tx(approve1)

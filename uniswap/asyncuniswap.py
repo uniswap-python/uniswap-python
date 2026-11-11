@@ -1232,7 +1232,7 @@ class AsyncUniswap:
             nft_manager.address, amount_0
         ).transact({"from": _addr_to_str(self.address)})
         await token_1_instance.functions.approve(
-            nft_manager.address, amount_1 * 1000
+            nft_manager.address, amount_1
         ).transact({"from": _addr_to_str(self.address)})
 
         # TODO: add slippage param
