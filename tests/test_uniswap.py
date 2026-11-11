@@ -166,7 +166,7 @@ class TestUniswap:
     @pytest.mark.parametrize(
         "token0",
         [
-            ("ETH"),
+            ("WETH"),
             ("UNI"),
             ("DAI"),
             ("USDC"),
@@ -340,7 +340,7 @@ class TestUniswap:
     @pytest.mark.parametrize(
         "token0, token1, amount0, amount1, qty, fee",
         [
-            ("DAI", "USDC", ONE_ETH, ONE_USDC, ONE_ETH, FeeTier.TIER_3000),
+            ("DAI", "USDC", ONE_DAI, ONE_USDC, ONE_ETH, FeeTier.TIER_500),
         ],
     )
     def test_v3_deploy_pool_with_liquidity(
