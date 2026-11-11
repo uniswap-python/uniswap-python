@@ -70,6 +70,8 @@ jobs:
 
     - name: Install Foundry
       uses: foundry-rs/foundry-toolchain@v1
+      with:
+        version: 1.8.6
 
     - name: Test
       env:
