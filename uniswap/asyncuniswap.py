@@ -235,9 +235,11 @@ class AsyncUniswap:
         fee = validate_fee_tier(fee=fee, version=self.version)
 
         if is_same_address(token0, ETH_ADDRESS) and self.version == 2:
-            return await self._get_eth_token_input_price(token1, Wei(qty), fee)
+            return await self._get_eth_token_input_price(
+                token1, Wei(qty), fee, route, fees
+            )
         elif is_same_address(token1, ETH_ADDRESS) and self.version == 2:
-            return await self._get_token_eth_input_price(token0, qty, fee)
+            return await self._get_token_eth_input_price(token0, qty, fee, route, fees)
         else:
             if is_same_address(token0, ETH_ADDRESS):
                 token0 = await self.get_weth_address()
@@ -792,7 +794,7 @@ class AsyncUniswap:
                     args=[
                         (
                             encoded_v3_path,
-                            recipient,
+                            ETH_ADDRESS,
                             self._deadline(),
                             qty,
                             min_tokens_bought,
@@ -988,7 +990,9 @@ class AsyncUniswap:
                 recipient = self.address
             eth_qty = int(
                 (1 + slippage)
-                * await self._get_eth_token_output_price(output_token, qty, fee)
+                * await self._get_eth_token_output_price(
+                    output_token, qty, fee, route, fees
+                )
             )  # type: ignore
             if route is None:
                 path = [await self.get_weth_address(), output_token]

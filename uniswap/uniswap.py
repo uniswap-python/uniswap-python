@@ -316,9 +316,15 @@ class Uniswap:
                 path = route
             price = self.router.functions.getAmountsOut(qty, path).call()[-1]
         elif self.version == 3:
-            price = self._get_token_token_input_price(
-                token, self.get_weth_address(), qty, fee=fee
-            )
+            if route and fees:
+                encoded_v3_path = self.encode_v3_path(route, fees)
+                price = self.quoter.functions.quoteExactInput(
+                    encoded_v3_path, qty
+                ).call()
+            else:
+                price = self._get_token_token_input_price(
+                    token, self.get_weth_address(), qty, fee=fee
+                )
         else:
             raise ValueError  # pragma: no cover
         return price
@@ -777,7 +783,7 @@ class Uniswap:
                     args=[
                         {
                             "path": encoded_v3_path,
-                            "recipient": recipient,
+                            "recipient": ETH_ADDRESS,
                             "deadline": self._deadline(),
                             "amountIn": qty,
                             "amountOutMinimum": min_tokens_bought,
@@ -1049,7 +1055,7 @@ class Uniswap:
 
         # Balance check
         input_balance = self.get_token_balance(input_token)
-        cost = self._get_token_eth_output_price(input_token, qty, fee)
+        cost = self._get_token_eth_output_price(input_token, qty, fee, route, fees)
         amount_in_max = int((1 + slippage) * cost)
 
         # We check balance against amount_in_max rather than cost to be conservative
