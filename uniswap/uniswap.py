@@ -1114,7 +1114,7 @@ class Uniswap:
                     args=[
                         {
                             "path": encoded_v3_path,
-                            "recipient": recipient,
+                            "recipient": ETH_ADDRESS,
                             "deadline": self._deadline(),
                             "amountOut": qty,
                             "amountInMaximum": amount_in_max,

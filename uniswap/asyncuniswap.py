@@ -1131,7 +1131,7 @@ class AsyncUniswap:
                     args=[
                         (
                             encoded_v3_path,
-                            recipient,
+                            ETH_ADDRESS,
                             self._deadline(),
                             qty,
                             amount_in_max,
