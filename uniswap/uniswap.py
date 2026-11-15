@@ -7,7 +7,6 @@ from typing import (
     Any,
 )
 
-from eth_typing import HexStr
 from eth_typing.evm import Address, ChecksumAddress
 from hexbytes import HexBytes
 from web3 import Web3
@@ -49,6 +48,7 @@ from .util import (
     _validate_address,
     chunks,
     encode_sqrt_ratioX96,
+    encode_v3_path,
     is_same_address,
     nearest_tick,
     realised_fee_percentage,
@@ -78,7 +78,7 @@ class Uniswap:
         private_key: str | None,
         provider: str | None = None,
         web3: Web3 | None = None,
-        version: int = 1,
+        version: int = 3,
         default_slippage: float = 0.01,
         use_estimate_gas: bool = True,
         # use_eip1559: bool = True,
@@ -106,10 +106,8 @@ class Uniswap:
         )
 
         self.version = version
-        if self.version not in [1, 2, 3]:
-            raise ValueError(
-                f"Invalid version '{self.version}', only 1, 2 or 3 supported"
-            )  # pragma: no cover
+        if self.version not in [2, 3]:
+            raise ValueError(f"Invalid version '{self.version}', only 2 or 3 supported")
 
         self.default_slippage = default_slippage
         self.use_estimate_gas = use_estimate_gas
@@ -285,7 +283,7 @@ class Uniswap:
             price = self.router.functions.getAmountsOut(qty, path).call()[-1]
         elif self.version == 3:
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees)
+                encoded_v3_path = encode_v3_path(route, fees)
                 price = self.quoter.functions.quoteExactInput(
                     encoded_v3_path, qty
                 ).call()
@@ -317,7 +315,7 @@ class Uniswap:
             price = self.router.functions.getAmountsOut(qty, path).call()[-1]
         elif self.version == 3:
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees)
+                encoded_v3_path = encode_v3_path(route, fees)
                 price = self.quoter.functions.quoteExactInput(
                     encoded_v3_path, qty
                 ).call()
@@ -362,7 +360,7 @@ class Uniswap:
                     "V3 custom routes require both 'route' and 'fees' parameters"
                 )
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees)
+                encoded_v3_path = encode_v3_path(route, fees)
                 price = self.quoter.functions.quoteExactInput(
                     encoded_v3_path, qty
                 ).call()
@@ -396,7 +394,7 @@ class Uniswap:
             price = self.router.functions.getAmountsIn(qty, path).call()[0]
         elif self.version == 3:
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees, is_exact_out=True)
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
                 price = self.quoter.functions.quoteExactOutput(
                     encoded_v3_path, qty
                 ).call()
@@ -431,7 +429,7 @@ class Uniswap:
             price = self.router.functions.getAmountsIn(qty, path).call()[0]
         elif self.version == 3:
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees, is_exact_out=True)
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
                 price = self.quoter.functions.quoteExactOutput(
                     encoded_v3_path, qty
                 ).call()
@@ -474,7 +472,7 @@ class Uniswap:
             price: int = self.router.functions.getAmountsIn(qty, route).call()[0]
         elif self.version == 3:
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees, is_exact_out=True)
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
                 price = self.quoter.functions.quoteExactOutput(
                     encoded_v3_path, qty
                 ).call()
@@ -675,7 +673,7 @@ class Uniswap:
             sqrtPriceLimitX96 = 0
 
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees)
+                encoded_v3_path = encode_v3_path(route, fees)
                 return self._build_and_send_tx(
                     self.router.functions.exactInput(
                         {
@@ -777,7 +775,7 @@ class Uniswap:
             sqrtPriceLimitX96 = 0
 
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees)
+                encoded_v3_path = encode_v3_path(route, fees)
                 swap_data = self.router.encode_abi(
                     "exactInput",
                     args=[
@@ -906,7 +904,7 @@ class Uniswap:
             )
             sqrtPriceLimitX96 = 0
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees)
+                encoded_v3_path = encode_v3_path(route, fees)
                 return self._build_and_send_tx(
                     self.router.functions.exactInput(
                         {
@@ -999,7 +997,7 @@ class Uniswap:
             sqrtPriceLimitX96 = 0
 
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees, is_exact_out=True)
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
                 swap_data = self.router.encode_abi(
                     "exactOutput",
                     args=[
@@ -1108,7 +1106,7 @@ class Uniswap:
             sqrtPriceLimitX96 = 0
 
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees, is_exact_out=True)
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
                 swap_data = self.router.encode_abi(
                     "exactOutput",
                     args=[
@@ -1231,7 +1229,7 @@ class Uniswap:
             sqrtPriceLimitX96 = 0
 
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees, is_exact_out=True)
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
                 return self._build_and_send_tx(
                     self.router.functions.exactOutput(
                         {
@@ -2031,46 +2029,6 @@ class Uniswap:
         # print(position['data'])
 
         return multicall
-
-    @supports([3])
-    def encode_v3_path(
-        self, route: list[AddressLike], fees: list[int], is_exact_out: bool = False
-    ) -> bytes:
-        """
-        Encodes a Uniswap V3 path for use in swap and quote functions.
-
-        :param route : A list of token addresses representing the swap route. The length of this list must be one greater than the length of the `fees` list.
-        :param fees : A list of fee tiers corresponding to each hop in the route. Each fee tier should be an integer representing the fee in hundredths of a bip (e.g., 3000 for 0.3%).
-        :param is_exact_out : A boolean indicating whether the swap is an exact output swap. If True, the path will be encoded in reverse order.
-
-        :return : A bytes object representing the encoded path.
-        """
-        if len(route) < 2:
-            raise ValueError(
-                "Route must contain at least two token addresses. "
-                f"Got route length {len(route)}."
-            )
-        if len(route) != len(fees) + 1:
-            raise ValueError(
-                "Route length must be one greater than fees length. "
-                f"Got route length {len(route)} and fees length {len(fees)}."
-            )
-
-        path = b""
-        _route = route.copy()
-        _fees = fees.copy()
-        if is_exact_out:
-            # For exact output swaps, the path is encoded in reverse order
-            _route.reverse()
-            _fees.reverse()
-
-        for i in range(len(_fees)):
-            path += self.w3.to_bytes(hexstr=HexStr(_addr_to_str(_route[i]))) + _fees[
-                i
-            ].to_bytes(3, "big")
-        path += self.w3.to_bytes(hexstr=HexStr(_addr_to_str(_route[-1])))
-
-        return path
 
     @supports([2, 3])
     def get_raw_price(

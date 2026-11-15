@@ -317,6 +317,7 @@ universal_router_commands_abis = {
         "uint256",
         "bytes",
         "bool",
+        "uint256[]",
     ],
     "V3_SWAP_EXACT_OUT": [
         "address",
@@ -324,11 +325,12 @@ universal_router_commands_abis = {
         "uint256",
         "bytes",
         "bool",
+        "uint256[]",
     ],
     "PERMIT2_TRANSFER_FROM": [
         "address",
         "address",
-        "uint256",
+        "uint160",
     ],
     "PERMIT2_PERMIT_BATCH": [
         "((address,uint160,uint48,uint48)[],address,uint256)",
@@ -360,6 +362,7 @@ universal_router_commands_abis = {
         "uint256",
         "address[]",
         "bool",
+        "uint256[]",
     ],
     "V2_SWAP_EXACT_OUT": [
         "address",
@@ -367,6 +370,7 @@ universal_router_commands_abis = {
         "uint256",
         "address[]",
         "bool",
+        "uint256[]",
     ],
     "PERMIT2_PERMIT": [
         "((address,uint160,uint48,uint48),address,uint256)",
@@ -381,7 +385,7 @@ universal_router_commands_abis = {
         "uint256",
     ],
     "PERMIT2_TRANSFER_FROM_BATCH": [
-        "(address,uint256,address,bytes)[]",
+        "(address,address,uint160,address)[]",
     ],
     "BALANCE_CHECK_ERC20": [
         "address",

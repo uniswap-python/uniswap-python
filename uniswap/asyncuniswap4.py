@@ -52,6 +52,7 @@ from .util import (
     _addr_to_str,
     _load_abi,
     _str_to_addr,
+    encode_v3_path,
     get_sqrt_ratio_at_tick,
     realised_fee_percentage,
 )
@@ -2140,6 +2141,102 @@ class AsyncUniswap4:
             custom_nonce=custom_nonce,
         )
 
+    async def token_to_token_swap_input_v2(
+        self,
+        input_token: str,
+        qty: int,
+        qtycap: int,
+        output_token: str,
+        route_legacy: list[str],
+        min_hop_price_x_36: list[int] = [],
+        custom_nonce: Nonce | None = None,
+    ) -> HexBytes:
+        """
+        :param input_token: The token to be sold.
+        :param qty: The amount of `input_token` to be sold.
+        :param qtycap: The maximum amount of `output_token` that can be bought for the trade to proceed.
+        :param output_token: The token to be bought.
+        :param route_legacy: The route for the swap.
+        :param min_hop_price_x_36: The minimum hop price for the swap.
+        :param custom_nonce: The nonce for the transaction.
+        """
+        min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
+
+        ether_amount: int = 0
+
+        if input_token == ETH_ADDRESS:
+            ether_amount = qty
+
+        # V2_SWAP_EXACT_IN // Encode swap commands and actions
+        commands: bytes = encode_packed(
+            ["uint8"],
+            args=[universal_router_commands["V2_SWAP_EXACT_IN"]],
+        )
+
+        params: bytes = encode(
+            universal_router_commands_abis["V2_SWAP_EXACT_IN"],
+            [
+                (
+                    _addr_to_str(self.address),
+                    qty,
+                    min_tokens_bought,
+                    route_legacy,
+                    True,
+                    min_hop_price_x_36,
+                )
+            ],
+        )
+        return await self._build_and_send_tx(
+            self.router.functions.execute(commands, params, self._deadline()),
+            await self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
+        )
+
+    async def token_to_token_swap_input_v3(
+        self,
+        input_token: str,
+        qty: int,
+        qtycap: int,
+        output_token: str,
+        route_legacy: list[str],
+        fees_legacy: list[int],
+        min_hop_price_x_36: list[int] = [],
+        custom_nonce: Nonce | None = None,
+    ) -> HexBytes:
+        min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
+
+        ether_amount: int = 0
+
+        if input_token == ETH_ADDRESS:
+            ether_amount = qty
+
+        # V3_SWAP_EXACT_IN // Encode swap commands and actions
+        commands: bytes = encode_packed(
+            ["uint8"],
+            args=[universal_router_commands["V3_SWAP_EXACT_IN"]],
+        )
+        checksum_route_legacy: list[AddressLike] = [
+            self.w3.to_checksum_address(addr) for addr in route_legacy
+        ]
+        params: bytes = encode(
+            universal_router_commands_abis["V3_SWAP_EXACT_IN"],
+            [
+                (
+                    _addr_to_str(self.address),
+                    qty,
+                    min_tokens_bought,
+                    encode_v3_path(checksum_route_legacy, fees_legacy),
+                    True,
+                    min_hop_price_x_36,
+                )
+            ],
+        )
+        return await self._build_and_send_tx(
+            self.router.functions.execute(commands, params, self._deadline()),
+            await self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
+        )
+
     async def token_to_token_swap_exact_output(
         self,
         input_token: str,
@@ -2339,6 +2436,113 @@ class AsyncUniswap4:
             custom_nonce=custom_nonce,
         )
 
+    async def token_to_token_swap_output_v2(
+        self,
+        input_token: str,
+        qty: int,
+        qtycap: int,
+        output_token: str,
+        route_legacy: list[str],
+        min_hop_price_x_36: list[int] = [],
+        custom_nonce: Nonce | None = None,
+    ) -> HexBytes:
+        """
+        :param input_token: The token to be sold.
+        :param qty: The amount of `output_token` to be bought.
+        :param qtycap: The maximum amount of `input_token` that can be sold for the trade to proceed.
+        :param output_token: The token to be bought.
+        :param route_legacy: The route for the swap.
+        :param min_hop_price_x_36: The minimum hop price for the swap.
+        :param custom_nonce: The nonce for the transaction.
+        """
+
+        amount_in_max: int = int((1 + self.max_slippage) * qtycap)
+        ether_amount: int = 0
+
+        if input_token == ETH_ADDRESS:
+            ether_amount = qty
+
+        # V2_SWAP_EXACT_OUT // Encode swap commands and actions
+        commands: bytes = encode_packed(
+            ["uint8"],
+            args=[universal_router_commands["V2_SWAP_EXACT_OUT"]],
+        )
+
+        params: bytes = encode(
+            universal_router_commands_abis["V2_SWAP_EXACT_OUT"],
+            [
+                (
+                    _addr_to_str(self.address),
+                    qty,
+                    amount_in_max,
+                    route_legacy,
+                    True,
+                    min_hop_price_x_36,
+                )
+            ],
+        )
+        return await self._build_and_send_tx(
+            self.router.functions.execute(commands, params, self._deadline()),
+            await self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
+        )
+
+    async def token_to_token_swap_output_v3(
+        self,
+        input_token: str,
+        qty: int,
+        qtycap: int,
+        output_token: str,
+        route_legacy: list[str],
+        fees_legacy: list[int],
+        min_hop_price_x_36: list[int] = [],
+        custom_nonce: Nonce | None = None,
+    ) -> HexBytes:
+        """
+        :param input_token: The token to be sold.
+        :param qty: The amount of `output_token` to be bought.
+        :param qtycap: The maximum amount of `input_token` that can be sold for the trade to proceed.
+        :param output_token: The token to be bought.
+        :param route_legacy: The route for the swap.
+        :param fees_legacy: The fees for the swap.
+        :param min_hop_price_x_36: The minimum hop price for the swap.
+        :param custom_nonce: The nonce for the transaction.
+        """
+
+        amount_in_max: int = int((1 + self.max_slippage) * qtycap)
+
+        ether_amount: int = 0
+
+        if input_token == ETH_ADDRESS:
+            ether_amount = qty
+
+        # V3_SWAP_EXACT_OUT // Encode swap commands and actions
+        commands: bytes = encode_packed(
+            ["uint8"],
+            args=[universal_router_commands["V3_SWAP_EXACT_OUT"]],
+        )
+        checksum_route_legacy: list[AddressLike] = [
+            self.w3.to_checksum_address(addr) for addr in route_legacy
+        ]
+        params: bytes = encode(
+            universal_router_commands_abis["V3_SWAP_EXACT_OUT"],
+            [
+                (
+                    _addr_to_str(self.address),
+                    qty,
+                    amount_in_max,
+                    encode_v3_path(checksum_route_legacy, fees_legacy),
+                    True,
+                    min_hop_price_x_36,
+                )
+            ],
+        )
+        return await self._build_and_send_tx(
+            self.router.functions.execute(commands, params, self._deadline()),
+            await self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
+            custom_nonce=custom_nonce,
+        )
+
     async def drop_txn(
         self,
         address_to: AddressLike,
@@ -2405,7 +2609,10 @@ class AsyncUniswap4:
         swap_pool_key: PoolKey | None = None,
         hook_data: bytes | None = b"",
         route: list[PoolKey] | None = None,
+        min_hop_price_x_36: list[int] | None = None,
         custom_nonce: Nonce | None = None,
+        route_legacy: list[str] | None = None,
+        fees_legacy: list[int] | None = None,
     ) -> HexBytes:
         """
         :param input_token: The token to be sold.
@@ -2416,11 +2623,35 @@ class AsyncUniswap4:
         :param hook_data: Optional. The hook data for the swap. This is only used for single hop swaps and will be ignored if `route` is provided.
         :param route: Optional. The route for the swap. The first element should be the pool containing `input_token` and the last element should be the pool containing `output_token`. If `route` is provided, it will be used for the swap instead of `swap_pool_key`.
         :param custom_nonce: Optional. The nonce for the transaction.
+        :param route_legacy: Optional. The route for v2 and v3 swaps. Parameter`route` will be ignored if `route_legacy` is provided.
+        :param fees_legacy: Optional. The fees for v3 swaps.
 
         Make a trade by defining the qty of the input token.
-         If `route` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap."""
+         If `route` or `route_legacy` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap."""
         result: HexBytes | None = None
-        if route is None:
+
+        if route_legacy and fees_legacy is None:
+            result = await self.token_to_token_swap_input_v2(
+                input_token,
+                qty,
+                qtycap,
+                output_token,
+                route_legacy,
+                [],
+                custom_nonce=custom_nonce,
+            )
+        elif route_legacy and fees_legacy:
+            result = await self.token_to_token_swap_input_v3(
+                input_token,
+                qty,
+                qtycap,
+                output_token,
+                route_legacy,
+                fees_legacy,
+                [],
+                custom_nonce=custom_nonce,
+            )
+        elif route is None:
             if swap_pool_key is None:
                 raise ValueError("swap_pool_key must be provided for single hop swaps")
             result = await self.token_to_token_swap_exact_input(
@@ -2456,6 +2687,8 @@ class AsyncUniswap4:
         hook_data: bytes | None = b"",
         route: list[PoolKey] | None = None,
         custom_nonce: Nonce | None = None,
+        route_legacy: list[str] | None = None,
+        fees_legacy: list[int] | None = None,
     ) -> HexBytes:
         """
         :param input_token: The token to be sold.
@@ -2465,12 +2698,36 @@ class AsyncUniswap4:
         :param swap_pool_key: Optional. The PoolKey for the swap, required if `route` is not provided.
         :param hook_data: Optional. The hook data for the swap.
         :param route: Optional. The route for the swap in reverse order. The first element should be the pool containing `output_token` and the last element should be the pool containing `input_token`.
+        :param custom_nonce: Optional. The nonce for the transaction.
+        :param route_legacy: Optional. The route for v2 and v3 swaps. Parameter `route` will be ignored if `route_legacy` is provided.
+        :param fees_legacy: Optional. The fees for v3 swaps.
 
         Make a trade by defining the qty of the output token.
-        If `route` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap.
+        If `route` or `route_legacy` is provided, it will be used for the swap. Otherwise, `swap_pool_key` must be provided for a single hop swap.
         """
         result: HexBytes | None = None
-        if route is None:
+        if route_legacy and fees_legacy is None:
+            result = await self.token_to_token_swap_output_v2(
+                input_token,
+                qty,
+                qtycap,
+                output_token,
+                route_legacy,
+                [],
+                custom_nonce=custom_nonce,
+            )
+        elif route_legacy and fees_legacy:
+            result = await self.token_to_token_swap_output_v3(
+                input_token,
+                qty,
+                qtycap,
+                output_token,
+                route_legacy,
+                fees_legacy,
+                [],
+                custom_nonce=custom_nonce,
+            )
+        elif route is None:
             if swap_pool_key is None:
                 raise ValueError("swap_pool_key must be provided for single hop swaps")
             result = await self.token_to_token_swap_exact_output(

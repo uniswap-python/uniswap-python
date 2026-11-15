@@ -9,6 +9,7 @@ from typing import (
 )
 from xml.etree import ElementTree as ET
 
+from eth_typing import HexStr
 from web3 import AsyncWeb3, Web3
 from web3.contract import AsyncContract, Contract
 from web3.exceptions import NameNotFound
@@ -77,13 +78,44 @@ def _load_contract_erc20(w3: Web3, address: AddressLike) -> Contract:
     return _load_contract(w3, "erc20", address)
 
 
-def _encode_path(token_in: AddressLike, route: list[tuple[int, AddressLike]]) -> bytes:
+def encode_v3_path(
+    route: list[AddressLike], fees: list[int], is_exact_out: bool = False
+) -> bytes:
     """
-    Needed for multi-hop swaps in V3.
+    Encodes a Uniswap V3 path for use in swap and quote functions.
 
-    https://github.com/Uniswap/uniswap-v3-sdk/blob/1a74d5f0a31040fec4aeb1f83bba01d7c03f4870/src/utils/encodeRouteToPath.ts
+    :param route : A list of token addresses representing the swap route. The length of this list must be one greater than the length of the `fees` list.
+    :param fees : A list of fee tiers corresponding to each hop in the route. Each fee tier should be an integer representing the fee in hundredths of a bip (e.g., 3000 for 0.3%).
+    :param is_exact_out : A boolean indicating whether the swap is an exact output swap. If True, the path will be encoded in reverse order.
+
+    :return : A bytes object representing the encoded path.
     """
-    raise NotImplementedError
+    if len(route) < 2:
+        raise ValueError(
+            "Route must contain at least two token addresses. "
+            f"Got route length {len(route)}."
+        )
+    if len(route) != len(fees) + 1:
+        raise ValueError(
+            "Route length must be one greater than fees length. "
+            f"Got route length {len(route)} and fees length {len(fees)}."
+        )
+
+    path = b""
+    _route = route.copy()
+    _fees = fees.copy()
+    if is_exact_out:
+        # For exact output swaps, the path is encoded in reverse order
+        _route.reverse()
+        _fees.reverse()
+
+    for i in range(len(_fees)):
+        path += Web3.to_bytes(hexstr=HexStr(_addr_to_str(_route[i]))) + _fees[
+            i
+        ].to_bytes(3, "big")
+    path += Web3.to_bytes(hexstr=HexStr(_addr_to_str(_route[-1])))
+
+    return path
 
 
 # Adapted from: https://github.com/Uniswap/v3-sdk/blob/main/src/utils/encodeSqrtRatioX96.ts
