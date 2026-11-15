@@ -2609,7 +2609,6 @@ class AsyncUniswap4:
         swap_pool_key: PoolKey | None = None,
         hook_data: bytes | None = b"",
         route: list[PoolKey] | None = None,
-        min_hop_price_x_36: list[int] | None = None,
         custom_nonce: Nonce | None = None,
         route_legacy: list[str] | None = None,
         fees_legacy: list[int] | None = None,
