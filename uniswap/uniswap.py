@@ -106,8 +106,10 @@ class Uniswap:
         )
 
         self.version = version
-        if self.version not in [2, 3]:
-            raise ValueError(f"Invalid version '{self.version}', only 2 or 3 supported")
+        if self.version not in [1, 2, 3]:
+            raise ValueError(
+                f"Invalid version '{self.version}', only 1, 2 or 3 supported"
+            )
 
         self.default_slippage = default_slippage
         self.use_estimate_gas = use_estimate_gas

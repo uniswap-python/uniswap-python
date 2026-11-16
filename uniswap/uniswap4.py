@@ -54,6 +54,7 @@ from .util import (
     _str_to_addr,
     encode_v3_path,
     get_sqrt_ratio_at_tick,
+    is_same_address,
     realised_fee_percentage,
 )
 
@@ -2104,30 +2105,64 @@ class Uniswap4:
         """
         min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
 
+        if len(route_legacy) < 2:
+            raise ValueError("route_legacy must have at least 2 elements")
+
+        _route_legacy = route_legacy
+        command_abis = []
+        commands_codes = []
+        params_abis = []
+        params_values = []
+
+        # wrapping native token if input is native token
+        if is_same_address(input_token, ETH_ADDRESS):
+            _route_legacy[0] = self.position_descriptor_get_wrapped_native_address()
+            command_abis.append("uint8")
+            commands_codes.append(universal_router_commands["WRAP_ETH"])
+            params_abis.append(["address", "uint256"])
+            params_values.append([_addr_to_str(self.address), qty])
+
+        # fixing the last element of the route if output is native token
+        if is_same_address(output_token, ETH_ADDRESS):
+            _route_legacy[-1] = self.position_descriptor_get_wrapped_native_address()
+
         ether_amount: int = 0
 
         if input_token == ETH_ADDRESS:
             ether_amount = qty
 
-        # V2_SWAP_EXACT_IN // Encode swap commands and actions
-        commands: bytes = encode_packed(
-            ["uint8"],
-            args=[universal_router_commands["V2_SWAP_EXACT_IN"]],
+        # encoding the swap command and parameters for V2_SWAP_EXACT_IN
+        command_abis.append("uint8")
+        commands_codes.append(universal_router_commands["V2_SWAP_EXACT_IN"])
+        params_abis.append(universal_router_commands_abis["V2_SWAP_EXACT_IN"])
+        params_values.append(
+            [
+                _addr_to_str(self.address),
+                qty,
+                min_tokens_bought,
+                route_legacy,
+                True,
+                min_hop_price_x_36,
+            ]
         )
 
-        params: bytes = encode(
-            universal_router_commands_abis["V2_SWAP_EXACT_IN"],
-            [
-                (
-                    _addr_to_str(self.address),
-                    qty,
-                    min_tokens_bought,
-                    route_legacy,
-                    True,
-                    min_hop_price_x_36,
-                )
-            ],
+        # unwrapping native token if output is native token
+        if is_same_address(output_token, ETH_ADDRESS):
+            command_abis.append("uint8")
+            commands_codes.append(universal_router_commands["UNWRAP_WETH"])
+            params_abis.append(["address", "uint256"])
+            params_values.append([_addr_to_str(self.address), min_tokens_bought])
+
+        # V2_SWAP_EXACT_IN // Encode swap commands and actions
+        commands: bytes = encode_packed(
+            command_abis,
+            args=commands_codes,
         )
+
+        params = []
+        for abi, value in zip(params_abis, params_values):
+            params.append(encode(abi, value))
+
         return self._build_and_send_tx(
             self.router.functions.execute(commands, params, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
@@ -2147,32 +2182,67 @@ class Uniswap4:
     ) -> HexBytes:
         min_tokens_bought: int = int((1 - self.max_slippage) * qtycap)
 
+        if len(route_legacy) < 2:
+            raise ValueError("route_legacy must have at least 2 elements")
+
+        command_abis = []
+        commands_codes = []
+        params_abis = []
+        params_values = []
+        _route_legacy = route_legacy
+
+        # wrapping native token if input is native token
+        if is_same_address(input_token, ETH_ADDRESS):
+            _route_legacy[0] = self.position_descriptor_get_wrapped_native_address()
+            command_abis.append("uint8")
+            commands_codes.append(universal_router_commands["WRAP_ETH"])
+            params_abis.append(["address", "uint256"])
+            params_values.append([_addr_to_str(self.address), qty])
+
+        # fixing the last element of the route if output is native token
+        if is_same_address(output_token, ETH_ADDRESS):
+            _route_legacy[-1] = self.position_descriptor_get_wrapped_native_address()
+
         ether_amount: int = 0
 
         if input_token == ETH_ADDRESS:
             ether_amount = qty
 
+        checksum_route_legacy: list[AddressLike] = [
+            self.w3.to_checksum_address(addr) for addr in _route_legacy
+        ]
+        # encoding the swap command and parameters for V3_SWAP_EXACT_IN
+        command_abis.append("uint8")
+        commands_codes.append(universal_router_commands["V3_SWAP_EXACT_IN"])
+        params_abis.append(universal_router_commands_abis["V3_SWAP_EXACT_IN"])
+        params_values.append(
+            [
+                _addr_to_str(self.address),
+                qty,
+                min_tokens_bought,
+                encode_v3_path(checksum_route_legacy, fees_legacy),
+                True,
+                min_hop_price_x_36,
+            ]
+        )
+
+        # unwrapping native token if output is native token
+        if is_same_address(output_token, ETH_ADDRESS):
+            command_abis.append("uint8")
+            commands_codes.append(universal_router_commands["UNWRAP_WETH"])
+            params_abis.append(["address", "uint256"])
+            params_values.append([_addr_to_str(self.address), min_tokens_bought])
+
         # V3_SWAP_EXACT_IN // Encode swap commands and actions
         commands: bytes = encode_packed(
-            ["uint8"],
-            args=[universal_router_commands["V3_SWAP_EXACT_IN"]],
+            command_abis,
+            args=commands_codes,
         )
-        checksum_route_legacy: list[AddressLike] = [
-            self.w3.to_checksum_address(addr) for addr in route_legacy
-        ]
-        params: bytes = encode(
-            universal_router_commands_abis["V3_SWAP_EXACT_IN"],
-            [
-                (
-                    _addr_to_str(self.address),
-                    qty,
-                    min_tokens_bought,
-                    encode_v3_path(checksum_route_legacy, fees_legacy),
-                    True,
-                    min_hop_price_x_36,
-                )
-            ],
-        )
+
+        params = []
+        for abi, value in zip(params_abis, params_values):
+            params.append(encode(abi, value))
+
         return self._build_and_send_tx(
             self.router.functions.execute(commands, params, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
@@ -2399,30 +2469,65 @@ class Uniswap4:
         """
 
         amount_in_max: int = int((1 + self.max_slippage) * qtycap)
+
+        if len(route_legacy) < 2:
+            raise ValueError("route_legacy must have at least 2 elements")
+
+        _route_legacy = route_legacy
+        command_abis = []
+        commands_codes = []
+        params_abis = []
+        params_values = []
+
+        # wrapping native token if input is native token
+        if is_same_address(input_token, ETH_ADDRESS):
+            _route_legacy[0] = self.position_descriptor_get_wrapped_native_address()
+            command_abis.append("uint8")
+            commands_codes.append(universal_router_commands["WRAP_ETH"])
+            params_abis.append(["address", "uint256"])
+            params_values.append([_addr_to_str(self.address), qty])
+
+        # fixing the last element of the route if output is native token
+        if is_same_address(output_token, ETH_ADDRESS):
+            _route_legacy[-1] = self.position_descriptor_get_wrapped_native_address()
+
         ether_amount: int = 0
 
         if input_token == ETH_ADDRESS:
             ether_amount = qty
 
-        # V2_SWAP_EXACT_OUT // Encode swap commands and actions
-        commands: bytes = encode_packed(
-            ["uint8"],
-            args=[universal_router_commands["V2_SWAP_EXACT_OUT"]],
+        # encoding the swap command and parameters for V2_SWAP_EXACT_OUT
+        command_abis.append("uint8")
+        commands_codes.append(universal_router_commands["V2_SWAP_EXACT_OUT"])
+        params_abis.append(universal_router_commands_abis["V2_SWAP_EXACT_OUT"])
+        params_values.append(
+            [
+                _addr_to_str(self.address),
+                qty,
+                amount_in_max,
+                _route_legacy,
+                True,
+                min_hop_price_x_36,
+            ]
         )
 
-        params: bytes = encode(
-            universal_router_commands_abis["V2_SWAP_EXACT_OUT"],
-            [
-                (
-                    _addr_to_str(self.address),
-                    qty,
-                    amount_in_max,
-                    route_legacy,
-                    True,
-                    min_hop_price_x_36,
-                )
-            ],
+        # unwrapping native token if output is native token
+        if is_same_address(output_token, ETH_ADDRESS):
+            command_abis.append("uint8")
+            commands_codes.append(universal_router_commands["UNWRAP_WETH"])
+            params_abis.append(["address", "uint256"])
+            params_values.append([_addr_to_str(self.address), amount_in_max])
+
+        # V2_SWAP_EXACT_OUT // Encode swap commands and actions
+        commands: bytes = encode_packed(
+            command_abis,
+            args=commands_codes,
         )
+
+        params = []
+        for abi, value in zip(params_abis, params_values):
+            params.append(encode(abi, value))
+
         return self._build_and_send_tx(
             self.router.functions.execute(commands, params, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
@@ -2453,32 +2558,67 @@ class Uniswap4:
 
         amount_in_max: int = int((1 + self.max_slippage) * qtycap)
 
+        if len(route_legacy) < 2:
+            raise ValueError("route_legacy must have at least 2 elements")
+
+        command_abis = []
+        commands_codes = []
+        params_abis = []
+        params_values = []
+        _route_legacy = route_legacy
+
+        # wrapping native token if input is native token
+        if is_same_address(input_token, ETH_ADDRESS):
+            _route_legacy[0] = self.position_descriptor_get_wrapped_native_address()
+            command_abis.append("uint8")
+            commands_codes.append(universal_router_commands["WRAP_ETH"])
+            params_abis.append(["address", "uint256"])
+            params_values.append([_addr_to_str(self.address), qty])
+
+        # fixing the last element of the route if output is native token
+        if is_same_address(output_token, ETH_ADDRESS):
+            _route_legacy[-1] = self.position_descriptor_get_wrapped_native_address()
+
         ether_amount: int = 0
 
         if input_token == ETH_ADDRESS:
             ether_amount = qty
 
+        checksum_route_legacy: list[AddressLike] = [
+            self.w3.to_checksum_address(addr) for addr in _route_legacy
+        ]
+        # encoding the swap command and parameters for V3_SWAP_EXACT_OUT
+        command_abis.append("uint8")
+        commands_codes.append(universal_router_commands["V3_SWAP_EXACT_OUT"])
+        params_abis.append(universal_router_commands_abis["V3_SWAP_EXACT_OUT"])
+        params_values.append(
+            [
+                _addr_to_str(self.address),
+                qty,
+                amount_in_max,
+                encode_v3_path(checksum_route_legacy, fees_legacy),
+                True,
+                min_hop_price_x_36,
+            ]
+        )
+
+        # unwrapping native token if output is native token
+        if is_same_address(output_token, ETH_ADDRESS):
+            command_abis.append("uint8")
+            commands_codes.append(universal_router_commands["UNWRAP_WETH"])
+            params_abis.append(["address", "uint256"])
+            params_values.append([_addr_to_str(self.address), amount_in_max])
+
         # V3_SWAP_EXACT_OUT // Encode swap commands and actions
         commands: bytes = encode_packed(
-            ["uint8"],
-            args=[universal_router_commands["V3_SWAP_EXACT_OUT"]],
+            command_abis,
+            args=commands_codes,
         )
-        checksum_route_legacy: list[AddressLike] = [
-            self.w3.to_checksum_address(addr) for addr in route_legacy
-        ]
-        params: bytes = encode(
-            universal_router_commands_abis["V3_SWAP_EXACT_OUT"],
-            [
-                (
-                    _addr_to_str(self.address),
-                    qty,
-                    amount_in_max,
-                    encode_v3_path(checksum_route_legacy, fees_legacy),
-                    True,
-                    min_hop_price_x_36,
-                )
-            ],
-        )
+
+        params = []
+        for abi, value in zip(params_abis, params_values):
+            params.append(encode(abi, value))
+
         return self._build_and_send_tx(
             self.router.functions.execute(commands, params, self._deadline()),
             self._get_tx_params(value=ether_amount, custom_nonce=custom_nonce),
