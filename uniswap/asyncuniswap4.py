@@ -2564,7 +2564,7 @@ class AsyncUniswap4:
         ether_amount: int = 0
 
         if input_token == ETH_ADDRESS:
-            ether_amount = qty
+            ether_amount = amount_in_max
 
         # encoding the swap command and parameters for V2_SWAP_EXACT_OUT
         command_abis.append("uint8")
@@ -2656,7 +2656,7 @@ class AsyncUniswap4:
         ether_amount: int = 0
 
         if input_token == ETH_ADDRESS:
-            ether_amount = qty
+            ether_amount = amount_in_max
 
         checksum_route_legacy: list[AddressLike] = [
             self.w3.to_checksum_address(addr) for addr in _route_legacy
