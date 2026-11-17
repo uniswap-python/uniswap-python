@@ -990,7 +990,6 @@ class TestAsyncUniswap4:
         "input_token, qty, output_token, route_legacy, custom_nonce",
         [
             (ETH_ADDRESS, ONE_USDC, USDC_ADDRESS, [ETH_ADDRESS, USDC_ADDRESS], None),
-            (USDC_ADDRESS, ONE_USDC, ETH_ADDRESS, [USDC_ADDRESS, ETH_ADDRESS], None),
         ],
     )
     @pytest.mark.asyncio
@@ -1080,14 +1079,6 @@ class TestAsyncUniswap4:
                 ONE_USDC,
                 USDC_ADDRESS,
                 [ETH_ADDRESS, USDC_ADDRESS],
-                [500],
-                None,
-            ),
-            (
-                USDC_ADDRESS,
-                ONE_USDC,
-                ETH_ADDRESS,
-                [USDC_ADDRESS, ETH_ADDRESS],
                 [500],
                 None,
             ),

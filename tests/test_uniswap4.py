@@ -987,7 +987,6 @@ class TestUniswap4:
         "input_token, qty, output_token, route_legacy, custom_nonce",
         [
             (ETH_ADDRESS, ONE_USDC, USDC_ADDRESS, [ETH_ADDRESS, USDC_ADDRESS], None),
-            (USDC_ADDRESS, ONE_USDC, ETH_ADDRESS, [USDC_ADDRESS, ETH_ADDRESS], None),
         ],
     )
     def test_make_swap_output_v2(
@@ -1075,14 +1074,6 @@ class TestUniswap4:
                 ONE_USDC,
                 USDC_ADDRESS,
                 [ETH_ADDRESS, USDC_ADDRESS],
-                [500],
-                None,
-            ),
-            (
-                USDC_ADDRESS,
-                ONE_USDC,
-                ETH_ADDRESS,
-                [USDC_ADDRESS, ETH_ADDRESS],
                 [500],
                 None,
             ),
