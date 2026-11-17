@@ -2586,7 +2586,7 @@ class AsyncUniswap4:
             command_abis.append("uint8")
             commands_codes.append(universal_router_commands["UNWRAP_WETH"])
             params_abis.append(["address", "uint256"])
-            params_values.append([_addr_to_str(self.address), amount_in_max])
+            params_values.append([_addr_to_str(self.address), qty])
 
         # V2_SWAP_EXACT_OUT // Encode swap commands and actions
         commands: bytes = encode_packed(
@@ -2681,7 +2681,7 @@ class AsyncUniswap4:
             command_abis.append("uint8")
             commands_codes.append(universal_router_commands["UNWRAP_WETH"])
             params_abis.append(["address", "uint256"])
-            params_values.append([_addr_to_str(self.address), amount_in_max])
+            params_values.append([_addr_to_str(self.address), qty])
 
         # V3_SWAP_EXACT_OUT // Encode swap commands and actions
         commands: bytes = encode_packed(
