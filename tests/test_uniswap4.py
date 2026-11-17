@@ -999,7 +999,7 @@ class TestUniswap4:
         route_legacy: list[str],
         custom_nonce: Nonce,
     ):
-        qtycap = 1
+        qtycap = 2**256 - 1
         tx = client.make_swap_output(
             input_token,
             output_token,
@@ -1098,7 +1098,7 @@ class TestUniswap4:
         fees_legacy: list[int],
         custom_nonce: Nonce,
     ):
-        qtycap = 1
+        qtycap = 2**256 - 1
         tx = client.make_swap_output(
             input_token,
             output_token,
