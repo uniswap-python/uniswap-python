@@ -2485,7 +2485,7 @@ class Uniswap4:
             command_abis.append("uint8")
             commands_codes.append(universal_router_commands["WRAP_ETH"])
             params_abis.append(["address", "uint256"])
-            params_values.append([_addr_to_str(self.address), qty])
+            params_values.append([_addr_to_str(self.address), amount_in_max])
 
         # fixing the last element of the route if output is native token
         if is_same_address(output_token, ETH_ADDRESS):
@@ -2573,7 +2573,7 @@ class Uniswap4:
             command_abis.append("uint8")
             commands_codes.append(universal_router_commands["WRAP_ETH"])
             params_abis.append(["address", "uint256"])
-            params_values.append([_addr_to_str(self.address), qty])
+            params_values.append([_addr_to_str(self.address), amount_in_max])
 
         # fixing the last element of the route if output is native token
         if is_same_address(output_token, ETH_ADDRESS):
