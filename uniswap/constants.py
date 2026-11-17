@@ -333,7 +333,7 @@ universal_router_commands_abis = {
         "uint160",
     ],
     "PERMIT2_PERMIT_BATCH": [
-        "((address,uint160,uint48,uint48)[],address,uint256)",
+        "((address,uint160,uint48,uint48)[],address,uint256)[]",
         "bytes",
     ],
     "SWEEP": [
@@ -480,7 +480,6 @@ v4_actions_abis = {
     ],
     "INCREASE_LIQUIDITY_FROM_DELTAS": [
         "uint256",
-        "uint256",
         "uint128",
         "uint128",
         "bytes",
@@ -489,7 +488,6 @@ v4_actions_abis = {
         "(address,address,uint24,int24,address)",
         "int24",
         "int24",
-        "uint256",
         "uint128",
         "uint128",
         "address",
