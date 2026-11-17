@@ -1003,7 +1003,7 @@ class TestAsyncUniswap4:
         route_legacy: list[str],
         custom_nonce: Nonce,
     ):
-        qtycap = 2**160 - 1
+        qtycap = 10 * ONE_ETH - 1
         tx = await client.make_swap_output(
             input_token,
             output_token,
@@ -1104,7 +1104,7 @@ class TestAsyncUniswap4:
         fees_legacy: list[int],
         custom_nonce: Nonce,
     ):
-        qtycap = 2**160 - 1
+        qtycap = 10 * ONE_ETH - 1
         tx = await client.make_swap_output(
             input_token,
             output_token,
