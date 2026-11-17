@@ -19,6 +19,9 @@ from uniswap.constants import (
     universal_router_commands,
     v4_actions,
 )
+from uniswap.constants import (
+    WETH9_ADDRESS as WETH_ADDRESS,
+)
 from uniswap.types import AddressLike, PoolKey
 from uniswap.util import AsyncV4pools, V4pools, _addr_to_str, _str_to_addr
 
@@ -143,7 +146,8 @@ class TestAsyncUniswap4:
     @pytest.mark.parametrize(
         "token, max_approval, delay_interval",
         [
-            (USDC_ADDRESS, None, 7),
+            (USDC_ADDRESS, None, 2),
+            (WETH_ADDRESS, 0, 1),
             (USDT_ADDRESS, 1_000_000 * ONE_USDT, 1),
         ],
     )
