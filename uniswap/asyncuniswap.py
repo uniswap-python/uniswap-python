@@ -8,7 +8,6 @@ from typing import (
     Any,
 )
 
-from eth_typing import HexStr
 from eth_typing.evm import Address, ChecksumAddress
 from hexbytes import HexBytes
 from web3 import AsyncWeb3, Web3
@@ -48,6 +47,7 @@ from .util import (
     _validate_address,
     chunks,
     encode_sqrt_ratioX96,
+    encode_v3_path,
     is_same_address,
     nearest_tick,
     realised_fee_percentage,
@@ -77,7 +77,7 @@ class AsyncUniswap:
         private_key: str | None,
         provider: str | None = None,
         web3: AsyncWeb3 | None = None,
-        version: int = 1,
+        version: int = 3,
         default_slippage: float = 0.01,
         use_estimate_gas: bool = True,
         # use_eip1559: bool = True,
@@ -108,7 +108,7 @@ class AsyncUniswap:
         if self.version not in [1, 2, 3]:
             raise ValueError(
                 f"Invalid version '{self.version}', only 1, 2 or 3 supported"
-            )  # pragma: no cover
+            )
 
         # TODO: Write tests for slippage
         self.default_slippage = default_slippage
@@ -235,9 +235,11 @@ class AsyncUniswap:
         fee = validate_fee_tier(fee=fee, version=self.version)
 
         if is_same_address(token0, ETH_ADDRESS) and self.version == 2:
-            return await self._get_eth_token_input_price(token1, Wei(qty), fee)
+            return await self._get_eth_token_input_price(
+                token1, Wei(qty), fee, route, fees
+            )
         elif is_same_address(token1, ETH_ADDRESS) and self.version == 2:
-            return await self._get_token_eth_input_price(token0, qty, fee)
+            return await self._get_token_eth_input_price(token0, qty, fee, route, fees)
         else:
             if is_same_address(token0, ETH_ADDRESS):
                 token0 = await self.get_weth_address()
@@ -260,9 +262,11 @@ class AsyncUniswap:
         fee = validate_fee_tier(fee=fee, version=self.version)
 
         if is_same_address(token0, ETH_ADDRESS) and self.version == 2:
-            return await self._get_eth_token_output_price(token1, qty, fee)
+            return await self._get_eth_token_output_price(token1, qty, fee, route, fees)
         elif is_same_address(token1, ETH_ADDRESS) and self.version == 2:
-            return await self._get_token_eth_output_price(token0, Wei(qty), fee)
+            return await self._get_token_eth_output_price(
+                token0, Wei(qty), fee, route, fees
+            )
         else:
             if is_same_address(token0, ETH_ADDRESS):
                 token0 = await self.get_weth_address()
@@ -277,21 +281,29 @@ class AsyncUniswap:
         token: AddressLike,  # output token
         qty: Wei,
         fee: int,
+        route: list[AddressLike] | None = None,
+        fees: list[int] | None = None,
     ) -> Wei:
         """Public price (i.e. amount of output token received) for ETH to token trades with an exact input."""
         if self.version == 1:
             ex = await self._exchange_contract(token)
             price: Wei = await ex.functions.getEthToTokenInputPrice(qty).call()
         elif self.version == 2:
-            price = (
-                await self.router.functions.getAmountsOut(
-                    qty, [await self.get_weth_address(), token]
-                ).call()
-            )[-1]
+            if route is None:
+                path = [await self.get_weth_address(), token]
+            else:
+                path = route
+            price = (await self.router.functions.getAmountsOut(qty, path).call())[-1]
         elif self.version == 3:
-            price = await self._get_token_token_input_price(
-                await self.get_weth_address(), token, qty, fee=fee
-            )  # type: ignore
+            if route and fees:
+                encoded_v3_path = encode_v3_path(route, fees)
+                price = await self.quoter.functions.quoteExactInput(
+                    encoded_v3_path, qty
+                ).call()
+            else:
+                price = await self._get_token_token_input_price(
+                    await self.get_weth_address(), token, qty, fee=fee
+                )  # type: ignore
         else:
             raise ValueError  # pragma: no cover
         return price
@@ -301,21 +313,29 @@ class AsyncUniswap:
         token: AddressLike,  # input token
         qty: int,
         fee: int,
+        route: list[AddressLike] | None = None,
+        fees: list[int] | None = None,
     ) -> int:
         """Public price (i.e. amount of ETH received) for token to ETH trades with an exact input."""
         if self.version == 1:
             ex = await self._exchange_contract(token)
             price: int = await ex.functions.getTokenToEthInputPrice(qty).call()
         elif self.version == 2:
-            price = (
-                await self.router.functions.getAmountsOut(
-                    qty, [token, await self.get_weth_address()]
-                ).call()
-            )[-1]
+            if route is None:
+                path = [token, await self.get_weth_address()]
+            else:
+                path = route
+            price = (await self.router.functions.getAmountsOut(qty, path).call())[-1]
         elif self.version == 3:
-            price = await self._get_token_token_input_price(
-                token, await self.get_weth_address(), qty, fee=fee
-            )
+            if route and fees:
+                encoded_v3_path = encode_v3_path(route, fees)
+                price = await self.quoter.functions.quoteExactInput(
+                    encoded_v3_path, qty
+                ).call()
+            else:
+                price = await self._get_token_token_input_price(
+                    token, await self.get_weth_address(), qty, fee=fee
+                )
         else:
             raise ValueError  # pragma: no cover
         return price
@@ -351,14 +371,11 @@ class AsyncUniswap:
             ]
         elif self.version == 3:
             if route and fees:
-                # NOTE: to support custom routes we need to support the Path data encoding: https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/Path.sol
-                # result: tuple = self.quoter.functions.quoteExactInput(route, qty).call()
-                encoded_v3_path = self.encode_v3_path(route, fees)
+                encoded_v3_path = encode_v3_path(route, fees)
                 price = await self.quoter.functions.quoteExactInput(
                     encoded_v3_path, qty
                 ).call()
             else:
-                # FIXME: How to calculate this properly? See https://docs.uniswap.org/reference/libraries/SqrtPriceMath
                 sqrtPriceLimitX96 = 0
                 price = await self.quoter.functions.quoteExactInputSingle(
                     token0, token1, fee, qty, sqrtPriceLimitX96
@@ -372,6 +389,8 @@ class AsyncUniswap:
         token: AddressLike,  # output token
         qty: int,
         fee: int | None = None,
+        route: list[AddressLike] | None = None,
+        fees: list[int] | None = None,
     ) -> Wei:
         """Public price (i.e. amount of ETH needed) for ETH to token trades with an exact output."""
         fee = validate_fee_tier(fee=fee, version=self.version)
@@ -379,14 +398,23 @@ class AsyncUniswap:
             ex = await self._exchange_contract(token)
             price: Wei = await ex.functions.getEthToTokenOutputPrice(qty).call()
         elif self.version == 2:
-            route = [await self.get_weth_address(), token]
-            price = (await self.router.functions.getAmountsIn(qty, route).call())[0]
+            if route is None:
+                path = [await self.get_weth_address(), token]
+            else:
+                path = route
+            price = (await self.router.functions.getAmountsIn(qty, path).call())[0]
         elif self.version == 3:
-            price = Wei(
-                await self._get_token_token_output_price(
-                    await self.get_weth_address(), token, qty, fee=fee
+            if route and fees:
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
+                price = await self.quoter.functions.quoteExactOutput(
+                    encoded_v3_path, qty
+                ).call()
+            else:
+                price = Wei(
+                    await self._get_token_token_output_price(
+                        await self.get_weth_address(), token, qty, fee=fee
+                    )
                 )
-            )
         else:
             raise ValueError  # pragma: no cover
         return price
@@ -396,6 +424,8 @@ class AsyncUniswap:
         token: AddressLike,
         qty: Wei,
         fee: int | None = None,  # input token
+        route: list[AddressLike] | None = None,
+        fees: list[int] | None = None,
     ) -> int:
         """Public price (i.e. amount of input token needed) for token to ETH trades with an exact output."""
         fee = validate_fee_tier(fee=fee, version=self.version)
@@ -403,12 +433,21 @@ class AsyncUniswap:
             ex = await self._exchange_contract(token)
             price: int = await ex.functions.getTokenToEthOutputPrice(qty).call()
         elif self.version == 2:
-            route = [token, await self.get_weth_address()]
-            price = (await self.router.functions.getAmountsIn(qty, route).call())[0]
+            if route is None:
+                path = [token, await self.get_weth_address()]
+            else:
+                path = route
+            price = (await self.router.functions.getAmountsIn(qty, path).call())[0]
         elif self.version == 3:
-            price = await self._get_token_token_output_price(
-                token, await self.get_weth_address(), qty, fee=fee
-            )
+            if route and fees:
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
+                price = await self.quoter.functions.quoteExactOutput(
+                    encoded_v3_path, qty
+                ).call()
+            else:
+                price = await self._get_token_token_output_price(
+                    token, await self.get_weth_address(), qty, fee=fee
+                )
         else:
             raise ValueError  # pragma: no cover
         return price
@@ -447,16 +486,11 @@ class AsyncUniswap:
             ]
         elif self.version == 3:
             if route and fees:
-                # NOTE: to support custom routes we need to support the Path data encoding: https://github.com/Uniswap/uniswap-v3-periphery/blob/main/contracts/libraries/Path.sol
-                # result: tuple = self.quoter.functions.quoteExactOutput(route, qty).call()
-                encoded_v3_path = self.encode_v3_path(route, fees, is_exact_out=True)
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
                 price = await self.quoter.functions.quoteExactOutput(
                     encoded_v3_path, qty
                 ).call()
             else:
-                # FIXME: How to calculate this properly?
-                #   - https://docs.uniswap.org/reference/libraries/SqrtPriceMath
-                #   - https://github.com/Uniswap/uniswap-v3-sdk/blob/main/src/swapRouter.ts
                 sqrtPriceLimitX96 = 0
                 price = await self.quoter.functions.quoteExactOutputSingle(
                     token0, token1, fee, qty, sqrtPriceLimitX96
@@ -493,13 +527,27 @@ class AsyncUniswap:
         if self.version != 3 and fees:
             fees = None
 
-        if input_token == ETH_ADDRESS and (route is None or fees is None):
+        if input_token == ETH_ADDRESS:
             return await self._eth_to_token_swap_input(
-                output_token, Wei(qty), recipient, fee, slippage, fee_on_transfer
+                output_token,
+                Wei(qty),
+                recipient,
+                fee,
+                slippage,
+                fee_on_transfer,
+                route,
+                fees,
             )
-        elif output_token == ETH_ADDRESS and (route is None or fees is None):
+        elif output_token == ETH_ADDRESS:
             return await self._token_to_eth_swap_input(
-                input_token, qty, recipient, fee, slippage, fee_on_transfer
+                input_token,
+                qty,
+                recipient,
+                fee,
+                slippage,
+                fee_on_transfer,
+                route,
+                fees,
             )
         else:
             # if is_same_address(input_token, ETH_ADDRESS):
@@ -541,17 +589,19 @@ class AsyncUniswap:
         if self.version != 3 and fees:
             fees = None
 
-        if input_token == ETH_ADDRESS and (route is None or fees is None):
+        if input_token == ETH_ADDRESS:
             balance = await self.get_eth_balance()
-            need = await self._get_eth_token_output_price(output_token, qty, fee)
+            need = await self._get_eth_token_output_price(
+                output_token, qty, fee, route, fees
+            )
             if balance < need:
                 raise InsufficientBalance(balance, need)
             return await self._eth_to_token_swap_output(
-                output_token, qty, recipient, fee, slippage
+                output_token, qty, recipient, fee, slippage, route, fees
             )
-        elif output_token == ETH_ADDRESS and (route is None or fees is None):
+        elif output_token == ETH_ADDRESS:
             return await self._token_to_eth_swap_output(
-                input_token, Wei(qty), recipient, fee, slippage
+                input_token, Wei(qty), recipient, fee, slippage, route, fees
             )
         else:
             # if is_same_address(input_token, ETH_ADDRESS):
@@ -570,6 +620,8 @@ class AsyncUniswap:
         fee: int,
         slippage: float,
         fee_on_transfer: bool = False,
+        route: list[AddressLike] | None = None,
+        fees: list[int] | None = None,
     ) -> HexBytes:
         """Convert ETH to tokens given an input amount."""
         if output_token == ETH_ADDRESS:
@@ -595,16 +647,22 @@ class AsyncUniswap:
                 recipient = self.address
             amount_out_min = int(
                 (1 - slippage)
-                * await self._get_eth_token_input_price(output_token, qty, fee)
+                * await self._get_eth_token_input_price(
+                    output_token, qty, fee, route, fees
+                )
             )
             if fee_on_transfer:
                 func = self.router.functions.swapExactETHForTokensSupportingFeeOnTransferTokens
             else:
                 func = self.router.functions.swapExactETHForTokens
+            if route is None:
+                path = [await self.get_weth_address(), output_token]
+            else:
+                path = route
             return await self._build_and_send_tx(
                 func(
                     amount_out_min,
-                    [await self.get_weth_address(), output_token],
+                    path,
                     recipient,
                     self._deadline(),
                 ),
@@ -619,25 +677,42 @@ class AsyncUniswap:
 
             min_tokens_bought = int(
                 (1 - slippage)
-                * await self._get_eth_token_input_price(output_token, qty, fee=fee)
+                * await self._get_eth_token_input_price(
+                    output_token, qty, fee=fee, route=route, fees=fees
+                )
             )
             sqrtPriceLimitX96 = 0
 
-            return await self._build_and_send_tx(
-                self.router.functions.exactInputSingle(
-                    {
-                        "tokenIn": await self.get_weth_address(),
-                        "tokenOut": output_token,
-                        "fee": fee,
-                        "recipient": recipient,
-                        "deadline": self._deadline(),
-                        "amountIn": qty,
-                        "amountOutMinimum": min_tokens_bought,
-                        "sqrtPriceLimitX96": sqrtPriceLimitX96,
-                    }
-                ),
-                await self._get_tx_params(value=qty),
-            )
+            if route and fees:
+                encoded_v3_path = encode_v3_path(route, fees)
+                return await self._build_and_send_tx(
+                    self.router.functions.exactInput(
+                        {
+                            "path": encoded_v3_path,
+                            "recipient": recipient,
+                            "deadline": self._deadline(),
+                            "amountIn": qty,
+                            "amountOutMinimum": min_tokens_bought,
+                        }
+                    ),
+                    await self._get_tx_params(value=qty),
+                )
+            else:
+                return await self._build_and_send_tx(
+                    self.router.functions.exactInputSingle(
+                        {
+                            "tokenIn": await self.get_weth_address(),
+                            "tokenOut": output_token,
+                            "fee": fee,
+                            "recipient": recipient,
+                            "deadline": self._deadline(),
+                            "amountIn": qty,
+                            "amountOutMinimum": min_tokens_bought,
+                            "sqrtPriceLimitX96": sqrtPriceLimitX96,
+                        }
+                    ),
+                    await self._get_tx_params(value=qty),
+                )
         else:
             raise ValueError  # pragma: no cover
 
@@ -649,6 +724,8 @@ class AsyncUniswap:
         fee: int,
         slippage: float,
         fee_on_transfer: bool = False,
+        route: list[AddressLike] | None = None,
+        fees: list[int] | None = None,
     ) -> HexBytes:
         """Convert tokens to ETH given an input amount."""
         if input_token == ETH_ADDRESS:
@@ -673,17 +750,23 @@ class AsyncUniswap:
                 recipient = self.address
             amount_out_min = int(
                 (1 - slippage)
-                * await self._get_token_eth_input_price(input_token, qty, fee)
+                * await self._get_token_eth_input_price(
+                    input_token, qty, fee, route, fees
+                )
             )
             if fee_on_transfer:
                 func = self.router.functions.swapExactTokensForETHSupportingFeeOnTransferTokens
             else:
                 func = self.router.functions.swapExactTokensForETH
+            if route is None:
+                path = [input_token, await self.get_weth_address()]
+            else:
+                path = route
             return await self._build_and_send_tx(
                 func(
                     qty,
                     amount_out_min,
-                    [input_token, await self.get_weth_address()],
+                    path,
                     recipient,
                     self._deadline(),
                 ),
@@ -698,25 +781,42 @@ class AsyncUniswap:
             output_token = await self.get_weth_address()
             min_tokens_bought = int(
                 (1 - slippage)
-                * await self._get_token_eth_input_price(input_token, qty, fee=fee)
+                * await self._get_token_eth_input_price(
+                    input_token, qty, fee=fee, route=route, fees=fees
+                )
             )
             sqrtPriceLimitX96 = 0
 
-            swap_data = self.router.encode_abi(
-                "exactInputSingle",
-                args=[
-                    (
-                        input_token,
-                        output_token,
-                        fee,
-                        ETH_ADDRESS,
-                        self._deadline(),
-                        qty,
-                        min_tokens_bought,
-                        sqrtPriceLimitX96,
-                    )
-                ],
-            )
+            if route and fees:
+                encoded_v3_path = encode_v3_path(route, fees)
+                swap_data = self.router.encode_abi(
+                    "exactInput",
+                    args=[
+                        (
+                            encoded_v3_path,
+                            ETH_ADDRESS,
+                            self._deadline(),
+                            qty,
+                            min_tokens_bought,
+                        )
+                    ],
+                )
+            else:
+                swap_data = self.router.encode_abi(
+                    "exactInputSingle",
+                    args=[
+                        (
+                            input_token,
+                            output_token,
+                            fee,
+                            ETH_ADDRESS,
+                            self._deadline(),
+                            qty,
+                            min_tokens_bought,
+                            sqrtPriceLimitX96,
+                        )
+                    ],
+                )
 
             unwrap_data = self.router.encode_abi(
                 "unwrapWETH9", args=[min_tokens_bought, recipient]
@@ -817,7 +917,7 @@ class AsyncUniswap:
             )
             sqrtPriceLimitX96 = 0
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees)
+                encoded_v3_path = encode_v3_path(route, fees)
                 return await self._build_and_send_tx(
                     self.router.functions.exactInput(
                         {
@@ -856,6 +956,8 @@ class AsyncUniswap:
         recipient: AddressLike | None,
         fee: int,
         slippage: float,
+        route: list[AddressLike] | None = None,
+        fees: list[int] | None = None,
     ) -> HexBytes:
         """Convert ETH to tokens given an output amount."""
         if output_token == ETH_ADDRESS:
@@ -863,7 +965,9 @@ class AsyncUniswap:
 
         # Balance check
         eth_balance = await self.get_eth_balance()
-        cost = await self._get_eth_token_output_price(output_token, qty, fee)
+        cost = await self._get_eth_token_output_price(
+            output_token, qty, fee, route, fees
+        )
         amount_in_max = Wei(int((1 + slippage) * cost))
 
         # We check balance against amount_in_max rather than cost to be conservative
@@ -886,12 +990,18 @@ class AsyncUniswap:
                 recipient = self.address
             eth_qty = int(
                 (1 + slippage)
-                * await self._get_eth_token_output_price(output_token, qty, fee)
+                * await self._get_eth_token_output_price(
+                    output_token, qty, fee, route, fees
+                )
             )  # type: ignore
+            if route is None:
+                path = [await self.get_weth_address(), output_token]
+            else:
+                path = route
             return await self._build_and_send_tx(
                 self.router.functions.swapETHForExactTokens(
                     qty,
-                    [await self.get_weth_address(), output_token],
+                    path,
                     recipient,
                     self._deadline(),
                 ),
@@ -903,21 +1013,36 @@ class AsyncUniswap:
 
             sqrtPriceLimitX96 = 0
 
-            swap_data = self.router.encode_abi(
-                "exactOutputSingle",
-                args=[
-                    (
-                        await self.get_weth_address(),
-                        output_token,
-                        fee,
-                        recipient,
-                        self._deadline(),
-                        qty,
-                        amount_in_max,
-                        sqrtPriceLimitX96,
-                    )
-                ],
-            )
+            if route and fees:
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
+                swap_data = self.router.encode_abi(
+                    "exactOutput",
+                    args=[
+                        (
+                            encoded_v3_path,
+                            recipient,
+                            self._deadline(),
+                            qty,
+                            amount_in_max,
+                        )
+                    ],
+                )
+            else:
+                swap_data = self.router.encode_abi(
+                    "exactOutputSingle",
+                    args=[
+                        (
+                            await self.get_weth_address(),
+                            output_token,
+                            fee,
+                            recipient,
+                            self._deadline(),
+                            qty,
+                            amount_in_max,
+                            sqrtPriceLimitX96,
+                        )
+                    ],
+                )
 
             refund_data = self.router.encode_abi("refundETH", args=None)
 
@@ -936,6 +1061,8 @@ class AsyncUniswap:
         recipient: AddressLike | None,
         fee: int,
         slippage: float,
+        route: list[AddressLike] | None = None,
+        fees: list[int] | None = None,
     ) -> HexBytes:
         """Convert tokens to ETH given an output amount."""
         if input_token == ETH_ADDRESS:
@@ -943,7 +1070,9 @@ class AsyncUniswap:
 
         # Balance check
         input_balance = await self.get_token_balance(input_token)
-        cost = await self._get_token_eth_output_price(input_token, qty, fee)
+        cost = await self._get_token_eth_output_price(
+            input_token, qty, fee, route, fees
+        )
         amount_in_max = int((1 + slippage) * cost)
 
         # We check balance against amount_in_max rather than cost to be conservative
@@ -976,11 +1105,15 @@ class AsyncUniswap:
                 recipient = self.address
 
             max_tokens = int((1 + slippage) * cost)
+            if route is None:
+                path = [input_token, await self.get_weth_address()]
+            else:
+                path = route
             return await self._build_and_send_tx(
                 self.router.functions.swapTokensForExactETH(
                     qty,
                     max_tokens,
-                    [input_token, await self.get_weth_address()],
+                    path,
                     recipient,
                     self._deadline(),
                 ),
@@ -991,21 +1124,36 @@ class AsyncUniswap:
 
             sqrtPriceLimitX96 = 0
 
-            swap_data = self.router.encode_abi(
-                "exactOutputSingle",
-                args=[
-                    (
-                        input_token,
-                        await self.get_weth_address(),
-                        fee,
-                        ETH_ADDRESS,
-                        self._deadline(),
-                        qty,
-                        amount_in_max,
-                        sqrtPriceLimitX96,
-                    )
-                ],
-            )
+            if route and fees:
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
+                swap_data = self.router.encode_abi(
+                    "exactOutput",
+                    args=[
+                        (
+                            encoded_v3_path,
+                            ETH_ADDRESS,
+                            self._deadline(),
+                            qty,
+                            amount_in_max,
+                        )
+                    ],
+                )
+            else:
+                swap_data = self.router.encode_abi(
+                    "exactOutputSingle",
+                    args=[
+                        (
+                            input_token,
+                            await self.get_weth_address(),
+                            fee,
+                            ETH_ADDRESS,
+                            self._deadline(),
+                            qty,
+                            amount_in_max,
+                            sqrtPriceLimitX96,
+                        )
+                    ],
+                )
 
             unwrap_data = self.router.encode_abi("unwrapWETH9", args=[qty, recipient])
 
@@ -1100,7 +1248,7 @@ class AsyncUniswap:
             sqrtPriceLimitX96 = 0
 
             if route and fees:
-                encoded_v3_path = self.encode_v3_path(route, fees, is_exact_out=True)
+                encoded_v3_path = encode_v3_path(route, fees, is_exact_out=True)
                 return await self._build_and_send_tx(
                     self.router.functions.exactOutput(
                         {
@@ -1904,45 +2052,6 @@ class AsyncUniswap:
         # print(position['data'])
 
         return multicall
-
-    def encode_v3_path(
-        self, route: list[AddressLike], fees: list[int], is_exact_out: bool = False
-    ) -> bytes:
-        """
-        Encodes a Uniswap V3 path for use in swap and quote functions.
-
-        :param route : A list of token addresses representing the swap route. The length of this list must be one greater than the length of the `fees` list.
-        :param fees : A list of fee tiers corresponding to each hop in the route. Each fee tier should be an integer representing the fee in hundredths of a bip (e.g., 3000 for 0.3%).
-        :param is_exact_out : A boolean indicating whether the swap is an exact output swap. If True, the path will be encoded in reverse order.
-
-        :return : A bytes object representing the encoded path.
-        """
-        if len(route) < 2:
-            raise ValueError(
-                "Route must contain at least two token addresses. "
-                f"Got route length {len(route)}."
-            )
-        if len(route) != len(fees) + 1:
-            raise ValueError(
-                "Route length must be one greater than fees length. "
-                f"Got route length {len(route)} and fees length {len(fees)}."
-            )
-
-        path = b""
-        _route = route.copy()
-        _fees = fees.copy()
-        if is_exact_out:
-            # For exact output swaps, the path is encoded in reverse order
-            _route.reverse()
-            _fees.reverse()
-
-        for i in range(len(_fees)):
-            path += self.w3.to_bytes(hexstr=HexStr(_addr_to_str(_route[i]))) + _fees[
-                i
-            ].to_bytes(3, "big")
-        path += self.w3.to_bytes(hexstr=HexStr(_addr_to_str(_route[-1])))
-
-        return path
 
     async def get_raw_price(
         self, token_in: AddressLike, token_out: AddressLike, fee: int | None = None

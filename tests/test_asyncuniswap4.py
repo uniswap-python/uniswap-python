@@ -19,6 +19,9 @@ from uniswap.constants import (
     universal_router_commands,
     v4_actions,
 )
+from uniswap.constants import (
+    WETH9_ADDRESS as WETH_ADDRESS,
+)
 from uniswap.types import AddressLike, PoolKey
 from uniswap.util import AsyncV4pools, V4pools, _addr_to_str, _str_to_addr
 
@@ -143,7 +146,8 @@ class TestAsyncUniswap4:
     @pytest.mark.parametrize(
         "token, max_approval, delay_interval",
         [
-            (USDC_ADDRESS, None, 7),
+            (USDC_ADDRESS, None, 2),
+            (WETH_ADDRESS, 0, 1),
             (USDT_ADDRESS, 1_000_000 * ONE_USDT, 1),
         ],
     )
@@ -936,6 +940,170 @@ class TestAsyncUniswap4:
         )
         tx = await client.make_swap_output(
             token0, token1, qty, qtycap, pool_key, hook_data, route, custom_nonce
+        )
+        assert tx
+
+        tx_receipt = await client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.parametrize(
+        "input_token, qty, output_token, route_legacy, custom_nonce",
+        [
+            (ETH_ADDRESS, ONE_ETH, USDC_ADDRESS, [ETH_ADDRESS, USDC_ADDRESS], None),
+            (USDC_ADDRESS, ONE_USDC, ETH_ADDRESS, [USDC_ADDRESS, ETH_ADDRESS], None),
+        ],
+    )
+    @pytest.mark.asyncio
+    async def test_make_swap_input_v2(
+        self,
+        client: AsyncUniswap4,
+        input_token: str,
+        qty: int,
+        output_token: str,
+        route_legacy: list[str],
+        custom_nonce: Nonce,
+    ):
+
+        qtycap = 1
+        tx = await client.make_swap_input(
+            input_token,
+            output_token,
+            qty,
+            qtycap,
+            route_legacy=route_legacy,
+            custom_nonce=custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = await client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.parametrize(
+        "input_token, qty, output_token, route_legacy, custom_nonce",
+        [
+            (ETH_ADDRESS, ONE_USDC, USDC_ADDRESS, [ETH_ADDRESS, USDC_ADDRESS], None),
+        ],
+    )
+    @pytest.mark.asyncio
+    async def test_make_swap_output_v2(
+        self,
+        client: AsyncUniswap4,
+        input_token: str,
+        qty: int,
+        output_token: str,
+        route_legacy: list[str],
+        custom_nonce: Nonce,
+    ):
+        qtycap = 10 * ONE_ETH - 1
+        tx = await client.make_swap_output(
+            input_token,
+            output_token,
+            qty,
+            qtycap,
+            route_legacy=route_legacy,
+            custom_nonce=custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = await client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.parametrize(
+        "input_token, qty, output_token, route_legacy, fees_legacy, custom_nonce",
+        [
+            (
+                ETH_ADDRESS,
+                ONE_ETH,
+                USDC_ADDRESS,
+                [ETH_ADDRESS, USDC_ADDRESS],
+                [500],
+                None,
+            ),
+            (
+                USDC_ADDRESS,
+                ONE_USDC,
+                ETH_ADDRESS,
+                [USDC_ADDRESS, ETH_ADDRESS],
+                [500],
+                None,
+            ),
+        ],
+    )
+    @pytest.mark.asyncio
+    async def test_make_swap_input_v3(
+        self,
+        client: AsyncUniswap4,
+        input_token: str,
+        qty: int,
+        output_token: str,
+        route_legacy: list[str],
+        fees_legacy: list[int],
+        custom_nonce: Nonce,
+    ):
+        qtycap = 1
+        tx = await client.make_swap_input(
+            input_token,
+            output_token,
+            qty,
+            qtycap,
+            route_legacy=route_legacy,
+            fees_legacy=fees_legacy,
+            custom_nonce=custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = await client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.parametrize(
+        "input_token, qty, output_token, route_legacy, fees_legacy, custom_nonce",
+        [
+            (
+                ETH_ADDRESS,
+                ONE_USDC,
+                USDC_ADDRESS,
+                [ETH_ADDRESS, USDC_ADDRESS],
+                [500],
+                None,
+            ),
+        ],
+    )
+    @pytest.mark.asyncio
+    async def test_make_swap_output_v3(
+        self,
+        client: AsyncUniswap4,
+        input_token: str,
+        qty: int,
+        output_token: str,
+        route_legacy: list[str],
+        fees_legacy: list[int],
+        custom_nonce: Nonce,
+    ):
+        qtycap = 10 * ONE_ETH - 1
+        tx = await client.make_swap_output(
+            input_token,
+            output_token,
+            qty,
+            qtycap,
+            route_legacy=route_legacy,
+            fees_legacy=fees_legacy,
+            custom_nonce=custom_nonce,
         )
         assert tx
 
