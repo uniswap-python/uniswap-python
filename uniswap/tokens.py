@@ -93,6 +93,8 @@ def get_decimals(netname: str) -> dict[str, int]:
     """
     if netname == "mainnet":
         return decimals_mainnet
+    elif netname == "arbitrum":
+        return decimals_arbitrum
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -104,5 +106,7 @@ def get_pool_data(netname: str) -> dict[str, tuple[int, int]]:
     """
     if netname == "mainnet":
         return pool_data_mainnet
+    elif netname == "arbitrum":
+        return pool_data_arbitrum
     else:
         raise ValueError(f"Unknown net '{netname}'")
