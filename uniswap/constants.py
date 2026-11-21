@@ -136,7 +136,7 @@ _quoter_contract_addresses_v4 = {
     "unichain": "0x333e3c607b141b18ff6de9f258db6e77fe7491e0",
     "optimism": "0x1f3131a13296fb91c90870043742c3cdbff1a8d7",
     "base": "0x0d5e0f971ed27fbff6c2837bf31316121532048d",
-    "arbitrum": "0x99bd42B2B22e531f283b7F8a86dFf631EB16A9D1",
+    "arbitrum": "0x8928074CA1b241D8Ec02815881c1Af11E8bC5219",
     "polygon": "0xb3d5c3dfc3a7aebff71895a7191796bffc2c81b9",
     "zora": "0x5edaccc0660e0a2c44b06e07ce8b915e625dc2c6",
     "worldchain": "0x55d235b3ff2daf7c3ede0defc9521f1d6fe6c5c0",
