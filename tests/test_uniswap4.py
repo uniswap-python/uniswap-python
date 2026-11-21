@@ -17,6 +17,7 @@ from uniswap import Uniswap4
 from uniswap.constants import (
     ETH_ADDRESS,
     ZERO_HOOK,
+    _netid_to_name,
     universal_router_commands,
     v4_actions,
 )
@@ -128,10 +129,13 @@ def anvil() -> Generator[AnvilInstance, None, None]:
 
     port = 10998 - int(networks.index(os.environ["NETWORK"]))
     defaultGasPrice = 100_000_000_000  # 100 gwei
+    chain_id: int = list(_netid_to_name.keys())[
+        list(_netid_to_name.values()).index(str(current_network))
+    ]
     p = subprocess.Popen(
         f"""anvil
         --port {port}
-        --chain-id 1
+        --chain-id {chain_id}
         --fork-url {os.environ["PROVIDER"]}
         --gas-price {defaultGasPrice}
         """.replace("\n", " "),

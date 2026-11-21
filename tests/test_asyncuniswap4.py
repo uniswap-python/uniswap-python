@@ -17,6 +17,7 @@ from uniswap import AsyncUniswap4
 from uniswap.constants import (
     ETH_ADDRESS,
     ZERO_HOOK,
+    _netid_to_name,
     universal_router_commands,
     v4_actions,
 )
@@ -46,10 +47,6 @@ poa_networks = [
     "arbitrum",
 ]
 current_network = os.environ.get("NETWORK")
-pytestmark = pytest.mark.skipif(
-    current_network == "arbitrum",
-    reason="Skipping Uniswap v4 tests on Arbitrum due to known issues with the Quoter contract on that network.",
-)
 if current_network is None or current_network not in networks:
     raise ValueError(
         "NETWORK was not set to a valid network (such as mainnet) so that we can run the tests"
@@ -136,10 +133,13 @@ def anvil() -> Generator[AnvilInstance, None, None]:
 
     port = 11998 - int(networks.index(os.environ["NETWORK"]))
     defaultGasPrice = 100_000_000_000  # 100 gwei
+    chain_id: int = list(_netid_to_name.keys())[
+        list(_netid_to_name.values()).index(str(current_network))
+    ]
     p = subprocess.Popen(
         f"""anvil
         --port {port}
-        --chain-id 1
+        --chain-id {chain_id}
         --fork-url {os.environ["PROVIDER"]}
         --gas-price {defaultGasPrice}
         """.replace("\n", " "),
