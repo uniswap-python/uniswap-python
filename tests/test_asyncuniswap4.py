@@ -21,9 +21,6 @@ from uniswap.constants import (
     universal_router_commands,
     v4_actions,
 )
-from uniswap.constants import (
-    WETH9_ADDRESS as WETH_ADDRESS,
-)
 from uniswap.tokens import get_decimals, get_pool_data, get_tokens
 from uniswap.types import AddressLike, PoolKey
 from uniswap.util import AsyncV4pools, V4pools, _addr_to_str, _str_to_addr
@@ -63,6 +60,7 @@ ONE_USDT = 10**USDT_DECIMALS
 ONE_USDC = 10**USDC_DECIMALS
 USDC_ADDRESS = tokens["USDC"]
 USDT_ADDRESS = tokens["USDT"]
+WETH_ADDRESS = tokens["WETH"]
 ETH_USDC_FEE = pool_data["ETH_USDC"][0]
 ETH_USDC_TICK_SPACING = pool_data["ETH_USDC"][1]
 USDC_USDT_FEE = pool_data["USDC_USDT"][0]
