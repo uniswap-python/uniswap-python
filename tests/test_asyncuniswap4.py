@@ -10,6 +10,7 @@ from time import sleep
 import pytest
 import pytest_asyncio
 from web3 import AsyncWeb3
+from web3.middleware import ExtraDataToPOAMiddleware
 from web3.types import Nonce
 
 from uniswap import AsyncUniswap4
@@ -41,7 +42,9 @@ networks = [
     "mainnet",
     "arbitrum",
 ]
-
+poa_networks = [
+    "arbitrum",
+]
 current_network = os.environ.get("NETWORK")
 if current_network is None or current_network not in networks:
     raise ValueError(
@@ -112,6 +115,8 @@ async def web3(anvil: AnvilInstance) -> AsyncWeb3:
     )
     if 1 != int(await w3.net.version):
         logger.warning("PROVIDER was not a mainnet provider, which the tests require")
+    if current_network in poa_networks:
+        w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
     return w3
 
 

@@ -10,6 +10,7 @@ from dataclasses import astuple, dataclass
 
 import pytest
 from web3 import Web3
+from web3.middleware import ExtraDataToPOAMiddleware
 from web3.types import Nonce
 
 from uniswap import Uniswap4
@@ -40,7 +41,9 @@ networks = [
     "mainnet",
     "arbitrum",
 ]
-
+poa_networks = [
+    "arbitrum",
+]
 current_network = os.environ.get("NETWORK")
 if current_network is None or current_network not in networks:
     raise ValueError(
@@ -108,6 +111,8 @@ def web3(anvil: AnvilInstance) -> Web3:
     w3 = Web3(Web3.HTTPProvider(anvil.provider, request_kwargs={"timeout": 30}))
     if 1 != int(w3.net.version):
         logger.warning("PROVIDER was not a mainnet provider, which the tests require")
+    if current_network in poa_networks:
+        w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
     return w3
 
 
