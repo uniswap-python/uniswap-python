@@ -11,7 +11,7 @@ env:
   # the public endpoint directly instead of preferring the secret on push runs.
   PROVIDER_MAINNET: 'https://ethereum.publicnode.com'
   #PROVIDER_MAINNET: 'https://eth.drpc.org'
-  PROVIDER_ARBITRUM: 'https://arb1.arbitrum.io/rpc'
+  PROVIDER_ARBITRUM: 'https://arbitrum-one-rpc.publicnode.com'
   PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
 
 jobs:
@@ -23,9 +23,9 @@ jobs:
       matrix:
         uniswap-version: [2, 3, 4]
         network: ["mainnet"]
-        # include:
-        #   - network: arbitrum
-        #     uniswap-version: 3
+          include:
+            - network: arbitrum
+              uniswap-version: 4
         #include:
         #  - network: xdai
         #    uniswap-version: 3

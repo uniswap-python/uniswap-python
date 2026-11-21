@@ -37,7 +37,10 @@ logging.basicConfig(level=logging.INFO)
 RECEIPT_TIMEOUT = 5
 
 
-networks = ["mainnet"]
+networks = [
+    "mainnet",
+    "arbitrum",
+]
 
 current_network = os.environ.get("NETWORK")
 if current_network is None or current_network not in networks:

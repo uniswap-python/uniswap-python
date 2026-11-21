@@ -28,14 +28,24 @@ tokens_arbitrum: dict[str, ChecksumAddress] = {
     k: Web3.to_checksum_address(v)
     for k, v in {
         "ETH": "0x0000000000000000000000000000000000000000",
-        "WETH": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+        "WETH": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
         "DAI": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
-        "USDC": "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
+        "USDC": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "USDT": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
         "UNI": "0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0",
     }.items()
 }
 
 decimals_mainnet: dict[str, int] = {
+    k: v
+    for k, v in {
+        "ETH": 18,
+        "WETH": 18,
+        "USDC": 6,
+        "USDT": 6,
+    }.items()
+}
+decimals_arbitrum: dict[str, int] = {
     k: v
     for k, v in {
         "ETH": 18,
@@ -50,6 +60,13 @@ pool_data_mainnet: dict[str, tuple[int, int]] = {
     for k, (v, z) in {
         "ETH_USDC": (500, 10),
         "USDC_USDT": (10, 1),
+    }.items()
+}
+pool_data_arbitrum: dict[str, tuple[int, int]] = {
+    k: (v, z)
+    for k, (v, z) in {
+        "ETH_USDC": (500, 10),
+        "USDC_USDT": (8, 1),
     }.items()
 }
 
