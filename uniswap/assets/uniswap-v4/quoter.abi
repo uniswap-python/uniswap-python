@@ -322,6 +322,19 @@
   },
   {
     "inputs": [],
+    "name": "msgSender",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "poolManager",
     "outputs": [
       {
