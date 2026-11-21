@@ -22,6 +22,7 @@ from uniswap.constants import (
 from uniswap.constants import (
     WETH9_ADDRESS as WETH_ADDRESS,
 )
+from uniswap.tokens import get_decimals, get_pool_data, get_tokens
 from uniswap.types import AddressLike, PoolKey
 from uniswap.util import AsyncV4pools, V4pools, _addr_to_str, _str_to_addr
 
@@ -35,20 +36,31 @@ logging.basicConfig(level=logging.INFO)
 
 RECEIPT_TIMEOUT = 5
 
-ONE_ETH = 10**18
-ONE_USDT = 10**6
-ONE_USDC = 10**6
-ETH_DECIMALS = 18
-USDT_DECIMALS = 6
-USDC_DECIMALS = 6
-USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-ETH_USDC_FEE = 500
-ETH_USDC_TICK_SPACING = 10
-USDC_USDT_FEE = 10
-USDC_USDT_TICK_SPACING = 1
 
-TOKEN_ID = 1
+networks = ["mainnet"]
+
+current_network = os.environ.get("NETWORK")
+if current_network is None or current_network not in networks:
+    raise ValueError(
+        "NETWORK was not set to a valid network (such as mainnet) so that we can run the tests"
+    )
+tokens = get_tokens(current_network)
+decimals = get_decimals(current_network)
+pool_data = get_pool_data(current_network)
+
+ETH_DECIMALS = decimals["ETH"]
+USDT_DECIMALS = decimals["USDT"]
+USDC_DECIMALS = decimals["USDC"]
+ONE_ETH = 10**ETH_DECIMALS
+ONE_USDT = 10**USDT_DECIMALS
+ONE_USDC = 10**USDC_DECIMALS
+USDC_ADDRESS = tokens["USDC"]
+USDT_ADDRESS = tokens["USDT"]
+ETH_USDC_FEE = pool_data["ETH_USDC"][0]
+ETH_USDC_TICK_SPACING = pool_data["ETH_USDC"][1]
+USDC_USDT_FEE = pool_data["USDC_USDT"][0]
+USDC_USDT_TICK_SPACING = pool_data["USDC_USDT"][1]
+
 
 eth_usdc_poolkey: PoolKey = PoolKey(
     currency0=ETH_ADDRESS,  # ETH
@@ -81,7 +93,7 @@ def client(web3: AsyncWeb3, anvil: AnvilInstance) -> AsyncUniswap4:
         anvil.eth_address,
         anvil.eth_privkey,
         web3=web3,
-        gas_limit=500_000,
+        gas_limit=5_000_000,
     )
 
 
@@ -110,7 +122,7 @@ def anvil() -> Generator[AnvilInstance, None, None]:
             "PROVIDER was not set, you need to set it to a mainnet provider (such as Infura) so that we can fork off our testnet"
         )
 
-    port = 11998
+    port = 11998 - int(networks.index(os.environ["NETWORK"]))
     defaultGasPrice = 100_000_000_000  # 100 gwei
     p = subprocess.Popen(
         f"""anvil

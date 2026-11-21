@@ -11,6 +11,7 @@ tokens_mainnet: dict[str, ChecksumAddress] = {
         "WBTC": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
         "UNI": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
         "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "USDT": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     }.items()
 }
 
@@ -34,6 +35,24 @@ tokens_arbitrum: dict[str, ChecksumAddress] = {
     }.items()
 }
 
+decimals_mainnet: dict[str, int] = {
+    k: v
+    for k, v in {
+        "ETH": 18,
+        "WETH": 18,
+        "USDC": 6,
+        "USDT": 6,
+    }.items()
+}
+
+pool_data_mainnet: dict[str, tuple[int, int]] = {
+    k: (v, z)
+    for k, (v, z) in {
+        "ETH_USDC": (500, 10),
+        "USDC_USDT": (10, 1),
+    }.items()
+}
+
 
 def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
     """
@@ -46,5 +65,27 @@ def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
         return tokens_rinkeby
     elif netname == "arbitrum":
         return tokens_arbitrum
+    else:
+        raise ValueError(f"Unknown net '{netname}'")
+
+
+def get_decimals(netname: str) -> dict[str, int]:
+    """
+    Returns a dict with decimals for tokens for the current net.
+    Used in testing.
+    """
+    if netname == "mainnet":
+        return decimals_mainnet
+    else:
+        raise ValueError(f"Unknown net '{netname}'")
+
+
+def get_pool_data(netname: str) -> dict[str, tuple[int, int]]:
+    """
+    Returns a dict with pool data for tokens for the current net.
+    Used in testing.
+    """
+    if netname == "mainnet":
+        return pool_data_mainnet
     else:
         raise ValueError(f"Unknown net '{netname}'")
