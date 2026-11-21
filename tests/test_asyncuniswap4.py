@@ -1472,6 +1472,10 @@ class TestAsyncUniswap4:
         currecy0: str,
         currency1: str,
     ):
+        if current_network != "mainnet":
+            pytest.skip(
+                f"Skipping test_get_poolkeys_sublist because current network is not mainnet, current_network: {current_network}"
+            )
         test_data_file_full_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "pool_list.test"
         )
