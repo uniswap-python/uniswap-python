@@ -46,6 +46,10 @@ poa_networks = [
     "arbitrum",
 ]
 current_network = os.environ.get("NETWORK")
+pytestmark = pytest.mark.skipif(
+    current_network == "arbitrum",
+    reason="Skipping Uniswap v4 tests on Arbitrum due to known issues with the Quoter contract on that network.",
+)
 if current_network is None or current_network not in networks:
     raise ValueError(
         "NETWORK was not set to a valid network (such as mainnet) so that we can run the tests"
