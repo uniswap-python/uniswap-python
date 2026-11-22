@@ -38,14 +38,16 @@ RECEIPT_TIMEOUT = 5
 networks = [
     "mainnet",
     "arbitrum",
+    "unichain",
 ]
 poa_networks = [
     "arbitrum",
 ]
 current_network = os.environ.get("NETWORK")
 if current_network is None or current_network not in networks:
-    raise ValueError(
-        "NETWORK was not set to a valid network (such as mainnet) so that we can run the tests"
+    pytest.skip(
+        f"NETWORK environment variable must be set to one of {networks}",
+        allow_module_level=True,
     )
 tokens = get_tokens(current_network)
 decimals = get_decimals(current_network)

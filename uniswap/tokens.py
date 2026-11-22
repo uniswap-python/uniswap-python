@@ -36,6 +36,16 @@ tokens_arbitrum: dict[str, ChecksumAddress] = {
     }.items()
 }
 
+tokens_unichain: dict[str, ChecksumAddress] = {
+    k: Web3.to_checksum_address(v)
+    for k, v in {
+        "ETH": "0x0000000000000000000000000000000000000000",
+        "WETH": "0x4200000000000000000000000000000000000006",
+        "USDC": "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
+        "USDT": "0x9151434b16b9763660705744891fA906F660EcC5",
+    }.items()
+}
+
 decimals_mainnet: dict[str, int] = {
     k: v
     for k, v in {
@@ -45,7 +55,18 @@ decimals_mainnet: dict[str, int] = {
         "USDT": 6,
     }.items()
 }
+
 decimals_arbitrum: dict[str, int] = {
+    k: v
+    for k, v in {
+        "ETH": 18,
+        "WETH": 18,
+        "USDC": 6,
+        "USDT": 6,
+    }.items()
+}
+
+decimals_unichain: dict[str, int] = {
     k: v
     for k, v in {
         "ETH": 18,
@@ -62,11 +83,20 @@ pool_data_mainnet: dict[str, tuple[int, int]] = {
         "USDC_USDT": (10, 1),
     }.items()
 }
+
 pool_data_arbitrum: dict[str, tuple[int, int]] = {
     k: (v, z)
     for k, (v, z) in {
         "ETH_USDC": (500, 10),
         "USDC_USDT": (8, 1),
+    }.items()
+}
+
+pool_data_unichain: dict[str, tuple[int, int]] = {
+    k: (v, z)
+    for k, (v, z) in {
+        "ETH_USDC": (500, 10),
+        "USDC_USDT": (100, 1),
     }.items()
 }
 
@@ -82,6 +112,8 @@ def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
         return tokens_rinkeby
     elif netname == "arbitrum":
         return tokens_arbitrum
+    elif netname == "unichain":
+        return tokens_unichain
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -95,6 +127,8 @@ def get_decimals(netname: str) -> dict[str, int]:
         return decimals_mainnet
     elif netname == "arbitrum":
         return decimals_arbitrum
+    elif netname == "unichain":
+        return decimals_unichain
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -108,5 +142,7 @@ def get_pool_data(netname: str) -> dict[str, tuple[int, int]]:
         return pool_data_mainnet
     elif netname == "arbitrum":
         return pool_data_arbitrum
+    elif netname == "unichain":
+        return pool_data_unichain
     else:
         raise ValueError(f"Unknown net '{netname}'")

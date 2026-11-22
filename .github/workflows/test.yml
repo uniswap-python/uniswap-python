@@ -13,6 +13,7 @@ env:
   #PROVIDER_MAINNET: 'https://eth.drpc.org'
   PROVIDER_ARBITRUM: 'https://arb1.arbitrum.io/rpc'
   PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
+  PROVIDER_UNICHAIN: 'https://mainnet.unichain.org'
 
 jobs:
   test:
@@ -25,6 +26,9 @@ jobs:
         network: ["mainnet"]
         include:
           - network: arbitrum
+            uniswap-version: 4
+        include:
+          - network: unichain
             uniswap-version: 4
         #include:
         #  - network: xdai
