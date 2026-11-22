@@ -42,7 +42,7 @@ networks = [
     "arbitrum",
     "optimism",
 ]
-poa_networks = ["arbitrum", "optimism"]
+poa_networks: list[str] = []
 current_network = os.environ.get("NETWORK")
 if current_network is None or current_network not in networks:
     pytest.skip(
