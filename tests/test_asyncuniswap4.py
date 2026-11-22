@@ -38,8 +38,8 @@ RECEIPT_TIMEOUT = 5
 
 networks = [
     "mainnet",
-    "arbitrum",
     "unichain",
+    "arbitrum",
 ]
 poa_networks = [
     "arbitrum",
