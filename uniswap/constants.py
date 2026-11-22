@@ -35,15 +35,18 @@ _netid_to_name = {
     196: "xlayer",
     250: "fantom",
     480: "worldchain",
+    999: "hyperevm",
     1868: "soneium",
     4217: "tempo",
     4326: "megaeth",
     4663: "robinhood",
+    5042: "arc",
     8453: "base",
     42161: "arbitrum",
     42220: "celo",
     43114: "avalanche",
     57073: "ink",
+    99901: "elysium",
     421611: "arbitrum_testnet",
     7777777: "zora",
     1666600000: "harmony_mainnet",
@@ -110,46 +113,52 @@ _tick_bitmap_range = {
 # https://developers.uniswap.org/docs/protocols/v4/deployments
 _router_contract_addresses_v4 = {
     # Production addresses
-    "mainnet": "0x4c82d1fbfe28c977cbb58d8c7ff8fcf9f70a2cca",
-    "unichain": "0xfdf682f51fe81aa4898f0ae2163d8a55c127fbc7",
-    "optimism": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
-    "base": "0xfdf682f51fe81aa4898f0ae2163d8a55c127fbc7",
-    "arbitrum": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
-    "polygon": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
-    "zora": "0xfdf682f51fe81aa4898f0ae2163d8a55c127fbc7",
-    "worldchain": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
-    "ink": "0x112908dac86e20e7241b0927479ea3bf935d1fa0",
-    "soneium": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
-    "avalanche": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
-    "binance": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
-    "celo": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
-    "monad": "0xfdf682f51fe81aa4898f0ae2163d8a55c127fbc7",
-    "megaeth": "0x47837eb80db5908eabba9105626d9b348bea7b02",
-    "xlayer": "0x8b844f885672f333bc0042cb669255f93a4c1e6b",
-    "tempo": "0xa2dc7d0266f0cc50b3eeaf36c9bfcecff1beea91",
-    "robinhood": "0x8876789976decbfcbbbe364623c63652db8c0904",
+    "mainnet": "0x23617e59A5925b2A4Bf75d73ff6711cD0b29De85",
+    "unichain": "0xD1b797D92d87B688193A2B976eFc8D577D204343",
+    "optimism": "0xC09255D86DB563cBc11C2fCf4a0C512e160111B4",
+    "base": "0xd6145b2D3F379919E8CdEda7B97e37c4b2Ca9c40",
+    "arbitrum": "0x2d01411773c8C24805306E89A41F7855C3c4Fe65",
+    "polygon": "xDc264714F68d84CF29BC605589405E78bDBE7C9f",
+    "zora": "0xF025e0Fe9E331A0eF05c2ad3C4E9C64b625cda6f",
+    "worldchain": "0xF025e0Fe9E331A0eF05c2ad3C4E9C64b625cda6f",
+    "ink": "0x661E93cca42AfacB172121EF892830cA3b70F08d",
+    "soneium": "0x661E93cca42AfacB172121EF892830cA3b70F08d",
+    "avalanche": "0x661E93cca42AfacB172121EF892830cA3b70F08d",
+    "binance": "0xDc264714F68d84CF29BC605589405E78bDBE7C9f",
+    "celo": "0xe2023F3FA515cF070e07fD9d51c1d236e07843f4",
+    "monad": "0xa6CE4F10d83dBdDAc17E68e1837ca9cE6a1b596e",
+    "megaeth": "0xAedd1CF4C14e833140A61E9C0d2b73a64795c823",
+    "xlayer": "0x1cd182C94fcF42277B80DBB9060F88024809E61E",
+    "tempo": "0x182a927119D56008d921126764bF884221b10f59",
+    "robinhood": "0x204FAca1764B154221e35c0d20aBb3c525710498",
+    "arc": "0x8702463e73f74d0b6765aBceb314Ef07aCb92650",
+    "hyperevm": "0xeD270A1Bcdc63cf1356D695e7f40961d4819d6bF",
+    "elysium": "0xA13f7611115752DEB2B13813BDDE16A5073e4b45",
 }
 
 _quoter_contract_addresses_v4 = {
     # Production addresses
     "mainnet": "0x99bd42B2B22e531f283b7F8a86dFf631EB16A9D1",
-    "unichain": "0x333e3c607b141b18ff6de9f258db6e77fe7491e0",
-    "optimism": "0x1f3131a13296fb91c90870043742c3cdbff1a8d7",
-    "base": "0x0d5e0f971ed27fbff6c2837bf31316121532048d",
+    "unichain": "0xF885781cB68A0BE66AA2AC7eDa5Fe72Bde7dA907",
+    "optimism": "0xd673F731EDFe5AaF1bDa7FD43D13Bbb5150B87Ca",
+    "base": "0xE1A6C5803e3c44368b171BD680c7D32dfc92CA47",
     "arbitrum": "0x8928074CA1b241D8Ec02815881c1Af11E8bC5219",
-    "polygon": "0xb3d5c3dfc3a7aebff71895a7191796bffc2c81b9",
-    "zora": "0x5edaccc0660e0a2c44b06e07ce8b915e625dc2c6",
-    "worldchain": "0x55d235b3ff2daf7c3ede0defc9521f1d6fe6c5c0",
-    "ink": "0x3972c00f7ed4885e145823eb7c655375d275a1c5",
-    "soneium": "0x3972c00f7ed4885e145823eb7c655375d275a1c5",
-    "avalanche": "0xbe40675bb704506a3c2ccfb762dcfd1e979845c2",
-    "binance": "0x9f75dd27d6664c475b90e105573e550ff69437b0",
+    "polygon": "0x31AB0Dea31FC0ad5A54F03cD59C896eCD067447B",
+    "zora": "0x2a7AaD35a2EbD95c1dC5AE323E866a737Bf79523",
+    "worldchain": "0xAD02601f1bE313C952AD198c0Cbc3F87f9eE8E63",
+    "ink": "0x8928074CA1b241D8Ec02815881c1Af11E8bC5219",
+    "soneium": "0x8928074CA1b241D8Ec02815881c1Af11E8bC5219",
+    "avalanche": "0xf27e532878B622d6b916F524E8711880107D4eF0",
+    "binance": "0x95C086d7fE28AdD842ee220fef225a777474d781",
     "celo": "0x28566da1093609182dff2cb2a91cfd72e61d66cd",
     "monad": "0xa222dd357a9076d1091ed6aa2e16c9742dd26891",
     "megaeth": "0x94bdc671f0c35f44a1daa53143fd1f868d1623b9",
     "xlayer": "0x8928074ca1b241d8ec02815881c1af11e8bc5219",
     "tempo": "0x20e6487c371a2086f841ef453f85378223df4f4e",
     "robinhood": "0x8dc178efb8111bb0973dd9d722ebeff267c98f94",
+    "arc": "0x8Dc178eFB8111BB0973Dd9d722ebeFF267c98F94",
+    "hyperevm": "0x108Bfe38532C98f8Cd8D7Ab49c9dDAa3675a1c5e",
+    "elysium": "0x379F556c5a748BD7Cc9baF0F7A344094Ac1814f5",
 }
 
 _stateview_contract_addresses_v4 = {
@@ -172,6 +181,9 @@ _stateview_contract_addresses_v4 = {
     "xlayer": "0x76fd297e2d437cd7f76d50f01afe6160f86e9990",
     "tempo": "0x21b954fba3f5ddebe77ef2d47a3100c066908b2a",
     "robinhood": "0xf3334192d15450cdd385c8b70e03f9a6bd9e673b",
+    "arc": "0xF3334192D15450CdD385c8B70e03f9A6bD9E673b",
+    "hyperevm": "0x1656326235cb9E34Cb58CaDe53AE30789AB32A1A",
+    "elysium": "0x27eD73aE0652fdCf71d6793412A7525f32bE9dfE",
 }
 
 _permit2_contract_addresses_v4 = {
@@ -194,6 +206,9 @@ _permit2_contract_addresses_v4 = {
     "xlayer": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "tempo": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
     "robinhood": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    "arc": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    "hyperevm": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    "elysium": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
 }
 
 _poolmanager_contract_addresses_v4 = {
@@ -216,6 +231,9 @@ _poolmanager_contract_addresses_v4 = {
     "xlayer": "0x360e68faccca8ca495c1b759fd9eee466db9fb32",
     "tempo": "0x33620f62c5b9b2086dd6b62f4a297a9f30347029",
     "robinhood": "0x8366a39cc670b4001a1121b8f6a443a643e40951",
+    "arc": "0x8366a39CC670B4001A1121B8F6A443A643e40951",
+    "hyperevm": "0x12D4Fd9C5DeDd00ab8a0bCe2CF0167bbf94b6B1F",
+    "elysium": "0xE2e105d3F7209A9DA11f83cCf3E7398a753823F1",
 }
 
 _position_descriptor_contract_addresses_v4 = {
@@ -238,6 +256,9 @@ _position_descriptor_contract_addresses_v4 = {
     "xlayer": "0x9e9fbbef0e1bd752e83de5acff3d0c936a9e5a4b",
     "tempo": "0xc73ed2cba8c347593d1d9120aa0be8ff88c6ff77",
     "robinhood": "0x9639443158e8c5efa35bd45287bf2effd3d8dc06",
+    "arc": "0x516b8a945700D6bBfDeDaa6dcFc4586bA60B8707",
+    "hyperevm": "0xfF0b85caDaC458D5aAcc22755e5107bfE31ED402",
+    "elysium": "0x9f92C5297EB3b39E6804b5e03899bC66B6b77348",
 }
 
 _position_manager_contract_addresses_v4 = {
@@ -260,6 +281,9 @@ _position_manager_contract_addresses_v4 = {
     "xlayer": "0xcf1eafc6928dc385a342e7c6491d371d2871458b",
     "tempo": "0x3fc79444f8eacc1894775493ff3fa41f1e35ce11",
     "robinhood": "0x58daec3116aae6d93017baaea7749052e8a04fa7",
+    "arc": "0x6049c9a0e26405C0985f9E3685C87d0aE917f82B",
+    "hyperevm": "0x0d7Ab5B3db668128Aff6F70C4eBC71D7d4DA9bf9",
+    "elysium": "0x1d1C51b9d07fD27d36412A2b66CC23D19Eb3E518",
 }
 
 _reserves_lens_contract_addresses_v4 = {
@@ -282,6 +306,9 @@ _reserves_lens_contract_addresses_v4 = {
     "xlayer": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
     "tempo": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
     "robinhood": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "arc": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "hyperevm": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
+    "elysium": "0x0000001b173C3bbF3984D417d8614E3eed34865B",
 }
 
 

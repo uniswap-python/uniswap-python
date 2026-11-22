@@ -447,6 +447,22 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "amountOutRequested",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountOutReceived",
+        "type": "uint256"
+      }
+    ],
+    "name": "V4ExactOutputUnfilled",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "minAmountOutReceived",
         "type": "uint256"
       },
