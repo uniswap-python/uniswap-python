@@ -14,7 +14,7 @@ env:
   PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
   PROVIDER_UNICHAIN: 'https://unichain.drpc.org'
   PROVIDER_OPTIMISM: 'https://optimism-rpc.publicnode.com'
-  PROVIDER_BASE: 'https://base.daybreak-rpc.network'
+  PROVIDER_BASE: 'https://base-mainnet.g.alchemy.com/public'
 jobs:
   test:
     name: test (v${{ matrix.uniswap-version }}, ${{ matrix.network }})
