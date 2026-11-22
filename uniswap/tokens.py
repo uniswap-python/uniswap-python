@@ -66,6 +66,17 @@ tokens_base: dict[str, ChecksumAddress] = {
     }.items()
 }
 
+tokens_polygon: dict[str, ChecksumAddress] = {
+    k: Web3.to_checksum_address(v)
+    for k, v in {
+        "ETH": "0x0000000000000000000000000000000000000000",
+        "WETH": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+        "USDC": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+        "USDT": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+    }.items()
+}
+
+# tokens decimals
 decimals_mainnet: dict[str, int] = {
     k: v
     for k, v in {
@@ -116,6 +127,17 @@ decimals_base: dict[str, int] = {
     }.items()
 }
 
+decimals_polygon: dict[str, int] = {
+    k: v
+    for k, v in {
+        "ETH": 18,
+        "WETH": 18,
+        "USDC": 6,
+        "USDT": 6,
+    }.items()
+}
+
+# pools data
 pool_data_mainnet: dict[str, tuple[int, int]] = {
     k: (v, z)
     for k, (v, z) in {
@@ -156,6 +178,14 @@ pool_data_base: dict[str, tuple[int, int]] = {
     }.items()
 }
 
+pool_data_polygon: dict[str, tuple[int, int]] = {
+    k: (v, z)
+    for k, (v, z) in {
+        "ETH_USDC": (3000, 60),
+        "USDC_USDT": (8, 1),
+    }.items()
+}
+
 
 def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
     """
@@ -174,6 +204,8 @@ def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
         return tokens_optimism
     elif netname == "base":
         return tokens_base
+    elif netname == "polygon":
+        return tokens_polygon
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -193,6 +225,8 @@ def get_decimals(netname: str) -> dict[str, int]:
         return decimals_optimism
     elif netname == "base":
         return decimals_base
+    elif netname == "polygon":
+        return decimals_polygon
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -212,5 +246,7 @@ def get_pool_data(netname: str) -> dict[str, tuple[int, int]]:
         return pool_data_optimism
     elif netname == "base":
         return pool_data_base
+    elif netname == "polygon":
+        return pool_data_polygon
     else:
         raise ValueError(f"Unknown net '{netname}'")

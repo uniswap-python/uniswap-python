@@ -42,6 +42,7 @@ networks = [
     "arbitrum",
     "optimism",
     "base",
+    "polygon",
 ]
 poa_networks: list[str] = []
 current_network = os.environ.get("NETWORK")

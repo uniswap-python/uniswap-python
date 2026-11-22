@@ -12,9 +12,10 @@ env:
   PROVIDER_MAINNET: 'https://ethereum.publicnode.com'
   PROVIDER_ARBITRUM: 'https://arb1.arbitrum.io/rpc'
   PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
-  PROVIDER_UNICHAIN: 'https://unichain.drpc.org'
-  PROVIDER_OPTIMISM: 'https://optimism-rpc.publicnode.com'
+  PROVIDER_UNICHAIN: 'https://mainnet.unichain.org'
+  PROVIDER_OPTIMISM: 'https://mainnet.optimism.io'
   PROVIDER_BASE: 'https://mainnet.base.org'
+  PROVIDER_POLYGON: 'https://polygon-drpc.org'
 jobs:
   test:
     name: test (v${{ matrix.uniswap-version }}, ${{ matrix.network }})
@@ -31,7 +32,7 @@ jobs:
           #  uniswap-version: 4
           #- network: optimism
           #  uniswap-version: 4
-          - network: base
+          - network: polygon
             uniswap-version: 4
 
     steps:
@@ -74,7 +75,7 @@ jobs:
     - name: Test
       env:
         # Use the secret if available, otherwise fallback to the public key
-        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'base') && env.PROVIDER_BASE) }}
+        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'polygon') && env.PROVIDER_POLYGON) }}
         NETWORK: ${{ matrix.network }}
         UNISWAP_VERSION: ${{ matrix.uniswap-version }}
       run: |
