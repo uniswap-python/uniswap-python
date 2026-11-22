@@ -141,7 +141,7 @@ def anvil() -> Generator[AnvilInstance, None, None]:
         --port {port}
         --chain-id {chain_id}
         --fork-url {os.environ["PROVIDER"]}
-        --compute-units-per-second 100
+        --compute-units-per-second 10
         --gas-price {defaultGasPrice}
         """.replace("\n", " "),
         shell=True,
