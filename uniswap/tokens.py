@@ -56,6 +56,16 @@ tokens_optimism: dict[str, ChecksumAddress] = {
     }.items()
 }
 
+tokens_base: dict[str, ChecksumAddress] = {
+    k: Web3.to_checksum_address(v)
+    for k, v in {
+        "ETH": "0x0000000000000000000000000000000000000000",
+        "WETH": "0x4200000000000000000000000000000000000006",
+        "USDC": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "USDT": "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2",
+    }.items()
+}
+
 decimals_mainnet: dict[str, int] = {
     k: v
     for k, v in {
@@ -87,6 +97,16 @@ decimals_unichain: dict[str, int] = {
 }
 
 decimals_optimism: dict[str, int] = {
+    k: v
+    for k, v in {
+        "ETH": 18,
+        "WETH": 18,
+        "USDC": 6,
+        "USDT": 6,
+    }.items()
+}
+
+decimals_base: dict[str, int] = {
     k: v
     for k, v in {
         "ETH": 18,
@@ -128,6 +148,14 @@ pool_data_optimism: dict[str, tuple[int, int]] = {
     }.items()
 }
 
+pool_data_base: dict[str, tuple[int, int]] = {
+    k: (v, z)
+    for k, (v, z) in {
+        "ETH_USDC": (3000, 60),
+        "USDC_USDT": (7, 1),
+    }.items()
+}
+
 
 def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
     """
@@ -144,6 +172,8 @@ def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
         return tokens_unichain
     elif netname == "optimism":
         return tokens_optimism
+    elif netname == "base":
+        return tokens_base
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -161,6 +191,8 @@ def get_decimals(netname: str) -> dict[str, int]:
         return decimals_unichain
     elif netname == "optimism":
         return decimals_optimism
+    elif netname == "base":
+        return decimals_base
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -178,5 +210,7 @@ def get_pool_data(netname: str) -> dict[str, tuple[int, int]]:
         return pool_data_unichain
     elif netname == "optimism":
         return pool_data_optimism
+    elif netname == "base":
+        return pool_data_base
     else:
         raise ValueError(f"Unknown net '{netname}'")

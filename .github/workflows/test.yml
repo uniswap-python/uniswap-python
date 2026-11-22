@@ -10,11 +10,11 @@ env:
   # The repo secret still points at a rate-limited Infura URL, so CI must use
   # the public endpoint directly instead of preferring the secret on push runs.
   PROVIDER_MAINNET: 'https://ethereum.publicnode.com'
-  #PROVIDER_MAINNET: 'https://eth.drpc.org'
   PROVIDER_ARBITRUM: 'https://arb1.arbitrum.io/rpc'
   PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
   PROVIDER_UNICHAIN: 'https://unichain.drpc.org'
   PROVIDER_OPTIMISM: 'https://optimism-rpc.publicnode.com'
+  PROVIDER_BASE: 'https://mainnet.base.org'
 jobs:
   test:
     name: test (v${{ matrix.uniswap-version }}, ${{ matrix.network }})
@@ -29,7 +29,9 @@ jobs:
             uniswap-version: 4
           #- network: unichain
           #  uniswap-version: 4
-          - network: optimism
+          #- network: optimism
+          #  uniswap-version: 4
+          - network: base
             uniswap-version: 4
 
     steps:
