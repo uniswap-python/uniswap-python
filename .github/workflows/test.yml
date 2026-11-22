@@ -13,8 +13,8 @@ env:
   #PROVIDER_MAINNET: 'https://eth.drpc.org'
   PROVIDER_ARBITRUM: 'https://arb1.arbitrum.io/rpc'
   PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
-  PROVIDER_UNICHAIN: 'https://mainnet.unichain.org'
-
+  #PROVIDER_UNICHAIN: 'https://mainnet.unichain.org'
+  PROVIDER_UNICHAIN: 'https://unichain-rpc.publicnode.com'
 jobs:
   test:
     name: test (v${{ matrix.uniswap-version }}, ${{ matrix.network }})
