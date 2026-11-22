@@ -25,8 +25,8 @@ jobs:
         uniswap-version: [2, 3, 4]
         network: ["mainnet"]
         include:
-          - network: arbitrum
-            uniswap-version: 4
+          #- network: arbitrum
+          #  uniswap-version: 4
           - network: unichain
             uniswap-version: 4
         #include:
