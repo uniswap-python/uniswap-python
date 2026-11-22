@@ -46,6 +46,16 @@ tokens_unichain: dict[str, ChecksumAddress] = {
     }.items()
 }
 
+tokens_optimism: dict[str, ChecksumAddress] = {
+    k: Web3.to_checksum_address(v)
+    for k, v in {
+        "ETH": "0x0000000000000000000000000000000000000000",
+        "WETH": "0x4200000000000000000000000000000000000006",
+        "USDC": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+        "USDT": "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+    }.items()
+}
+
 decimals_mainnet: dict[str, int] = {
     k: v
     for k, v in {
@@ -67,6 +77,16 @@ decimals_arbitrum: dict[str, int] = {
 }
 
 decimals_unichain: dict[str, int] = {
+    k: v
+    for k, v in {
+        "ETH": 18,
+        "WETH": 18,
+        "USDC": 6,
+        "USDT": 6,
+    }.items()
+}
+
+decimals_optimism: dict[str, int] = {
     k: v
     for k, v in {
         "ETH": 18,
@@ -100,6 +120,14 @@ pool_data_unichain: dict[str, tuple[int, int]] = {
     }.items()
 }
 
+pool_data_optimism: dict[str, tuple[int, int]] = {
+    k: (v, z)
+    for k, (v, z) in {
+        "ETH_USDC": (20000, 400),
+        "USDC_USDT": (25, 1),
+    }.items()
+}
+
 
 def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
     """
@@ -114,6 +142,8 @@ def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
         return tokens_arbitrum
     elif netname == "unichain":
         return tokens_unichain
+    elif netname == "optimism":
+        return tokens_optimism
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -129,6 +159,8 @@ def get_decimals(netname: str) -> dict[str, int]:
         return decimals_arbitrum
     elif netname == "unichain":
         return decimals_unichain
+    elif netname == "optimism":
+        return decimals_optimism
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -144,5 +176,7 @@ def get_pool_data(netname: str) -> dict[str, tuple[int, int]]:
         return pool_data_arbitrum
     elif netname == "unichain":
         return pool_data_unichain
+    elif netname == "optimism":
+        return pool_data_optimism
     else:
         raise ValueError(f"Unknown net '{netname}'")

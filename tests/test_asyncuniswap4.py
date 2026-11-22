@@ -40,6 +40,7 @@ networks = [
     "mainnet",
     "unichain",
     "arbitrum",
+    "optimism",
 ]
 poa_networks = [
     "arbitrum",
