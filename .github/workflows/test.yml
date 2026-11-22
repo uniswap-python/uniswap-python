@@ -11,7 +11,8 @@ env:
   # the public endpoint directly instead of preferring the secret on push runs.
   PROVIDER_MAINNET: 'https://ethereum.publicnode.com'
   #PROVIDER_MAINNET: 'https://eth.drpc.org'
-  PROVIDER_ARBITRUM: 'https://arb1.arbitrum.io/rpc'
+  #PROVIDER_ARBITRUM: 'https://arb1.arbitrum.io/rpc'
+  PROVIDER_ARBITRUM: 'https://arbitrum-one-rpc.publicnode.com'
   PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
   PROVIDER_UNICHAIN: 'https://unichain.drpc.org'
   PROVIDER_OPTIMISM: 'https://optimism-rpc.publicnode.com'
