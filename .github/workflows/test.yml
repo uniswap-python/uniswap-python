@@ -15,7 +15,7 @@ env:
   PROVIDER_UNICHAIN: 'https://mainnet.unichain.org'
   PROVIDER_OPTIMISM: 'https://mainnet.optimism.io'
   PROVIDER_BASE: 'https://mainnet.base.org'
-  PROVIDER_POLYGON: 'https://polygon-drpc.org'
+  PROVIDER_POLYGON: 'https://polygon.publicnode.com'
 jobs:
   test:
     name: test (v${{ matrix.uniswap-version }}, ${{ matrix.network }})
