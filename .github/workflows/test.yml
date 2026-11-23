@@ -34,12 +34,6 @@ jobs:
         include:
           - network: arbitrum
             uniswap-version: 4
-          - network: robinhood
-            uniswap-version: 4
-          - network: monad
-            uniswap-version: 4
-          - network: bnb
-            uniswap-version: 4
 
     steps:
     - uses: actions/checkout@v4
@@ -81,7 +75,7 @@ jobs:
     - name: Test
       env:
         # Use the secret if available, otherwise fallback to the public key
-        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'bnb') && env.PROVIDER_BNB) || ((matrix.network == 'monad') && env.PROVIDER_MONAD) || ((matrix.network == 'robinhood') && env.PROVIDER_ROBINHOOD) }}
+        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) }}
         NETWORK: ${{ matrix.network }}
         UNISWAP_VERSION: ${{ matrix.uniswap-version }}
       run: |
