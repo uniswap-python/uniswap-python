@@ -20,7 +20,7 @@ env:
   PROVIDER_SONEIUM: 'https://rpc.soneium.org/'
   PROVIDER_AVALANCHE: 'https://api.avax.network/ext/bc/C/rpc'
   PROVIDER_BNB: 'https://bsc-dataseed.bnbchain.org'
-  PROVIDER_MONAD: 'https://rpc.monad.xyz'
+  PROVIDER_MONAD: 'https://rpc-mainnet.monadinfra.com'
   PROVIDER_ROBINHOOD: 'https://rpc.mainnet.chain.robinhood.com'
 jobs:
   test:
