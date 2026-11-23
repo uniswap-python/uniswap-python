@@ -86,6 +86,16 @@ tokens_ink: dict[str, ChecksumAddress] = {
     }.items()
 }
 
+tokens_soneium: dict[str, ChecksumAddress] = {
+    k: Web3.to_checksum_address(v)
+    for k, v in {
+        "ETH": "0x0000000000000000000000000000000000000000",
+        "WETH": "0x4200000000000000000000000000000000000006",
+        "USDC": "0xbA9986D2381edf1DA03B0B9c1f8b00dc4AacC369",
+        "USDT": "0x3A337a6adA9d885b6Ad95ec48F9b75f197b5AE35",
+    }.items()
+}
+
 # tokens decimals
 decimals_mainnet: dict[str, int] = {
     k: v
@@ -157,6 +167,16 @@ decimals_ink: dict[str, int] = {
     }.items()
 }
 
+decimals_soneium: dict[str, int] = {
+    k: v
+    for k, v in {
+        "ETH": 18,
+        "WETH": 18,
+        "USDC": 6,
+        "USDT": 6,
+    }.items()
+}
+
 # pools data
 pool_data_mainnet: dict[str, tuple[int, int]] = {
     k: (v, z)
@@ -214,6 +234,14 @@ pool_data_ink: dict[str, tuple[int, int]] = {
     }.items()
 }
 
+pool_data_soneium: dict[str, tuple[int, int]] = {
+    k: (v, z)
+    for k, (v, z) in {
+        "ETH_USDC": (3000, 60),
+        "USDC_USDT": (50, 1),
+    }.items()
+}
+
 
 def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
     """
@@ -236,6 +264,8 @@ def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
         return tokens_polygon
     elif netname == "ink":
         return tokens_ink
+    elif netname == "sonneium":
+        return tokens_soneium
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -259,6 +289,8 @@ def get_decimals(netname: str) -> dict[str, int]:
         return decimals_polygon
     elif netname == "ink":
         return decimals_ink
+    elif netname == "sonneium":
+        return decimals_soneium
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -282,5 +314,7 @@ def get_pool_data(netname: str) -> dict[str, tuple[int, int]]:
         return pool_data_polygon
     elif netname == "ink":
         return pool_data_ink
+    elif netname == "soneium":
+        return pool_data_soneium
     else:
         raise ValueError(f"Unknown net '{netname}'")

@@ -17,6 +17,7 @@ env:
   PROVIDER_BASE: 'https://mainnet.base.org'
   PROVIDER_POLYGON: 'https://polygon.publicnode.com'
   PROVIDER_INK: 'https://rpc-gel.inkonchain.com'
+  PROVIDER_SONEIUM: 'https://rpc.soneium.org/'
 jobs:
   test:
     name: test (v${{ matrix.uniswap-version }}, ${{ matrix.network }})
@@ -33,7 +34,7 @@ jobs:
           #  uniswap-version: 4
           #- network: optimism
           #  uniswap-version: 4
-          - network: ink
+          - network: soneium
             uniswap-version: 4
 
     steps:
@@ -76,7 +77,7 @@ jobs:
     - name: Test
       env:
         # Use the secret if available, otherwise fallback to the public key
-        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'ink') && env.PROVIDER_INK) }}
+        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'soneium') && env.PROVIDER_SONEIUM) }}
         NETWORK: ${{ matrix.network }}
         UNISWAP_VERSION: ${{ matrix.uniswap-version }}
       run: |
