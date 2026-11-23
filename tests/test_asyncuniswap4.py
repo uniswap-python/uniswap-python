@@ -102,7 +102,7 @@ def client(web3: AsyncWeb3, anvil: AnvilInstance) -> AsyncUniswap4:
         anvil.eth_address,
         anvil.eth_privkey,
         web3=web3,
-        gas_limit=5_000_000,
+        gas_limit=500_000,
     )
 
 
@@ -134,7 +134,7 @@ def anvil() -> Generator[AnvilInstance, None, None]:
         )
 
     port = 11998 - int(networks.index(os.environ["NETWORK"]))
-    defaultGasPrice = 100_000_000_000  # 100 gwei
+    defaultGasPrice = 10_000_000_000  # 10 gwei
     chain_id: int = list(_netid_to_name.keys())[
         list(_netid_to_name.values()).index(str(current_network))
     ]
