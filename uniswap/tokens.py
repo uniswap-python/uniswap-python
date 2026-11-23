@@ -264,7 +264,7 @@ def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
         return tokens_polygon
     elif netname == "ink":
         return tokens_ink
-    elif netname == "sonneium":
+    elif netname == "soneium":
         return tokens_soneium
     else:
         raise ValueError(f"Unknown net '{netname}'")
@@ -289,7 +289,7 @@ def get_decimals(netname: str) -> dict[str, int]:
         return decimals_polygon
     elif netname == "ink":
         return decimals_ink
-    elif netname == "sonneium":
+    elif netname == "soneium":
         return decimals_soneium
     else:
         raise ValueError(f"Unknown net '{netname}'")
