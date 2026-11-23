@@ -76,6 +76,16 @@ tokens_polygon: dict[str, ChecksumAddress] = {
     }.items()
 }
 
+tokens_ink: dict[str, ChecksumAddress] = {
+    k: Web3.to_checksum_address(v)
+    for k, v in {
+        "ETH": "0x0000000000000000000000000000000000000000",
+        "WETH": "0x4200000000000000000000000000000000000006",
+        "USDC": "0x2D270e6886d130D724215A266106e6832161EAEd",
+        "USDT": "0xAd09Cd20e513E4d8cB78036F77Ab9AfdE8555929",  # used kHYPE instead, no proper stables pool
+    }.items()
+}
+
 # tokens decimals
 decimals_mainnet: dict[str, int] = {
     k: v
@@ -137,6 +147,16 @@ decimals_polygon: dict[str, int] = {
     }.items()
 }
 
+decimals_ink: dict[str, int] = {
+    k: v
+    for k, v in {
+        "ETH": 18,
+        "WETH": 18,
+        "USDC": 6,
+        "USDT": 18,  # kHYPE decimals
+    }.items()
+}
+
 # pools data
 pool_data_mainnet: dict[str, tuple[int, int]] = {
     k: (v, z)
@@ -186,6 +206,14 @@ pool_data_polygon: dict[str, tuple[int, int]] = {
     }.items()
 }
 
+pool_data_ink: dict[str, tuple[int, int]] = {
+    k: (v, z)
+    for k, (v, z) in {
+        "ETH_USDC": (3000, 60),
+        "USDC_USDT": (2500, 25),
+    }.items()
+}
+
 
 def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
     """
@@ -206,6 +234,8 @@ def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
         return tokens_base
     elif netname == "polygon":
         return tokens_polygon
+    elif netname == "ink":
+        return tokens_ink
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -227,6 +257,8 @@ def get_decimals(netname: str) -> dict[str, int]:
         return decimals_base
     elif netname == "polygon":
         return decimals_polygon
+    elif netname == "ink":
+        return decimals_ink
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -248,5 +280,7 @@ def get_pool_data(netname: str) -> dict[str, tuple[int, int]]:
         return pool_data_base
     elif netname == "polygon":
         return pool_data_polygon
+    elif netname == "ink":
+        return pool_data_ink
     else:
         raise ValueError(f"Unknown net '{netname}'")

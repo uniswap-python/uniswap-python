@@ -16,6 +16,7 @@ env:
   PROVIDER_OPTIMISM: 'https://mainnet.optimism.io'
   PROVIDER_BASE: 'https://mainnet.base.org'
   PROVIDER_POLYGON: 'https://polygon.publicnode.com'
+  PROVIDER_INK: 'https://rpc-gel.inkonchain.com'
 jobs:
   test:
     name: test (v${{ matrix.uniswap-version }}, ${{ matrix.network }})
@@ -32,7 +33,7 @@ jobs:
           #  uniswap-version: 4
           #- network: optimism
           #  uniswap-version: 4
-          - network: polygon
+          - network: ink
             uniswap-version: 4
 
     steps:
@@ -75,7 +76,7 @@ jobs:
     - name: Test
       env:
         # Use the secret if available, otherwise fallback to the public key
-        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'polygon') && env.PROVIDER_POLYGON) }}
+        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'ink') && env.PROVIDER_INK) }}
         NETWORK: ${{ matrix.network }}
         UNISWAP_VERSION: ${{ matrix.uniswap-version }}
       run: |
