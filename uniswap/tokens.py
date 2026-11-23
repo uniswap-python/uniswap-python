@@ -99,7 +99,7 @@ tokens_soneium: dict[str, ChecksumAddress] = {
 tokens_avalanche: dict[str, ChecksumAddress] = {
     k: Web3.to_checksum_address(v)
     for k, v in {
-        "ETH": "",
+        "ETH": "0x0000000000000000000000000000000000000000",
         "WETH": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
         "USDC": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
         "USDT": "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7",
