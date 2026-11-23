@@ -186,7 +186,7 @@ class TestUniswap4:
         "token, max_approval, delay_interval",
         [
             (USDC_ADDRESS, None, 7),
-            (WETH_ADDRESS, 0, 1),
+            (WETH_ADDRESS, None, 1),
             (USDT_ADDRESS, 1_000_000 * ONE_USDT, 1),
         ],
     )
