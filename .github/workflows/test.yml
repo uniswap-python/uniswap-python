@@ -15,9 +15,10 @@ env:
   PROVIDER_UNICHAIN: 'https://mainnet.unichain.org'
   PROVIDER_OPTIMISM: 'https://mainnet.optimism.io'
   PROVIDER_BASE: 'https://mainnet.base.org'
-  PROVIDER_POLYGON: 'https://polygon.publicnode.com'
+  PROVIDER_POLYGON: 'https://polygon.publicnode.com' #there is a quasi-native with token
   PROVIDER_INK: 'https://rpc-gel.inkonchain.com'
   PROVIDER_SONEIUM: 'https://rpc.soneium.org/'
+  PROVIDER_AVALANCHE: 'https://api.avax.network/ext/bc/C/rpc'
 jobs:
   test:
     name: test (v${{ matrix.uniswap-version }}, ${{ matrix.network }})
@@ -30,11 +31,11 @@ jobs:
         include:
           - network: arbitrum
             uniswap-version: 4
-          #- network: unichain
-          #  uniswap-version: 4
-          #- network: optimism
-          #  uniswap-version: 4
-          - network: soneium
+          - network: unichain
+            uniswap-version: 4
+          - network: optimism
+            uniswap-version: 4
+          - network: avalanche
             uniswap-version: 4
 
     steps:
@@ -77,7 +78,7 @@ jobs:
     - name: Test
       env:
         # Use the secret if available, otherwise fallback to the public key
-        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'soneium') && env.PROVIDER_SONEIUM) }}
+        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'avalanche') && env.PROVIDER_AVALANCHE) || ((matrix.network == 'unichain') && env.PROVIDER_UNICHAIN) || ((matrix.network == 'optimism') && env.PROVIDER_OPTIMISM) }}
         NETWORK: ${{ matrix.network }}
         UNISWAP_VERSION: ${{ matrix.uniswap-version }}
       run: |

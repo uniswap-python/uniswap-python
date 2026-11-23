@@ -96,6 +96,16 @@ tokens_soneium: dict[str, ChecksumAddress] = {
     }.items()
 }
 
+tokens_avalanche: dict[str, ChecksumAddress] = {
+    k: Web3.to_checksum_address(v)
+    for k, v in {
+        "ETH": "",
+        "WETH": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+        "USDC": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+        "USDT": "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7",
+    }.items()
+}
+
 # tokens decimals
 decimals_mainnet: dict[str, int] = {
     k: v
@@ -177,6 +187,16 @@ decimals_soneium: dict[str, int] = {
     }.items()
 }
 
+decimals_avalanche: dict[str, int] = {
+    k: v
+    for k, v in {
+        "ETH": 18,
+        "WETH": 18,
+        "USDC": 6,
+        "USDT": 6,
+    }.items()
+}
+
 # pools data
 pool_data_mainnet: dict[str, tuple[int, int]] = {
     k: (v, z)
@@ -242,6 +262,14 @@ pool_data_soneium: dict[str, tuple[int, int]] = {
     }.items()
 }
 
+pool_data_avalanche: dict[str, tuple[int, int]] = {
+    k: (v, z)
+    for k, (v, z) in {
+        "ETH_USDC": (500, 10),
+        "USDC_USDT": (32, 1),
+    }.items()
+}
+
 
 def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
     """
@@ -266,6 +294,8 @@ def get_tokens(netname: str) -> dict[str, ChecksumAddress]:
         return tokens_ink
     elif netname == "soneium":
         return tokens_soneium
+    elif netname == "avalanche":
+        return tokens_avalanche
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -291,6 +321,8 @@ def get_decimals(netname: str) -> dict[str, int]:
         return decimals_ink
     elif netname == "soneium":
         return decimals_soneium
+    elif netname == "avalanche":
+        return decimals_avalanche
     else:
         raise ValueError(f"Unknown net '{netname}'")
 
@@ -316,5 +348,7 @@ def get_pool_data(netname: str) -> dict[str, tuple[int, int]]:
         return pool_data_ink
     elif netname == "soneium":
         return pool_data_soneium
+    elif netname == "avalanche":
+        return pool_data_avalanche
     else:
         raise ValueError(f"Unknown net '{netname}'")
