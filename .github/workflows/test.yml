@@ -19,6 +19,9 @@ env:
   PROVIDER_INK: 'https://rpc-gel.inkonchain.com'
   PROVIDER_SONEIUM: 'https://rpc.soneium.org/'
   PROVIDER_AVALANCHE: 'https://api.avax.network/ext/bc/C/rpc'
+  PROVIDER_BNB: 'https://bsc-dataseed.bnbchain.org'
+  PROVIDER_MONAD: 'https://rpc.monad.xyz'
+  PROVIDER_ROBINHOOD: 'https://rpc.mainnet.chain.robinhood.com'
 jobs:
   test:
     name: test (v${{ matrix.uniswap-version }}, ${{ matrix.network }})
@@ -31,11 +34,11 @@ jobs:
         include:
           - network: arbitrum
             uniswap-version: 4
-          - network: unichain
+          - network: robinhood
             uniswap-version: 4
-          - network: optimism
+          - network: monad
             uniswap-version: 4
-          - network: avalanche
+          - network: bnb
             uniswap-version: 4
 
     steps:
@@ -78,7 +81,7 @@ jobs:
     - name: Test
       env:
         # Use the secret if available, otherwise fallback to the public key
-        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'avalanche') && env.PROVIDER_AVALANCHE) || ((matrix.network == 'unichain') && env.PROVIDER_UNICHAIN) || ((matrix.network == 'optimism') && env.PROVIDER_OPTIMISM) }}
+        PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) || ((matrix.network == 'bnb') && env.PROVIDER_BNB) || ((matrix.network == 'monad') && env.PROVIDER_MONAD) || ((matrix.network == 'robinhood') && env.PROVIDER_ROBINHOOD) }}
         NETWORK: ${{ matrix.network }}
         UNISWAP_VERSION: ${{ matrix.uniswap-version }}
       run: |

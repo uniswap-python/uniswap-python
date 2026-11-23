@@ -46,6 +46,9 @@ networks = [
     "ink",
     "soneium",
     "avalanche",
+    "bnb",
+    "monad",
+    "robinhood",
 ]
 poa_networks: list[str] = []
 current_network = os.environ.get("NETWORK")
