@@ -75,7 +75,7 @@ class Uniswap4:
         provider: str | None = None,
         web3: Web3 | None = None,
         max_slippage: float = 0.01,
-        gas_limit: float = 250000.0,
+        gas_limit: float | None = None,
         gas_price: float = 1.80,
         priority_fee: float = 1.0,
         post_merge: bool = True,
@@ -86,7 +86,8 @@ class Uniswap4:
         :param provider: Can be optionally set to a Web3 provider URI. If none set, will fall back to the PROVIDER environment variable, or web3 if set.
         :param web3: Can be optionally set to a custom Web3 instance.
         :param max_slippage: Maximum slippage for a trade, as a float (0.01 is 1%).
-        :param gas_limit: Maximum gas amount allocated for transactions.
+        :param gas_limit: Fixed gas limit for every transaction. Defaults to None, which
+            estimates gas per transaction (with a 20% margin). Set it only to override.
         :param gas_price: Cost per unit of gas, in GWei.
         :param priority_fee: Amount of ETH to pay to the block producers, in GWei. Affects tx position in the block, the bigger value, the higher position is.
         :param post_merge: True is for post-Merge transations, False for legacy ones.
@@ -300,12 +301,12 @@ class Uniswap4:
 
     # Transaction parameters customization
     # Gas limit
-    def get_gas_limit(self) -> float:
-        """Returns the current gas limit for transactions."""
+    def get_gas_limit(self) -> float | None:
+        """Returns the fixed gas limit, or None if gas is estimated per transaction."""
         return self.gas_limit
 
-    def set_gas_limit(self, gas_limit: float) -> None:
-        """Sets the gas limit for transactions."""
+    def set_gas_limit(self, gas_limit: float | None) -> None:
+        """Sets a fixed gas limit for transactions; None estimates per transaction."""
         self.gas_limit = gas_limit
 
     # Gas price in GWei
@@ -2296,6 +2297,19 @@ class Uniswap4:
         Params `gas_price` and `priority_fee` are Gas Price and Max Priority Fee respectively;
         MUST be at least 20% higher than values the original transaction has.
         """
+        drop_gas = (
+            int(self.gas_limit)
+            if self.gas_limit is not None
+            else int(
+                self.w3.eth.estimate_gas(
+                    {
+                        "from": _addr_to_str(self.address),
+                        "to": Web3.to_checksum_address(address_to),
+                        "value": Web3.to_wei(0, "wei"),
+                    }
+                )
+            )
+        )
         # This one is for legacy transactions
         transaction_dict_legacy = {
             "nonce": self.w3.eth.get_transaction_count(self.address)
@@ -2305,7 +2319,7 @@ class Uniswap4:
             "to": Web3.to_checksum_address(address_to),
             "value": Web3.to_wei(0, "wei"),
             "gasPrice": Web3.to_wei(gas_price, "gwei"),
-            "gas": int(self.gas_limit),
+            "gas": drop_gas,
             "chainId": int(self.w3.eth.chain_id),
         }
         signed_txn = self.w3.eth.account.sign_transaction(
@@ -2323,7 +2337,7 @@ class Uniswap4:
             "value": Web3.to_wei(0, "wei"),
             "maxFeePerGas": Web3.to_wei(int(gas_price), "gwei"),
             "maxPriorityFeePerGas": Web3.to_wei(priority_fee, "gwei"),
-            "gas": int(self.gas_limit),
+            "gas": drop_gas,
             "chainId": int(self.w3.eth.chain_id),
         }
         signed_txn_london = self.w3.eth.account.sign_transaction(
@@ -3391,20 +3405,19 @@ class Uniswap4:
         """Get generic transaction parameters."""
         if custom_nonce is not None and custom_nonce < Nonce(0):
             raise ValueError("Nonce can only be a positive integer.")
+        params: TxParams
         if not self.post_merge:
-            return {
+            params = {
                 "from": _addr_to_str(self.address),
                 "value": Wei(value),
-                "gas": int(self.gas_limit),
                 "gasPrice": Web3.to_wei(self.gas_price, "gwei"),
                 "nonce": Nonce(max(self.last_nonce, 0))
                 if custom_nonce is None
                 else custom_nonce,
             }
         else:
-            return {
+            params = {
                 "from": _addr_to_str(self.address),
-                "gas": int(self.gas_limit),
                 "maxPriorityFeePerGas": Web3.to_wei(self.priority_fee, "gwei"),
                 "maxFeePerGas": Web3.to_wei(self.gas_price, "gwei"),
                 "type": 2,
@@ -3414,6 +3427,9 @@ class Uniswap4:
                 if custom_nonce is None
                 else custom_nonce,
             }
+        if self.gas_limit is not None:
+            params["gas"] = Wei(int(self.gas_limit))
+        return params
 
     def _build_and_send_tx(
         self,
@@ -3424,6 +3440,14 @@ class Uniswap4:
         """Build and send a transaction."""
         if not tx_params:
             tx_params = self._get_tx_params(custom_nonce=custom_nonce)
+        if "gas" not in tx_params:
+            # Estimate per transaction with a 20% margin, as the V1-V3 client and the
+            # Uniswap UI do. A fixed limit cannot cover calls whose cost depends on
+            # state, such as modifyLiquidities creating storage.
+            unsigned = tx_params.copy()
+            unsigned.pop("nonce", None)
+            estimate = function.estimate_gas(unsigned)
+            tx_params["gas"] = Wei(int(estimate * 1.2))
         transaction = function.build_transaction(tx_params)
         signed_txn = self.w3.eth.account.sign_transaction(
             transaction, private_key=self.private_key
