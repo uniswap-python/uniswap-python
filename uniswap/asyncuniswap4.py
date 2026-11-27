@@ -3515,8 +3515,10 @@ class AsyncUniswap4:
                 unsigned.pop("nonce", None)
                 estimate = await function.estimate_gas(unsigned)
                 tx_params["gas"] = Wei(int(estimate * 1.2))
-            # Reserve the nonce before yielding so concurrent calls never share it.
+            # Refresh prebuilt parameters and reserve the nonce without yielding.
+            # Another public call may have prepared them before waiting for this lock.
             if custom_nonce is None:
+                tx_params["nonce"] = Nonce(max(self.last_nonce, 0))
                 self.last_nonce = Nonce(tx_params["nonce"] + 1)
         transaction = await function.build_transaction(tx_params)
         signed_txn = self.w3.eth.account.sign_transaction(

@@ -7,6 +7,7 @@ import pytest
 from web3.types import Nonce
 
 from uniswap import AsyncUniswap4, Uniswap4
+from uniswap.types import PoolKey
 from uniswap.util import _str_to_addr
 
 ADDRESS = "0x0000000000000000000000000000000000000001"
@@ -140,6 +141,64 @@ def test_sync_failed_estimate_keeps_nonce():
 
     assert function.build_transaction.call_args.args[0]["nonce"] == 7
     assert client.last_nonce == 8
+
+
+@pytest.mark.parametrize("post_merge", [True, False])
+def test_async_concurrent_create_pool_reserves_distinct_nonces(post_merge):
+    async def run():
+        client = _async_client(gas_limit=None)
+        client.post_merge = post_merge
+        function = _function(is_async=True)
+        client.position_manager = Mock()
+        client.position_manager.functions.initializePool.return_value = function
+        second_prepared = asyncio.Event()
+        get_tx_params = client._get_tx_params
+        prepared = []
+
+        async def prepare(*args, **kwargs):
+            params = await get_tx_params(*args, **kwargs)
+            prepared.append(params["nonce"])
+            if len(prepared) == 2:
+                second_prepared.set()
+            return params
+
+        async def estimate(params):
+            # The second public call prepares its nonce while the first estimates.
+            await asyncio.wait_for(second_prepared.wait(), timeout=2)
+            return ESTIMATE
+
+        client._get_tx_params = prepare
+        function.estimate_gas.side_effect = estimate
+        pool_key = PoolKey(ADDRESS, ADDRESS, 3000, 60, ADDRESS)
+        await asyncio.wait_for(
+            asyncio.gather(
+                client.create_pool(pool_key, 2**96),
+                client.create_pool(pool_key, 2**96),
+            ),
+            timeout=5,
+        )
+
+        assert prepared == [7, 7]
+        built = function.build_transaction.call_args_list
+        assert [call.args[0]["nonce"] for call in built] == [7, 8]
+        assert client.last_nonce == 9
+        assert client.w3.eth.send_raw_transaction.await_count == 2
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize("gas_limit", [None, 500_000])
+def test_async_create_pool_preserves_custom_nonce(gas_limit):
+    client = _async_client(gas_limit=gas_limit)
+    function = _function(is_async=True)
+    client.position_manager = Mock()
+    client.position_manager.functions.initializePool.return_value = function
+    pool_key = PoolKey(ADDRESS, ADDRESS, 3000, 60, ADDRESS)
+
+    asyncio.run(client.create_pool(pool_key, 2**96, custom_nonce=Nonce(3)))
+
+    assert function.build_transaction.call_args.args[0]["nonce"] == 3
+    assert client.last_nonce == 7
 
 
 def test_async_failed_estimate_keeps_nonce():
