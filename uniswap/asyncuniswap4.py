@@ -3505,17 +3505,19 @@ class AsyncUniswap4:
         async with self._nonce_lock:
             if not tx_params:
                 tx_params = await self._get_tx_params(custom_nonce=custom_nonce)
+            if "gas" not in tx_params:
+                # Estimate per transaction with a 20% margin, as the V1-V3 client and
+                # the Uniswap UI do. A fixed limit cannot cover calls whose cost
+                # depends on state, such as modifyLiquidities creating storage.
+                # Estimate before reserving the nonce: a failed estimate sends
+                # nothing, so it must not leave a nonce gap.
+                unsigned = tx_params.copy()
+                unsigned.pop("nonce", None)
+                estimate = await function.estimate_gas(unsigned)
+                tx_params["gas"] = Wei(int(estimate * 1.2))
             # Reserve the nonce before yielding so concurrent calls never share it.
             if custom_nonce is None:
                 self.last_nonce = Nonce(tx_params["nonce"] + 1)
-        if "gas" not in tx_params:
-            # Estimate per transaction with a 20% margin, as the V1-V3 client and the
-            # Uniswap UI do. A fixed limit cannot cover calls whose cost depends on
-            # state, such as modifyLiquidities creating storage.
-            unsigned = tx_params.copy()
-            unsigned.pop("nonce", None)
-            estimate = await function.estimate_gas(unsigned)
-            tx_params["gas"] = Wei(int(estimate * 1.2))
         transaction = await function.build_transaction(tx_params)
         signed_txn = self.w3.eth.account.sign_transaction(
             transaction, private_key=self.private_key

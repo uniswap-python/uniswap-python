@@ -1,7 +1,7 @@
 """Offline gas-limit regressions for the V4 clients; no RPC or transactions."""
 
 import asyncio
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, PropertyMock
 
 import pytest
 from web3.types import Nonce
@@ -99,7 +99,10 @@ def _async_client(gas_limit):
     client.last_nonce = Nonce(7)
     client._nonce_lock = asyncio.Lock()
     client.w3 = Mock()
-    client.w3.eth.chain_id = asyncio.sleep(0, result=1)
+    # Each access returns a fresh awaitable, like AsyncWeb3's chain_id property.
+    type(client.w3.eth).chain_id = PropertyMock(
+        side_effect=lambda: asyncio.sleep(0, result=1)
+    )
     client.w3.eth.send_raw_transaction = AsyncMock(return_value=b"")
     return client
 
@@ -124,3 +127,29 @@ def test_async_fixed_gas_limit_overrides_estimate():
 
     function.estimate_gas.assert_not_called()
     assert function.build_transaction.call_args.args[0]["gas"] == 500_000
+
+
+def test_sync_failed_estimate_keeps_nonce():
+    client = _sync_client(gas_limit=None)
+    failing = _function()
+    failing.estimate_gas.side_effect = ValueError("execution reverted")
+
+    with pytest.raises(ValueError):
+        client._build_and_send_tx(failing)
+    client._build_and_send_tx(function := _function())
+
+    assert function.build_transaction.call_args.args[0]["nonce"] == 7
+    assert client.last_nonce == 8
+
+
+def test_async_failed_estimate_keeps_nonce():
+    client = _async_client(gas_limit=None)
+    failing = _function(is_async=True)
+    failing.estimate_gas.side_effect = ValueError("execution reverted")
+
+    with pytest.raises(ValueError):
+        asyncio.run(client._build_and_send_tx(failing))
+    asyncio.run(client._build_and_send_tx(function := _function(is_async=True)))
+
+    assert function.build_transaction.call_args.args[0]["nonce"] == 7
+    assert client.last_nonce == 8
