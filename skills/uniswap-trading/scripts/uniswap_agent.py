@@ -29,6 +29,7 @@ import json
 import os
 import sys
 from dataclasses import dataclass
+from fractions import Fraction
 from typing import Any, Optional
 
 ETH = "0x0000000000000000000000000000000000000000"
@@ -142,9 +143,10 @@ def _humanize(amounts: dict[str, Any], w3: Any, tokens: dict[str, str]) -> None:
         if decimals is None or key not in amounts:
             continue
         amounts[f"decimals_{key}"] = decimals
-        amounts[f"{key}_human"] = f"{amounts[key] / 10**decimals:.8f}".rstrip(
-            "0"
-        ).rstrip(".")
+        whole, fraction = divmod(amounts[key], 10**decimals)
+        amounts[f"{key}_human"] = str(whole)
+        if fraction:
+            amounts[f"{key}_human"] += f".{fraction:0{decimals}d}".rstrip("0")
 
 
 def check_slippage(slippage: float, ceiling: float) -> None:
@@ -310,7 +312,11 @@ def cmd_swap(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
         quoted = int(
             client.get_price_input(token_in, token_out, args.qty, fee=args.fee)
         )
-    min_out = int(quoted * (1 - args.slippage))
+    slippage = Fraction(str(args.slippage))
+    min_out = (
+        quoted * (slippage.denominator - slippage.numerator) // slippage.denominator
+    )
+    minimum_key = "min_out" if args.version == 4 else "estimated_min_out"
 
     plan = {
         "chain_id": chain_id,
@@ -319,15 +325,19 @@ def cmd_swap(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
         "token_out": token_out,
         "qty_in": args.qty,
         "quoted_out": quoted,
-        "min_out": min_out,
+        minimum_key: min_out,
         "slippage": args.slippage,
         "broadcast": args.broadcast,
     }
     _humanize(
         plan,
         client.w3,
-        {"qty_in": token_in, "quoted_out": token_out, "min_out": token_out},
+        {"qty_in": token_in, "quoted_out": token_out, minimum_key: token_out},
     )
+    if args.version != 4:
+        plan["minimum_note"] = (
+            "v2/v3 requotes at execution; estimated_min_out is advisory"
+        )
     if not args.broadcast:
         plan["note"] = "dry-run: pass --broadcast to sign and send"
         return plan
@@ -344,6 +354,8 @@ def cmd_swap(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
             tick_spacing=args.tick_spacing,
             hooks=ETH,
         )
+        # The wrapper already applied slippage; do not reduce the minimum twice.
+        client.set_max_slippage(0)
         tx_hash = client.make_swap_input(
             token_in, token_out, args.qty, min_out, swap_pool_key=pool_key
         )
@@ -374,6 +386,7 @@ def cmd_approve(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
     check_broadcast_allowed(args.broadcast, cfg.private_key)
     client = _connect(cfg, args.version)
     chain_id = _chain_id(client)
+    check_version_supported(args.version, chain_id)
     if args.broadcast:
         check_broadcast_chain_allowed(chain_id, cfg.allow_mainnet, args.allow_mainnet)
     token = resolve_token(args.token, chain_id)
@@ -382,8 +395,21 @@ def cmd_approve(cfg: Config, args: argparse.Namespace) -> dict[str, Any]:
             "token": token,
             "note": "dry-run: pass --broadcast to send the approval tx",
         }
-    client.approve(token)
-    return {"token": token, "approved": True}
+    from web3 import Web3
+
+    result = client.approve(token)
+    if args.version == 4:
+        # The library returns only the final Permit2 transaction's hash.
+        return {
+            "token": token,
+            "tx_hash": Web3.to_hex(result),
+            "status": "submitted",
+            "note": "Check the receipt and ERC-20/Permit2 allowances before trading",
+        }
+    tx_hash = Web3.to_hex(result["transactionHash"])
+    if result["status"] != 1:
+        raise RuntimeError(f"approval transaction {tx_hash} reverted")
+    return {"token": token, "approved": True, "status": "confirmed", "tx_hash": tx_hash}
 
 
 def build_parser() -> argparse.ArgumentParser:

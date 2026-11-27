@@ -31,7 +31,7 @@ commands (status, quote) work with just `PROVIDER`.
 ## Commands
 
 ```bash
-SKILL_DIR=$(dirname "$0")  # or the directory containing this SKILL.md
+SKILL_DIR="$PWD/skills/uniswap-trading"  # run from the repository root
 
 # Connectivity + wallet overview on Sepolia
 python3 "$SKILL_DIR/scripts/uniswap_agent.py" --json --version 2 status
@@ -95,3 +95,13 @@ of truth (the human fields are omitted when a decimals lookup fails).
 A broadcast result contains a submitted hash, not proof of success. Check the
 receipt on the same chain before reporting completion or retrying. A receipt
 timeout means pending/unknown; do not send a second swap automatically.
+
+For v2/v3, `estimated_min_out` is advisory: the library requotes when it
+builds the swap. For v4, `min_out` is passed to the transaction with no second
+slippage reduction.
+
+An approval response with `status: submitted` is not confirmed success. v4
+returns the final Permit2 transaction hash; inspect its receipt and both the
+ERC-20-to-Permit2 and Permit2-to-router allowances before trading. v2/v3
+return `approved: true` only after a successful mined receipt; a reverted
+approval exits nonzero and includes its transaction hash in the error.

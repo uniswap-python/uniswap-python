@@ -104,7 +104,8 @@ verification, **not** that acceptance receipt.
 python3 -m pytest skills/uniswap-trading/tests/ -q
 ```
 
-The 28 offline tests cover safety gates and the CLI argument surface. The
+The 41 offline tests cover safety gates, CLI results, exact amount formatting,
+and the real v4 calldata minimum. The
 repository's default pytest discovery includes these tests. The demo additionally
 needs the live or forked contract state described above.
 
