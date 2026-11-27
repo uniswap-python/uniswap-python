@@ -10,15 +10,18 @@ from dataclasses import astuple, dataclass
 
 import pytest
 from web3 import Web3
+from web3.middleware import ExtraDataToPOAMiddleware
 from web3.types import Nonce
 
 from uniswap import Uniswap4
 from uniswap.constants import (
     ETH_ADDRESS,
     ZERO_HOOK,
+    _netid_to_name,
     universal_router_commands,
     v4_actions,
 )
+from uniswap.tokens import get_decimals, get_pool_data, get_tokens
 from uniswap.types import AddressLike, PoolKey
 from uniswap.util import V4pools, _addr_to_str, _str_to_addr
 
@@ -32,20 +35,44 @@ logging.basicConfig(level=logging.INFO)
 
 RECEIPT_TIMEOUT = 5
 
-ONE_ETH = 10**18
-ONE_USDT = 10**6
-ONE_USDC = 10**6
-ETH_DECIMALS = 18
-USDT_DECIMALS = 6
-USDC_DECIMALS = 6
-USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
-USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-ETH_USDC_FEE = 500
-ETH_USDC_TICK_SPACING = 10
-USDC_USDT_FEE = 10
-USDC_USDT_TICK_SPACING = 1
+networks = [
+    "mainnet",
+    "unichain",
+    "arbitrum",
+    "optimism",
+    "base",
+    "polygon",
+    "ink",
+    "soneium",
+    "avalanche",
+    "bnb",
+    "monad",
+    "robinhood",
+]
+poa_networks: list[str] = []
+current_network = os.environ.get("NETWORK")
+if current_network is None or current_network not in networks:
+    pytest.skip(
+        f"NETWORK environment variable must be set to one of {networks}",
+        allow_module_level=True,
+    )
+tokens = get_tokens(current_network)
+decimals = get_decimals(current_network)
+pool_data = get_pool_data(current_network)
 
-TOKEN_ID = 1
+ETH_DECIMALS = decimals["ETH"]
+USDT_DECIMALS = decimals["USDT"]
+USDC_DECIMALS = decimals["USDC"]
+ONE_ETH = 10**ETH_DECIMALS
+ONE_USDT = 10**USDT_DECIMALS
+ONE_USDC = 10**USDC_DECIMALS
+USDC_ADDRESS = tokens["USDC"]
+USDT_ADDRESS = tokens["USDT"]
+WETH_ADDRESS = tokens["WETH"]
+ETH_USDC_FEE = pool_data["ETH_USDC"][0]
+ETH_USDC_TICK_SPACING = pool_data["ETH_USDC"][1]
+USDC_USDT_FEE = pool_data["USDC_USDT"][0]
+USDC_USDT_TICK_SPACING = pool_data["USDC_USDT"][1]
 
 eth_usdc_poolkey: PoolKey = PoolKey(
     currency0=ETH_ADDRESS,  # ETH
@@ -78,7 +105,7 @@ def client(web3: Web3, anvil: AnvilInstance) -> Uniswap4:
         anvil.eth_address,
         anvil.eth_privkey,
         web3=web3,
-        gas_limit=500_000,
+        gas_limit=5_000_000,
     )
 
 
@@ -92,6 +119,8 @@ def web3(anvil: AnvilInstance) -> Web3:
     w3 = Web3(Web3.HTTPProvider(anvil.provider, request_kwargs={"timeout": 30}))
     if 1 != int(w3.net.version):
         logger.warning("PROVIDER was not a mainnet provider, which the tests require")
+    if current_network in poa_networks:
+        w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
     return w3
 
 
@@ -105,13 +134,17 @@ def anvil() -> Generator[AnvilInstance, None, None]:
             "PROVIDER was not set, you need to set it to a mainnet provider (such as Infura) so that we can fork off our testnet"
         )
 
-    port = 10998
+    port = 10998 - int(networks.index(os.environ["NETWORK"]))
     defaultGasPrice = 100_000_000_000  # 100 gwei
+    chain_id: int = list(_netid_to_name.keys())[
+        list(_netid_to_name.values()).index(str(current_network))
+    ]
     p = subprocess.Popen(
         f"""anvil
         --port {port}
-        --chain-id 1
+        --chain-id {chain_id}
         --fork-url {os.environ["PROVIDER"]}
+        --compute-units-per-second 10
         --gas-price {defaultGasPrice}
         """.replace("\n", " "),
         shell=True,
@@ -157,6 +190,7 @@ class TestUniswap4:
         "token, max_approval, delay_interval",
         [
             (USDC_ADDRESS, None, 7),
+            (WETH_ADDRESS, None, 1),
             (USDT_ADDRESS, 1_000_000 * ONE_USDT, 1),
         ],
     )
@@ -944,6 +978,166 @@ class TestUniswap4:
             f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
         )
 
+    @pytest.mark.parametrize(
+        "input_token, qty, output_token, route_legacy, custom_nonce",
+        [
+            (ETH_ADDRESS, ONE_ETH, USDC_ADDRESS, [ETH_ADDRESS, USDC_ADDRESS], None),
+            (USDC_ADDRESS, ONE_USDC, ETH_ADDRESS, [USDC_ADDRESS, ETH_ADDRESS], None),
+        ],
+    )
+    def test_make_swap_input_v2(
+        self,
+        client: Uniswap4,
+        input_token: str,
+        qty: int,
+        output_token: str,
+        route_legacy: list[str],
+        custom_nonce: Nonce,
+    ):
+
+        qtycap = 1
+        tx = client.make_swap_input(
+            input_token,
+            output_token,
+            qty,
+            qtycap,
+            route_legacy=route_legacy,
+            custom_nonce=custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.parametrize(
+        "input_token, qty, output_token, route_legacy, custom_nonce",
+        [
+            (ETH_ADDRESS, ONE_USDC, USDC_ADDRESS, [ETH_ADDRESS, USDC_ADDRESS], None),
+        ],
+    )
+    def test_make_swap_output_v2(
+        self,
+        client: Uniswap4,
+        input_token: str,
+        qty: int,
+        output_token: str,
+        route_legacy: list[str],
+        custom_nonce: Nonce,
+    ):
+        qtycap = 10 * ONE_ETH - 1
+        tx = client.make_swap_output(
+            input_token,
+            output_token,
+            qty,
+            qtycap,
+            route_legacy=route_legacy,
+            custom_nonce=custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.parametrize(
+        "input_token, qty, output_token, route_legacy, fees_legacy, custom_nonce",
+        [
+            (
+                ETH_ADDRESS,
+                ONE_ETH,
+                USDC_ADDRESS,
+                [ETH_ADDRESS, USDC_ADDRESS],
+                [500],
+                None,
+            ),
+            (
+                USDC_ADDRESS,
+                ONE_USDC,
+                ETH_ADDRESS,
+                [USDC_ADDRESS, ETH_ADDRESS],
+                [500],
+                None,
+            ),
+        ],
+    )
+    def test_make_swap_input_v3(
+        self,
+        client: Uniswap4,
+        input_token: str,
+        qty: int,
+        output_token: str,
+        route_legacy: list[str],
+        fees_legacy: list[int],
+        custom_nonce: Nonce,
+    ):
+        qtycap = 1
+        tx = client.make_swap_input(
+            input_token,
+            output_token,
+            qty,
+            qtycap,
+            route_legacy=route_legacy,
+            fees_legacy=fees_legacy,
+            custom_nonce=custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
+    @pytest.mark.parametrize(
+        "input_token, qty, output_token, route_legacy, fees_legacy, custom_nonce",
+        [
+            (
+                ETH_ADDRESS,
+                ONE_USDC,
+                USDC_ADDRESS,
+                [ETH_ADDRESS, USDC_ADDRESS],
+                [500],
+                None,
+            ),
+        ],
+    )
+    def test_make_swap_output_v3(
+        self,
+        client: Uniswap4,
+        input_token: str,
+        qty: int,
+        output_token: str,
+        route_legacy: list[str],
+        fees_legacy: list[int],
+        custom_nonce: Nonce,
+    ):
+        qtycap = 10 * ONE_ETH - 1
+        tx = client.make_swap_output(
+            input_token,
+            output_token,
+            qty,
+            qtycap,
+            route_legacy=route_legacy,
+            fees_legacy=fees_legacy,
+            custom_nonce=custom_nonce,
+        )
+        assert tx
+
+        tx_receipt = client.w3.eth.wait_for_transaction_receipt(
+            tx, timeout=RECEIPT_TIMEOUT
+        )
+        assert tx_receipt["status"], (
+            f"Transaction failed with status {tx_receipt['status']}; tx_receipt: {tx_receipt}"
+        )
+
     # ------ Liquidity --------------------------------------------------------------------
 
     @pytest.mark.parametrize(
@@ -1264,6 +1458,10 @@ class TestUniswap4:
         currecy0: str,
         currency1: str,
     ):
+        if current_network != "mainnet":
+            pytest.skip(
+                f"Skipping test_get_poolkeys_sublist because current network is not mainnet, current_network: {current_network}"
+            )
         test_data_file_full_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "pool_list.test"
         )

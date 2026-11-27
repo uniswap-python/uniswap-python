@@ -31,7 +31,10 @@ pytestmark = pytest.mark.skipif(
     os.getenv("UNISWAP_VERSION") != "4",
     reason="Run with UNISWAP_VERSION=4",
 )
-
+pytestmark = pytest.mark.skipif(
+    os.getenv("NETWORK") != "mainnet",
+    reason="Run with NETWORK=mainnet to test against a mainnet fork",
+)
 # ---------------------------------------------------------------------------
 # Well-known mainnet addresses used in examples
 # ---------------------------------------------------------------------------

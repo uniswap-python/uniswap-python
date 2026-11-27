@@ -61,6 +61,7 @@ To run the full test suite, in the project directory set the `PROVIDER` env vari
 ```sh
 poetry install
 export PROVIDER= # URL of provider, e.g. https://mainnet.infura.io/v3/...
+export NETWORK= # Network name, e.g. mainnet, arbitrum etc
 make test
 # or...
 poetry run pytest --capture=no  # doesn't capture output (verbose)

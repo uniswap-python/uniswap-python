@@ -10,10 +10,18 @@ env:
   # The repo secret still points at a rate-limited Infura URL, so CI must use
   # the public endpoint directly instead of preferring the secret on push runs.
   PROVIDER_MAINNET: 'https://ethereum.publicnode.com'
-  #PROVIDER_MAINNET: 'https://eth.drpc.org'
   PROVIDER_ARBITRUM: 'https://arb1.arbitrum.io/rpc'
   PROVIDER_XDAI: 'https://rpc.ankr.com/gnosis'
-
+  PROVIDER_UNICHAIN: 'https://mainnet.unichain.org'
+  PROVIDER_OPTIMISM: 'https://mainnet.optimism.io'
+  PROVIDER_BASE: 'https://mainnet.base.org'
+  PROVIDER_POLYGON: 'https://polygon.publicnode.com' #there is a quasi-native with token
+  PROVIDER_INK: 'https://rpc-gel.inkonchain.com'
+  PROVIDER_SONEIUM: 'https://rpc.soneium.org/'
+  PROVIDER_AVALANCHE: 'https://api.avax.network/ext/bc/C/rpc'
+  PROVIDER_BNB: 'https://bsc-dataseed.bnbchain.org'
+  PROVIDER_MONAD: 'https://rpc-mainnet.monadinfra.com'
+  PROVIDER_ROBINHOOD: 'https://rpc.mainnet.chain.robinhood.com'
 jobs:
   test:
     name: test (v${{ matrix.uniswap-version }}, ${{ matrix.network }})
@@ -23,18 +31,9 @@ jobs:
       matrix:
         uniswap-version: [2, 3, 4]
         network: ["mainnet"]
-        # include:
-        #   - network: arbitrum
-        #     uniswap-version: 3
-        #include:
-        #  - network: xdai
-        #    uniswap-version: 3
-        #include:
-        #  - network: optimism
-        #    uniswap-version: 3
-        #include:
-        #  - network: polygon
-        #    uniswap-version: 3
+        include:
+          - network: arbitrum
+            uniswap-version: 4
 
     steps:
     - uses: actions/checkout@v4
@@ -77,6 +76,7 @@ jobs:
       env:
         # Use the secret if available, otherwise fallback to the public key
         PROVIDER: ${{ ((matrix.network == 'mainnet') && env.PROVIDER_MAINNET) || ((matrix.network == 'arbitrum') && env.PROVIDER_ARBITRUM) }}
+        NETWORK: ${{ matrix.network }}
         UNISWAP_VERSION: ${{ matrix.uniswap-version }}
       run: |
         make test
