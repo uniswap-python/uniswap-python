@@ -118,11 +118,18 @@ def get_tick_at_sqrt(sqrtPriceX96: int) -> int:
     logBase = math.log(1.0001)
     tick = logPrice / logBase
 
-    # Round tick to nearest integer
-    tick = int(round(tick))
+    # Floor to the greatest tick whose sqrt ratio is <= sqrtPriceX96,
+    # same as TickMath.getTickAtSqrtRatio and the tick reported by slot0
+    tick = math.floor(tick)
 
     # Ensure the tick is within the valid range
     assert tick >= MIN_TICK and tick <= MAX_TICK
+
+    # The float log can be off by one right at a tick boundary
+    if get_sqrt_ratio_at_tick(tick) > sqrtPriceX96:
+        tick -= 1
+    elif tick < MAX_TICK and get_sqrt_ratio_at_tick(tick + 1) <= sqrtPriceX96:
+        tick += 1
 
     return tick
 
